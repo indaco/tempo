@@ -12,6 +12,53 @@ import (
 	"github.com/indaco/tempo/internal/utils"
 )
 
+func TestDefaultCloneOrUpdate(t *testing.T) {
+	t.Run("ExistingRepo", func(t *testing.T) {
+		tempDir := setupTestRepo(t)
+
+		mockLogger := logger.NewDefaultLogger()
+
+		// Mock UpdateRepo to verify it's being called
+		originalUpdateRepo := UpdateRepo
+		defer func() { UpdateRepo = originalUpdateRepo }()
+
+		UpdateRepo = func(repoPath string, logger logger.LoggerInterface) error {
+			if repoPath != tempDir {
+				t.Errorf("UpdateRepo called with wrong path: got %s, want %s", repoPath, tempDir)
+			}
+			return nil
+		}
+
+		err := DefaultCloneOrUpdate("https://github.com/octocat/Hello-World.git", tempDir, mockLogger)
+		if err != nil {
+			t.Fatalf("DefaultCloneOrUpdate failed: %v", err)
+		}
+	})
+
+	t.Run("NonExistingRepo", func(t *testing.T) {
+		tempDir := t.TempDir()
+		destRepo := filepath.Join(tempDir, "new_repo")
+
+		mockLogger := logger.NewDefaultLogger()
+
+		// Mock CloneRepoFunc to verify it's being called
+		originalCloneRepo := CloneRepoFunc
+		defer func() { CloneRepoFunc = originalCloneRepo }()
+
+		CloneRepoFunc = func(repoURL, repoPath string, logger logger.LoggerInterface) error {
+			if repoPath != destRepo {
+				t.Errorf("CloneRepoFunc called with wrong path: got %s, want %s", repoPath, destRepo)
+			}
+			return nil
+		}
+
+		err := DefaultCloneOrUpdate("https://github.com/octocat/Hello-World.git", destRepo, mockLogger)
+		if err != nil {
+			t.Fatalf("DefaultCloneOrUpdate failed: %v", err)
+		}
+	})
+}
+
 func TestIsValidGitRepo_ValidRepo(t *testing.T) {
 	tempDir := setupTestRepo(t)
 	defer os.RemoveAll(tempDir)
