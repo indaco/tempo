@@ -1,0 +1,20 @@
+package css
+
+import (
+	"fmt"
+	"{{ .GoModule }}/{{ .GoPackage | normalizePath | goPackageName }}/{{ .ComponentName | goPackageName }}/css/themes"
+)
+
+var {{ .ComponentName | goUnexportedName }}CSSHandle = templ.NewOnceHandle()
+
+templ {{ .ComponentName | goExportedName }}CSS() {
+	@{{ .ComponentName | goUnexportedName }}CSSHandle.Once() {
+	<style type="text/css">
+/* [{{ .GuardMarker }}] BEGIN - Do not edit! This section is auto-generated. */
+/* [{{ .GuardMarker }}] END */
+</style>
+	}
+	{ fmt.Sprintf("\n") }
+	@themes.{{ .ComponentName | goExportedName }}Themes()
+	{ fmt.Sprintf("\n") }
+}

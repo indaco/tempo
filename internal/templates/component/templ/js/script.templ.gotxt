@@ -1,0 +1,12 @@
+package js
+
+var {{ .ComponentName | goUnexportedName }}JsHandle = templ.NewOnceHandle()
+
+templ {{ .ComponentName | goExportedName }}JS() {
+	@{{ .ComponentName | goUnexportedName }}JsHandle.Once() {
+<script type="text/javascript">
+/* [{{ .GuardMarker }}] BEGIN - Do not edit! This section is auto-generated. */
+/* [{{ .GuardMarker }}] END */
+</script>
+	}
+}

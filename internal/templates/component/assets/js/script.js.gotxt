@@ -1,0 +1,2 @@
+{{- if .WatermarkTip -}}// JS file for '{{ .ComponentName | goUnexportedName }}'
+// The content of this file will be processed and transferred to '{{ .ComponentName | goPackageName }}/js/script.templ'{{ end }}

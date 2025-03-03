@@ -1,0 +1,29 @@
+{{- if .WatermarkTip -}}/* The content of this file will be processed and transferred to  '{{ .ComponentName | goPackageName }}/css/themes/dark.templ' */{{ end }}
+
+{{- if isEmpty .CssLayer }}
+@media (prefers-color-scheme: dark) {
+  :root {
+
+  }
+}
+
+html.dark,
+html[data-theme='dark'],
+body.dark {
+
+}
+{{- else }}
+@layer {{ .CssLayer }} {
+  @media (prefers-color-scheme: dark) {
+    :root {
+
+    }
+  }
+
+  html.dark,
+  html[data-theme='dark'],
+  body.dark {
+
+  }
+}
+{{- end }}

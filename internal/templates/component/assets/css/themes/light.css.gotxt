@@ -1,0 +1,13 @@
+{{- if .WatermarkTip -}}/* The content of this file will be processed and transferred to  '{{ .ComponentName | goPackageName }}/css/themes/light.templ' */{{ end }}
+
+{{- if isEmpty .CssLayer }}
+:root {
+
+}
+{{- else }}
+@layer {{ .CssLayer }} {
+  :root {
+
+  }
+}
+{{- end }}

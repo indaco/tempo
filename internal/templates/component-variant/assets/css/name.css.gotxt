@@ -1,0 +1,5 @@
+{{- if .WatermarkTip -}}/* The content of this file will be processed and transferred to '{{ .GoPackage | goPackageName }}/{{ .ComponentName | goPackageName }}/css/variants/{{ .VariantName | goUnexportedName }}.templ' */{{- end }}
+
+{{ .ComponentName | goUnexportedName }}[data-variant="{{ .VariantName | goUnexportedName }}"] {
+    /* css styles here */
+ }

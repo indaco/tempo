@@ -1,0 +1,15 @@
+package themes
+
+import "fmt"
+
+var {{ .ComponentName | goUnexportedName }}LightHandle = templ.NewOnceHandle()
+
+templ {{ .ComponentName | goUnexportedName }}ThemeLight() {
+	@{{ .ComponentName | goUnexportedName }}LightHandle.Once() {
+<style type="text/css">
+/* [{{ .GuardMarker }}] BEGIN - Do not edit! This section is auto-generated. */
+/* [{{ .GuardMarker }}] END */
+</style>
+	}
+	{ fmt.Sprintf("\n") }
+}

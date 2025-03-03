@@ -1,0 +1,12 @@
+package variants
+
+var {{ .ComponentName | goUnexportedName }}{{ .VariantName | goExportedName }}VariantHandler = templ.NewOnceHandle()
+
+templ variant{{ .VariantName | goExportedName }}() {
+    @{{ .ComponentName | goUnexportedName }}{{ .VariantName | goExportedName }}VariantHandler.Once() {
+<style type="text/css">
+/* [{{ .GuardMarker }}] BEGIN - Do not edit! This section is auto-generated. */
+/* [{{ .GuardMarker }}] END */
+</style>
+    }
+}

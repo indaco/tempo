@@ -1,0 +1,10 @@
+package themes
+
+var {{ .ComponentName | goUnexportedName }}ThemesHandle = templ.NewOnceHandle()
+
+templ {{ .ComponentName | goExportedName }}Themes() {
+	@{{ .ComponentName | goUnexportedName }}ThemesHandle.Once() {
+		@{{ .ComponentName | goUnexportedName }}ThemeLight()
+		@{{ .ComponentName | goUnexportedName }}ThemeDark()
+	}
+}

@@ -1,0 +1,15 @@
+package themes
+
+import "fmt"
+
+var {{ .ComponentName | goUnexportedName }}DarkHandle = templ.NewOnceHandle()
+
+templ {{ .ComponentName | goUnexportedName }}ThemeDark() {
+	@{{ .ComponentName | goUnexportedName }}DarkHandle.Once() {
+<style type="text/css">
+/* [{{ .GuardMarker }}] BEGIN - Do not edit! This section is auto-generated. */
+/* [{{ .GuardMarker }}] END */
+</style>
+	}
+	{ fmt.Sprintf("\n") }
+}

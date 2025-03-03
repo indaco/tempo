@@ -1,0 +1,33 @@
+[
+  {
+    "Item": "file",
+    "TemplateFile": "template/file"
+    // Missing the required "Path" field
+  },
+  {
+    "Item": "folder",
+    "Path": "path/to/file",
+    "UnknownField": "unexpected" // Field not defined in the Action struct
+  },
+  {
+    "Item": 123, // Invalid item: should be a string
+    "Path": "path/to/file",
+    "TemplateFile": "template/file"
+  },
+  {
+    "Item": "file",
+    "Path": null, // Null value for a required string field
+    "TemplateFile": "template/file"
+  },
+  {
+    // Completely invalid object
+    "NotEvenClose": "wrong format"
+  },
+  "Just a string", // Invalid: should be an object
+  42, // Invalid: should be an object
+  null, // Invalid: should be an object
+  [
+    "nested array", // Invalid: nested arrays are not part of the Action struct
+    "should trigger an error"
+  ]
+]

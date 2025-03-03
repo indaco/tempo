@@ -1,0 +1,13 @@
+[
+  {
+    "item": "file",
+    "path": "components/example.templ",
+    "templateFile": "templates/example.gotxt",
+    "skipIfExists": true
+  },
+  {
+    "Item": "folder",
+    "Base": "base/directory",
+    "Destination": "destination/directory"
+  }
+]

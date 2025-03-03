@@ -1,0 +1,11 @@
+package {{ .ComponentName | goPackageName }}
+
+import (
+    "{{ .GoModule }}/{{ .GoPackage | normalizePath | goPackageName }}/{{ .ComponentName | goPackageName }}/css"
+)
+
+templ {{ .ComponentName | goExportedName }}() {
+    @css.{{ .ComponentName | goExportedName }}CSS()
+
+    // continue here...
+}
