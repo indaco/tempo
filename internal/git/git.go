@@ -13,6 +13,7 @@ import (
 var (
 	CloneOrUpdate = DefaultCloneOrUpdate
 	UpdateRepo    = DefaultUpdateRepo
+	CloneRepoFunc = CloneRepo
 )
 
 // Default implementation of CloneOrUpdate
@@ -22,7 +23,7 @@ func DefaultCloneOrUpdate(repoURL, repoPath string, logger logger.LoggerInterfac
 		return UpdateRepo(repoPath, logger)
 	}
 
-	return CloneRepo(repoURL, repoPath, logger)
+	return CloneRepoFunc(repoURL, repoPath, logger)
 }
 
 // Default implementation of UpdateRepo
