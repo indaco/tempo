@@ -4,6 +4,32 @@
 <h2 align="center" style="font-size: 1.5em;">
   A simple CLI for scaffolding components and managing assets in templ-based projects.
 </h2>
+<p align="center">
+    <a href="https://github.com/indaco/tempo/actions/workflows/ci.yml" target="_blank">
+      <img src="https://github.com/indaco/tempo/actions/workflows/ci.yml/badge.svg" alt="CI" />
+    </a>
+    <a href="https://coveralls.io/github/indaco/tempo?branch=main">
+        <img
+            src="https://coveralls.io/repos/github/indaco/tempo/badge.svg?branch=main"
+            alt="Coverage Status"
+        />
+    </a>
+    <a href="https://goreportcard.com/report/github.com/indaco/tempo" target="_blank">
+        <img src="https://goreportcard.com/badge/github.com/indaco/tempo" alt="go report card" />
+    </a>
+    <a href="https://pkg.go.dev/github.com/indaco/tempo/" target="_blank">
+        <img src="https://pkg.go.dev/badge/github.com/indaco/tempo/.svg" alt="go reference" />
+    </a>
+     <a href="https://github.com/indaco/tempo/blob/main/LICENSE" target="_blank">
+        <img src="https://img.shields.io/badge/license-mit-blue?style=flat-square&logo=none" alt="license" />
+    </a>
+    <a href="https://www.jetify.com/devbox/docs/contributor-quickstart/">
+      <img
+          src="https://www.jetify.com/img/devbox/shield_moon.svg"
+          alt="Built with Devbox"
+      />
+    </a>
+</p>
 
 `tempo` is a simple CLI for accelerating scaffolding and asset management in <a href="https://templ.guide" target="_blank">templ</a>-based projects. Inspired by the Italian word for **"time"**, its name naturally complements `templ`, helping developers streamline component generation and manage CSS & JS workflows with ease.
 
