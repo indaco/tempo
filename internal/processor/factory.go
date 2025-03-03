@@ -7,6 +7,14 @@ import (
 	"github.com/indaco/tempo/internal/processor/transformers"
 )
 
+// ProcessorFactoryInterface defines the behavior of a processor factory.
+type ProcessorFactoryInterface interface {
+	GetProcessor(filePath string) FileProcessor
+}
+
+// Ensure ProcessorFactory implements the interface.
+var _ ProcessorFactoryInterface = (*ProcessorFactory)(nil)
+
 // ProcessorFactory provides the correct FileProcessor based on file extension.
 type ProcessorFactory struct {
 	Production bool // Whether to use minification

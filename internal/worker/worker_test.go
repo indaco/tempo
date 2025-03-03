@@ -2,17 +2,17 @@ package worker
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/indaco/tempo/internal/processor"
 	"github.com/indaco/tempo/internal/utils"
 )
-
-/* ------------------------------------------------------------------------- */
-/* Test WorkerPool Skipped & Processed Files                                 */
-/* ------------------------------------------------------------------------- */
 
 // TestWorkerPool_SkippedAndProcessedFiles ensures:
 // - CSS & JS files are processed correctly
@@ -119,6 +119,104 @@ func TestWorkerPool_SkippedAndProcessedFiles(t *testing.T) {
 	validateSkippedFiles(t, outputDir, collectedSkipped, manager.Metrics)
 }
 
+func TestShouldSkipFile(t *testing.T) {
+	tempDir := t.TempDir()
+	inputDir := filepath.Join(tempDir, "input")
+	outputDir := filepath.Join(tempDir, "output")
+
+	// Ensure input and output directories exist
+	if err := os.MkdirAll(inputDir, 0755); err != nil {
+		t.Fatalf("Failed to create input directory: %v", err)
+	}
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		t.Fatalf("Failed to create output directory: %v", err)
+	}
+
+	// Create an unsupported file type
+	unsupportedFile := filepath.Join(inputDir, "unsupported.xyz")
+	if err := os.WriteFile(unsupportedFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create unsupported file: %v", err)
+	}
+
+	// Case 1: Unsupported file type
+	skipReason, skipType := shouldSkipFile(Job{InputPath: unsupportedFile}, inputDir, outputDir)
+	if skipReason == "" || skipType != SkipUnsupportedFile {
+		t.Errorf("Expected unsupported file type skip, got: %s (%v)", skipReason, skipType)
+	}
+
+	// Case 2: Missing corresponding `.templ` file
+	cssFile := filepath.Join(inputDir, "style.css")
+	if err := os.WriteFile(cssFile, []byte("body {color: red;}"), 0644); err != nil {
+		t.Fatalf("Failed to create CSS file: %v", err)
+	}
+
+	skipReason, skipType = shouldSkipFile(Job{InputPath: cssFile}, inputDir, outputDir)
+	if skipReason == "" || skipType != SkipMissingTemplFile {
+		t.Errorf("Expected missing .templ file skip, got: %s (%v)", skipReason, skipType)
+	}
+
+	// Case 3: Mismatched output structure
+	expectedTemplFile := utils.RebasePathToOutput(cssFile, inputDir, outputDir)
+	if err := os.WriteFile(expectedTemplFile, []byte(""), 0644); err != nil {
+		t.Fatalf("Failed to create expected .templ file: %v", err)
+	}
+
+	invalidOutputFile := filepath.Join(outputDir, "invalid-style.templ")
+	skipReason, skipType = shouldSkipFile(Job{InputPath: cssFile, OutputPath: invalidOutputFile}, inputDir, outputDir)
+	if skipReason == "" || skipType != SkipMismatchedPath {
+		t.Errorf("Expected mismatched output structure skip, got: %s (%v)", skipReason, skipType)
+	}
+
+	// Case 4: Valid case (no skipping required)
+	validJob := Job{InputPath: cssFile, OutputPath: expectedTemplFile}
+	skipReason, skipType = shouldSkipFile(validJob, inputDir, outputDir)
+	if skipReason != "" || skipType != "" {
+		t.Errorf("Expected no skipping for valid case, but got: %s (%v)", skipReason, skipType)
+	}
+}
+
+type MockProcessorFactory struct {
+	Processor processor.FileProcessor
+}
+
+// Ensure MockProcessorFactory implements ProcessorFactoryInterface
+var _ processor.ProcessorFactoryInterface = (*MockProcessorFactory)(nil)
+
+func (m *MockProcessorFactory) GetProcessor(_ string) processor.FileProcessor {
+	return m.Processor
+}
+
+type MockProcessor struct {
+	ProcessCalled bool
+}
+
+func (m *MockProcessor) Process(input, output, marker string) error {
+	m.ProcessCalled = true
+	return nil
+}
+
+func TestProcessFile(t *testing.T) {
+	mockProcessor := &MockProcessor{}
+
+	mockManager := &WorkerPoolManager{
+		Factory: &MockProcessorFactory{Processor: mockProcessor},
+	}
+
+	job := Job{
+		InputPath:  "style.css",
+		OutputPath: "style.templ",
+	}
+
+	err := processFile(job, mockManager, false)
+	if err != nil {
+		t.Fatalf("Expected processFile to succeed but got error: %v", err)
+	}
+
+	if !mockProcessor.ProcessCalled {
+		t.Fatal("Expected Process to be called but it wasn't")
+	}
+}
+
 /* ------------------------------------------------------------------------- */
 /* Helper Functions                                                          */
 /* ------------------------------------------------------------------------- */
@@ -150,5 +248,49 @@ func validateSkippedFiles(t *testing.T, outputDir string, collectedSkipped []Pro
 		if skipEntry.Reason != "Unsupported file type (not CSS or JS)" {
 			t.Errorf("Unexpected skip reason: %s", skipEntry.Reason)
 		}
+	}
+}
+
+func TestRecordExecutionTime(t *testing.T) {
+	// Create a WorkerPoolManager with an empty ExecutionTimes slice
+	mockManager := &WorkerPoolManager{}
+
+	// Define a test file path and duration
+	filePath := "testfile.css"
+	duration := 500 * time.Millisecond
+
+	// Capture standard output
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// Call the function
+	recordExecutionTime(mockManager, filePath, duration)
+
+	// Restore standard output
+	w.Close()
+	os.Stdout = oldStdout
+
+	// Read captured output
+	out, _ := io.ReadAll(r)
+	output := string(out)
+
+	// Verify execution time was recorded
+	if len(mockManager.ExecutionTimes) != 1 {
+		t.Fatalf("Expected 1 execution time entry, got %d", len(mockManager.ExecutionTimes))
+	}
+
+	if mockManager.ExecutionTimes[0].FilePath != filePath {
+		t.Errorf("Expected execution time entry for %s, got %s", filePath, mockManager.ExecutionTimes[0].FilePath)
+	}
+
+	if mockManager.ExecutionTimes[0].Duration != duration {
+		t.Errorf("Expected execution duration %v, got %v", duration, mockManager.ExecutionTimes[0].Duration)
+	}
+
+	// Validate printed output
+	expectedOutput := fmt.Sprintf("Processed %s (took %v)\n", filePath, duration)
+	if !strings.Contains(output, expectedOutput[:len(expectedOutput)-3]) { // Allow minor time variations
+		t.Errorf("Expected console output containing: %q, got: %q", expectedOutput, output)
 	}
 }
