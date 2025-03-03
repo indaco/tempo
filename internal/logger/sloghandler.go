@@ -87,7 +87,7 @@ func (h *groupedLogHandler) Enabled(ctx context.Context, level slog.Level) bool 
 }
 
 func (h *groupedLogHandler) Handle(ctx context.Context, record slog.Record) error {
-	// Format grouped attributes
+	// Collect grouped attributes
 	groupedAttrs := make([]slog.Attr, 0, record.NumAttrs())
 	record.Attrs(func(attr slog.Attr) bool {
 		groupedAttrs = append(groupedAttrs, slog.Attr{
@@ -97,9 +97,12 @@ func (h *groupedLogHandler) Handle(ctx context.Context, record slog.Record) erro
 		return true
 	})
 
-	// Pass record with grouped attributes to the original handler
+	// Pass only the modified attributes to the original handler
 	clonedHandler := h.original.WithAttrs(groupedAttrs)
-	return clonedHandler.Handle(ctx, record)
+	return clonedHandler.Handle(ctx, slog.Record{
+		Level:   record.Level,
+		Message: record.Message,
+	})
 }
 
 func (h *groupedLogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
