@@ -39,7 +39,7 @@ type WorkerPoolManager struct {
 	ErrorsChan     chan ProcessingError
 	SkippedChan    chan ProcessingError
 	Metrics        *Metrics
-	Factory        *processor.ProcessorFactory
+	Factory        processor.ProcessorFactoryInterface
 	InputDir       string
 	OutputDir      string
 	MarkerName     string
