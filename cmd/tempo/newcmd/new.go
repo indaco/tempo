@@ -1,4 +1,4 @@
-package createcmd
+package newcmd
 
 import (
 	"context"
@@ -22,19 +22,19 @@ import (
 /* Command Setup                                                             */
 /* ------------------------------------------------------------------------- */
 
-func SetupCreateCommand(cmdCtx *app.AppContext) *cli.Command {
+func SetupNewCommand(cmdCtx *app.AppContext) *cli.Command {
 	coreFlags := getCoreFlags()
 	componentFlags := getComponentFlags()
 	variantFlags := getVariantFlags()
 
 	return &cli.Command{
-		Name:        "create",
-		Aliases:     []string{"new", "c", "n"},
+		Name:        "new",
+		Aliases:     []string{"n"},
 		Description: "Generate a component or variant based on defined templates",
-		Before:      validateCreatePrerequisites(cmdCtx.CWD),
+		Before:      validateNewPrerequisites(cmdCtx.CWD),
 		Commands: []*cli.Command{
-			setupCreateComponentSubCommand(cmdCtx, append(coreFlags, componentFlags...)),
-			setupCreateVariantSubCommand(cmdCtx, append(coreFlags, variantFlags...)),
+			setupNewComponentSubCommand(cmdCtx, append(coreFlags, componentFlags...)),
+			setupNewVariantSubCommand(cmdCtx, append(coreFlags, variantFlags...)),
 		},
 	}
 }
@@ -96,8 +96,8 @@ func getVariantFlags() []cli.Flag {
 /* Subcommand Setup                                                          */
 /* ------------------------------------------------------------------------- */
 
-// setupCreateComponentSubCommand creates the "component" subcommand for generating files for a new component.
-func setupCreateComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
+// setupNewComponentSubCommand creates the "component" subcommand for generating files for a new component.
+func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:                   "component",
 		Description:            "Uses the templates and actions created with `tempo define` to generate a real component",
@@ -105,7 +105,7 @@ func setupCreateComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *c
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--watermark] [--force] [--dry-run]",
-		Before:                 validateCreateComponentPrerequisites(cmdCtx.Config),
+		Before:                 validateNewComponentPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
@@ -166,8 +166,8 @@ func setupCreateComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *c
 	}
 }
 
-// setupCreateVariantSubCommand creates the "variant" subcommand for generating files for a variant.
-func setupCreateVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
+// setupNewVariantSubCommand creates the "variant" subcommand for generating files for a variant.
+func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:                   "variant",
 		Description:            "Uses the templates and actions created with `tempo define` to generate a real component variant",
@@ -175,7 +175,7 @@ func setupCreateVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--watermark] [--force] [--dry-run]",
-		Before:                 validateCreateVariantPrerequisites(cmdCtx.Config),
+		Before:                 validateNewVariantPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
@@ -259,9 +259,9 @@ func setupCreateVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateCreatePrerequisites checks if the required configuration file exists for the "new" command,including:
+// validateNewPrerequisites checks if the required configuration file exists for the "new" command,including:
 // - Initialized Tempo project (inherit from the main define command).
-func validateCreatePrerequisites(folderPathToConfig string) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func validateNewPrerequisites(folderPathToConfig string) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		return ctx, app.IsTempoProject(folderPathToConfig)
 	}
@@ -270,7 +270,7 @@ func validateCreatePrerequisites(folderPathToConfig string) func(ctx context.Con
 // validateNewComponentPrerequisites checks prerequisites for the "new component" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
 // - Existence of the component templates folder.
-func validateCreateComponentPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func validateNewComponentPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		foldersToCheck := map[string]string{
 			"Templates directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
@@ -293,11 +293,11 @@ func validateCreateComponentPrerequisites(cfg *config.Config) func(ctx context.C
 	}
 }
 
-// validateCreateVariantPrerequisites checks prerequisites for the "new variant" subcommand, including:
+// validateNewVariantPrerequisites checks prerequisites for the "new variant" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
 // - Existence of the component templates folder.
 // - Existence of the variant templates folder.
-func validateCreateVariantPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func validateNewVariantPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		foldersToCheck := map[string]string{
 			"Component directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
