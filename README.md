@@ -141,7 +141,7 @@ assets/button/css/variant/outline.css → components/button/css/variant/outline.
 
 ```bash
 NAME:
-   tempo - A simple CLI to accelerate and simplify asset workflows in Templ-based projects
+   tempo - A simple CLI for scaffolding components and managing assets in templ-based projects
 
 USAGE:
    tempo [global options] [command [command options]]
