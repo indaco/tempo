@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/indaco/tempo/cmd/tempo/cleancmd"
-	"github.com/indaco/tempo/cmd/tempo/createcmd"
 	"github.com/indaco/tempo/cmd/tempo/definecmd"
 	"github.com/indaco/tempo/cmd/tempo/initcmd"
+	"github.com/indaco/tempo/cmd/tempo/newcmd"
 	"github.com/indaco/tempo/cmd/tempo/registercmd"
 	"github.com/indaco/tempo/cmd/tempo/synccmd"
 	"github.com/indaco/tempo/internal/app"
@@ -53,7 +53,7 @@ func main() {
 		Commands: []*cli.Command{
 			initcmd.SetupInitCommand(cliCtx),
 			definecmd.SetupDefineCommand(cliCtx),
-			createcmd.SetupCreateCommand(cliCtx),
+			newcmd.SetupNewCommand(cliCtx),
 			synccmd.SetupSyncCommand(cliCtx),
 			registercmd.SetupRegisterCommand(cliCtx),
 			cleancmd.SetupCleanCommand(cliCtx),

@@ -1,4 +1,4 @@
-package createcmd
+package newcmd
 
 import (
 	"context"
@@ -33,7 +33,7 @@ func setupConfig(tempDir string, overrides func(cfg *config.Config)) *config.Con
 	return cfg
 }
 
-func TestCreateCommandComponent_DefaultConfig(t *testing.T) {
+func TestNewCommandComponent_DefaultConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -52,7 +52,7 @@ func TestCreateCommandComponent_DefaultConfig(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -99,7 +99,7 @@ func TestCreateCommandComponent_DefaultConfig(t *testing.T) {
 	})
 }
 
-func TestCreateCommandComponent_WithFlags(t *testing.T) {
+func TestNewCommandComponent_WithFlags(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -118,7 +118,7 @@ func TestCreateCommandComponent_WithFlags(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -166,7 +166,7 @@ func TestCreateCommandComponent_WithFlags(t *testing.T) {
 	})
 }
 
-func TestCreateCommandVariant_DefaultConfig(t *testing.T) {
+func TestNewCommandVariant_DefaultConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -185,7 +185,7 @@ func TestCreateCommandVariant_DefaultConfig(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -279,7 +279,7 @@ func TestCreateCommandVariant_DefaultConfig(t *testing.T) {
 	})
 }
 
-func TestCreateCommandVariant_WithFlags(t *testing.T) {
+func TestNewCommandVariant_WithFlags(t *testing.T) {
 	tempDir := t.TempDir()
 	// Prepare configuration
 	cfg := setupConfig(tempDir, func(cfg *config.Config) {
@@ -302,7 +302,7 @@ func TestCreateCommandVariant_WithFlags(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -442,7 +442,7 @@ func TestHandleEntityExistence(t *testing.T) {
 	}
 }
 
-func TestCreateComponent_CheckComponentExists(t *testing.T) {
+func TestNewComponent_CheckComponentExists(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -461,7 +461,7 @@ func TestCreateComponent_CheckComponentExists(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -529,7 +529,7 @@ func TestCreateComponent_CheckComponentExists(t *testing.T) {
 	})
 }
 
-func TestCreateVariant_CheckComponentExists(t *testing.T) {
+func TestNewVariant_CheckComponentExists(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -548,7 +548,7 @@ func TestCreateVariant_CheckComponentExists(t *testing.T) {
 	app := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -614,7 +614,7 @@ func TestValidateCreateComponentPrerequisites(t *testing.T) {
 			t.Fatalf("Failed to create component template directory: %v", err)
 		}
 
-		validate := validateCreateComponentPrerequisites(cfg)
+		validate := validateNewComponentPrerequisites(cfg)
 		_, err := validate(context.Background(), &cli.Command{})
 
 		if err != nil {
@@ -627,7 +627,7 @@ func TestValidateCreateComponentPrerequisites(t *testing.T) {
 		componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
 		os.RemoveAll(componentTemplateDir)
 
-		validate := validateCreateComponentPrerequisites(cfg)
+		validate := validateNewComponentPrerequisites(cfg)
 		_, err := validate(context.Background(), &cli.Command{})
 
 		if err == nil {
@@ -649,7 +649,7 @@ func TestValidateCreateVariantPrerequisites_MissingFolders(t *testing.T) {
 	variantDir := filepath.Join(cfg.Paths.TemplatesDir, "component-variant")
 	os.RemoveAll(variantDir)
 
-	validate := validateCreateVariantPrerequisites(cfg)
+	validate := validateNewVariantPrerequisites(cfg)
 	_, err := validate(context.Background(), &cli.Command{})
 	if err == nil {
 		t.Fatal("Expected an error due to missing folders, but got nil")
@@ -659,9 +659,9 @@ func TestValidateCreateVariantPrerequisites_MissingFolders(t *testing.T) {
 	}
 }
 
-// TestCreateCommandComponent_DryRun tests that when the --dry-run flag is provided,
+// TestNewCommandComponent_DryRun tests that when the --dry-run flag is provided,
 // the command logs the dry run message.
-func TestCreateCommandComponent_DryRun(t *testing.T) {
+func TestNewCommandComponent_DryRun(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := setupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
@@ -680,7 +680,7 @@ func TestCreateCommandComponent_DryRun(t *testing.T) {
 	appCmd := &cli.Command{
 		Commands: []*cli.Command{
 			definecmd.SetupDefineCommand(cliCtx),
-			SetupCreateCommand(cliCtx),
+			SetupNewCommand(cliCtx),
 		},
 	}
 
@@ -719,17 +719,17 @@ func TestCreateCommandComponent_DryRun(t *testing.T) {
 
 // createTestComponentCmd returns the CLI command for creating a component.
 func createTestComponentCmd(cliCtx *app.AppContext) *cli.Command {
-	return SetupCreateCommand(cliCtx).Commands[0] // component subcommand
+	return SetupNewCommand(cliCtx).Commands[0] // component subcommand
 }
 
 // createTestVariantCmd returns the CLI command for creating a variant.
 func createTestVariantCmd(cliCtx *app.AppContext) *cli.Command {
-	return SetupCreateCommand(cliCtx).Commands[1] // variant subcommand
+	return SetupNewCommand(cliCtx).Commands[1] // variant subcommand
 }
 
-// TestCreateComponent_MissingActionsFile tests that if the required component actions file
+// TestNewComponent_MissingActionsFile tests that if the required component actions file
 // is missing, the command returns an error with the expected message.
-func TestCreateComponent_MissingActionsFile(t *testing.T) {
+func TestNewComponent_MissingActionsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	// Setup config but do not create component.json in the actions folder.
 	cfg := config.DefaultConfig()
@@ -765,9 +765,9 @@ func TestCreateComponent_MissingActionsFile(t *testing.T) {
 	}
 }
 
-// TestCreateVariant_MissingActionsFile tests that if the required variant actions file is missing,
+// TestNewVariant_MissingActionsFile tests that if the required variant actions file is missing,
 // the command returns an error with an expected substring.
-func TestCreateVariant_MissingActionsFile(t *testing.T) {
+func TestNewVariant_MissingActionsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := config.DefaultConfig()
 	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
@@ -803,9 +803,9 @@ func TestCreateVariant_MissingActionsFile(t *testing.T) {
 	}
 }
 
-// TestCreateVariant_AlreadyExists_NoForce tests that if the variant file already exists and --force is not provided,
+// TestNewVariant_AlreadyExists_NoForce tests that if the variant file already exists and --force is not provided,
 // the command returns early without overwriting the file.
-func TestCreateVariant_AlreadyExists_NoForce(t *testing.T) {
+func TestNewVariant_AlreadyExists_NoForce(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := config.DefaultConfig()
 	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
