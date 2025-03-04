@@ -27,26 +27,26 @@ const (
 	email       = "github@mircoveltri.me"
 )
 
-func main() {
-	// Get the current working directory
+// runApp encapsulates the main application logic and returns an error.
+func runApp(args []string) error {
+	// Get current working directory.
 	cwd := utils.GetCWD()
 
-	// Load configuration
+	// Load configuration.
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	// Initialize CLI context
+	// Initialize CLI context.
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
 		Config: cfg,
 		CWD:    cwd,
 	}
 
-	// Define CLI application
-	app := &cli.Command{
+	// Define CLI application.
+	appCmd := &cli.Command{
 		Name:        appName,
 		Version:     fmt.Sprintf("v%s", version.GetVersion()),
 		Description: description,
@@ -60,8 +60,12 @@ func main() {
 		},
 	}
 
-	// Run application
-	if err := app.Run(context.Background(), os.Args); err != nil {
+	// Run application.
+	return appCmd.Run(context.Background(), args)
+}
+
+func main() {
+	if err := runApp(os.Args); err != nil {
 		errors.LogErrorChain(err)
 		os.Exit(1)
 	}
