@@ -10,7 +10,7 @@ import (
 	"github.com/indaco/tempo/cmd/tempo/definecmd"
 	"github.com/indaco/tempo/cmd/tempo/initcmd"
 	"github.com/indaco/tempo/cmd/tempo/registercmd"
-	"github.com/indaco/tempo/cmd/tempo/runcmd"
+	"github.com/indaco/tempo/cmd/tempo/synccmd"
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/errors"
@@ -54,7 +54,7 @@ func main() {
 			initcmd.SetupInitCommand(cliCtx),
 			definecmd.SetupDefineCommand(cliCtx),
 			createcmd.SetupCreateCommand(cliCtx),
-			runcmd.SetupRunCommand(cliCtx),
+			synccmd.SetupSyncCommand(cliCtx),
 			registercmd.SetupRegisterCommand(cliCtx),
 			cleancmd.SetupCleanCommand(cliCtx),
 		},

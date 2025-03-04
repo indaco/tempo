@@ -1,4 +1,4 @@
-package runcmd
+package synccmd
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func TestRunCommand(t *testing.T) {
+func TestSyncCommand(t *testing.T) {
 	tempDir := os.TempDir()
 	inputDir := filepath.Join(tempDir, "input")
 	outputDir := filepath.Join(tempDir, "output")
@@ -110,7 +110,7 @@ func TestRunCommand(t *testing.T) {
 			// Run the command
 			app := &cli.Command{}
 			app.Commands = []*cli.Command{
-				SetupRunCommand(cliCtx),
+				SetupSyncCommand(cliCtx),
 			}
 
 			output, err := testutils.CaptureStdout(func() {
@@ -146,7 +146,7 @@ func TestRunCommand(t *testing.T) {
 /* Test Worker Pool Execution                                                */
 /* ------------------------------------------------------------------------- */
 
-func TestRunWorkerPool_BasicExecution(t *testing.T) {
+func TestSyncWorkerPool_BasicExecution(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_BasicExecution")
 
 	tempDir := t.TempDir()
@@ -201,7 +201,7 @@ func TestRunWorkerPool_BasicExecution(t *testing.T) {
 /* Test Summary Output as JSON String                                        */
 /* ------------------------------------------------------------------------- */
 
-func TestRunWorkerPool_SummaryAsJSON(t *testing.T) {
+func TestSyncWorkerPool_SummaryAsJSON(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_SummaryAsJSON")
 
 	tempDir := t.TempDir()
@@ -261,7 +261,7 @@ func TestRunWorkerPool_SummaryAsJSON(t *testing.T) {
 /* Test Summary Export to JSON File                                          */
 /* ------------------------------------------------------------------------- */
 
-func TestRunWorkerPool_SummaryToJSONFile(t *testing.T) {
+func TestSyncWorkerPool_SummaryToJSONFile(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_SummaryToJSONFile")
 
 	tempDir := t.TempDir()
@@ -395,7 +395,7 @@ func TestQueueFilesForProcessing(t *testing.T) {
 /* Testing Helpers                                                           */
 /* ------------------------------------------------------------------------- */
 
-func TestValidateRunPrerequisites(t *testing.T) {
+func TestValidateSyncPrerequisites(t *testing.T) {
 	tempDir := t.TempDir() // Temporary directory for test isolation
 
 	// Create a mock configuration
@@ -426,7 +426,7 @@ func TestValidateRunPrerequisites(t *testing.T) {
 			}
 		}
 
-		err := validateRunPrerequisites(inputDir, outputDir)
+		err := validateSyncPrerequisites(inputDir, outputDir)
 		if err != nil {
 			t.Errorf("expected no error, but got: %v", err)
 		}
@@ -441,7 +441,7 @@ func TestValidateRunPrerequisites(t *testing.T) {
 			t.Fatalf("failed to remove directory %s: %v", missingDir, err)
 		}
 
-		err := validateRunPrerequisites(missingDir, outputDir)
+		err := validateSyncPrerequisites(missingDir, outputDir)
 		if err == nil {
 			t.Errorf("expected an error due to missing folders, but got nil")
 		} else if !utils.ContainsSubstring(err.Error(), "Missing folders:") {
@@ -450,7 +450,7 @@ func TestValidateRunPrerequisites(t *testing.T) {
 	})
 }
 
-func TestResolveRunFlags(t *testing.T) {
+func TestResolveSyncFlags(t *testing.T) {
 	tempDir := t.TempDir()
 
 	cfg := config.DefaultConfig()
@@ -531,7 +531,7 @@ func TestResolveRunFlags(t *testing.T) {
 				Flags: flagSetFromMap(tt.flags),
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					cctx := context.Background()
-					opts, summaryOpts, err := resolveRunFlags(cctx, cmd, cmdCtx)
+					opts, summaryOpts, err := resolveSyncFlags(cctx, cmd, cmdCtx)
 
 					if tt.expectError {
 						if err == nil {

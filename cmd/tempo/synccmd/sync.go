@@ -1,4 +1,4 @@
-package runcmd
+package synccmd
 
 import (
 	"context"
@@ -22,12 +22,12 @@ import (
 /* Command Setup                                                             */
 /* ------------------------------------------------------------------------- */
 
-// SetupRunCommand initializes the "process" CLI command.
-func SetupRunCommand(cmdCtx *app.AppContext) *cli.Command {
+// SetupSyncCommand initializes the "process" CLI command.
+func SetupSyncCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "run",
-		Description:            "Process asset files into component templates",
-		Aliases:                []string{"r"},
+		Description:            "Process & sync asset files into component templates",
+		Aliases:                []string{"s"},
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
 		ArgsUsage:              "[--input value | -i] [--output value | -o] [--exclude value | -e] [--workers value | -w] [--prod | -p] [--force | -f] [--summary format | -s] [--verbose-summary] [--track-time] [--report-file file | --rf]",
@@ -38,13 +38,13 @@ func SetupRunCommand(cmdCtx *app.AppContext) *cli.Command {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
 			// Step 1: Get flag values
-			opts, summaryOpts, err := resolveRunFlags(ctx, cmd, cmdCtx)
+			opts, summaryOpts, err := resolveSyncFlags(ctx, cmd, cmdCtx)
 			if err != nil {
 				return err
 			}
 
 			// Step 2: Check prerequisites
-			if err := validateRunPrerequisites(opts.InputDir, opts.OutputDir); err != nil {
+			if err := validateSyncPrerequisites(opts.InputDir, opts.OutputDir); err != nil {
 				return err
 			}
 
@@ -124,10 +124,10 @@ func getFlags() []cli.Flag {
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateRunPrerequisites checks prerequisites for the "run" command, including:
+// validateSyncPrerequisites checks prerequisites for the "run" command, including:
 // - Existence of the input folder
 // - Existence of the output folder
-func validateRunPrerequisites(inputDir, outputDir string) error {
+func validateSyncPrerequisites(inputDir, outputDir string) error {
 	foldersToCheck := map[string]string{
 		"input_dir":  inputDir,
 		"output_dir": outputDir,
@@ -279,7 +279,7 @@ func queueFilesForProcessing(
 /* Helper Functions                                                          */
 /* ------------------------------------------------------------------------- */
 
-func resolveRunFlags(
+func resolveSyncFlags(
 	ctx context.Context,
 	cmd *cli.Command,
 	cmdCtx *app.AppContext,

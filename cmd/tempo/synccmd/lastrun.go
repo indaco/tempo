@@ -1,4 +1,4 @@
-package runcmd
+package synccmd
 
 import (
 	"fmt"
