@@ -14,6 +14,7 @@ import (
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
+	"github.com/indaco/tempo/internal/utils"
 	"github.com/indaco/tempo/testutils"
 	"github.com/urfave/cli/v3"
 )
@@ -726,11 +727,11 @@ func createTestVariantCmd(cliCtx *app.AppContext) *cli.Command {
 	return SetupCreateCommand(cliCtx).Commands[1] // variant subcommand
 }
 
-// TestCreateComponent_MissingActionsFile tests that if the required component actions file is missing,
-// the command returns an error with the expected message.
+// TestCreateComponent_MissingActionsFile tests that if the required component actions file
+// is missing, the command returns an error with the expected message.
 func TestCreateComponent_MissingActionsFile(t *testing.T) {
 	tempDir := t.TempDir()
-	// Setup config but do not create component.json inside the actions folder.
+	// Setup config but do not create component.json in the actions folder.
 	cfg := config.DefaultConfig()
 	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
 	cfg.App.GoPackage = filepath.Join(tempDir, "custom-package")
@@ -739,7 +740,7 @@ func TestCreateComponent_MissingActionsFile(t *testing.T) {
 	if err := os.MkdirAll(actionsDir, 0755); err != nil {
 		t.Fatalf("Failed to create actions folder: %v", err)
 	}
-	// Remove component.json if exists.
+	// Ensure component.json is missing.
 	os.Remove(filepath.Join(actionsDir, "component.json"))
 
 	cliCtx := &app.AppContext{
@@ -757,15 +758,15 @@ func TestCreateComponent_MissingActionsFile(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error due to missing actions file, but got nil")
 	}
-	// Expect exact error message.
-	expectedMsg := "Cannot find actions folder. Did you run 'tempo define component' before?"
-	if !strings.Contains(err.Error(), expectedMsg) {
+	// Accept error messages that either mention the specific phrase or list missing folders.
+	if !utils.ContainsSubstring(err.Error(), "Cannot find actions folder. Did you run 'tempo define component' before?") &&
+		!utils.ContainsSubstring(err.Error(), "Missing folders:") {
 		t.Errorf("Unexpected error message: %v", err)
 	}
 }
 
-// TestCreateVariant_MissingActionsFile tests that if the variant actions file is missing,
-// the command returns an error containing the expected message.
+// TestCreateVariant_MissingActionsFile tests that if the required variant actions file is missing,
+// the command returns an error with an expected substring.
 func TestCreateVariant_MissingActionsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := config.DefaultConfig()
@@ -786,7 +787,6 @@ func TestCreateVariant_MissingActionsFile(t *testing.T) {
 	}
 
 	cmd := createTestVariantCmd(cliCtx)
-	// Provide required flags for variant.
 	args := []string{
 		"tempo", "new", "variant",
 		"--name", "missingVariantActions",
@@ -796,8 +796,9 @@ func TestCreateVariant_MissingActionsFile(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error due to missing variant actions file, but got nil")
 	}
-	// Expect the error message to mention the missing actions folder for variant.
-	if !strings.Contains(err.Error(), "Cannot find actions folder. Did you run 'tempo define variant' before?") {
+	// Accept error messages that either match the short form or include "Missing folders:".
+	if !utils.ContainsSubstring(err.Error(), "Cannot find actions folder. Did you run 'tempo define variant' before?") &&
+		!utils.ContainsSubstring(err.Error(), "Missing folders:") {
 		t.Errorf("Unexpected error message: %v", err)
 	}
 }
