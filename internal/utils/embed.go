@@ -12,6 +12,9 @@ import (
 
 var embeddedFiles = templates.EmbeddedFiles
 
+// IsEmbeddedFunc is a function variable to allow testing overrides.
+var IsEmbeddedFunc = IsEmbedded
+
 // IsEmbedded checks if a file or directory is embedded in the embedded filesystem.
 func IsEmbedded(path string) bool {
 	_, err := embeddedFiles.Open(path)
@@ -46,6 +49,9 @@ func ensureDirExists(dir string) error {
 	return nil
 }
 
+// CopyDirFromEmbedFunc is a function variable to allow testing overrides.
+var CopyDirFromEmbedFunc = CopyDirFromEmbed
+
 // CopyDirFromEmbed copies all files and subdirectories from an embedded source to a destination directory.
 func CopyDirFromEmbed(source, destination string) error {
 	// Ensure the destination directory exists
@@ -77,6 +83,9 @@ func CopyDirFromEmbed(source, destination string) error {
 	}
 	return nil
 }
+
+// CopyFileFromEmbedFunc is a function variable to allow testing overrides.
+var CopyFileFromEmbedFunc = CopyFileFromEmbed
 
 // CopyFileFromEmbed copies a single file from an embedded source to a destination file path.
 func CopyFileFromEmbed(source, destination string) error {
