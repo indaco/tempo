@@ -146,7 +146,11 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 	if err := os.Chmod(configFile, 0444); err != nil {
 		t.Fatalf("Failed to set read-only permissions on config file: %v", err)
 	}
-	defer os.Chmod(configFile, 0644) // Ensure cleanup after test
+	defer func() {
+		if err := os.Chmod(configFile, 0644); err != nil {
+			t.Errorf("Failed to restore permissions on %s: %v", configFile, err)
+		}
+	}()
 
 	// Step 3: Run `init` again, expecting a write error
 	args := []string{"tempo", "init", "--base-folder", tempDir}
