@@ -62,7 +62,7 @@ While building a **UI component library in Golang with `templ`**, I faced two ke
 ### The Problem
 
 1. **Scaffolding new components** – Every component followed the same folder structure, but manually copying files and folders was inefficient. I initially used [Plop.js](https://plopjs.com/), but it required setting up a full Node.js project.
-2. **Managing CSS & JS assets** – `templ` provides a great Go/HTML templating experience but lacks built-in tools for handling styles and scripts, making asset management cumbersome. See the ongoing discussion in [#740](https://github.com/a-h/templ/issues/740).
+2. **Managing CSS & JS assets** – `templ` provides a great Go/HTML templating experience but lacks built-in tools for handling styles and scripts, making asset management cumbersome. (_See the ongoing discussion in [#740](https://github.com/a-h/templ/issues/740)._)
 
 ### The Solution
 
@@ -747,7 +747,7 @@ Once your provider is implemented:
 
 ### 📦 Available Function Providers
 
-A pre-built function provider for `Masterminds/sprig` is available for convenience:
+A pre-built function provider for `Masterminds/sprig` is [available](https://github.com/indaco/tempo-provider-sprig.git) for convenience:
 
 ```bash
 tempo register functions --name sprig --url https://github.com/indaco/tempo-provider-sprig.git
