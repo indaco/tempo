@@ -377,6 +377,240 @@ func TestHandleOutputFile(t *testing.T) {
 	}
 }
 
+//
+// CopyAction Tests
+//
+
+func TestCopyAction_Execute_Folder_Success(t *testing.T) {
+	// Create a temporary source directory.
+	srcDir := t.TempDir()
+	// Create a subfolder within srcDir.
+	folderName := "folder1"
+	subDir := filepath.Join(srcDir, folderName)
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatalf("failed to create subfolder: %v", err)
+	}
+	// Create a dummy file inside subDir.
+	dummyFile := filepath.Join(subDir, "dummy.txt")
+	expectedContent := "dummy content"
+	if err := os.WriteFile(dummyFile, []byte(expectedContent), 0644); err != nil {
+		t.Fatalf("failed to create dummy file: %v", err)
+	}
+
+	// Create a temporary destination directory.
+	destBase := t.TempDir()
+	data := &TemplateData{
+		TemplatesDir: destBase,
+	}
+
+	// Set action.Source to the relative folder name.
+	action := Action{
+		Item:   "folder",
+		Source: folderName, // non-empty, so that ReadEmbeddedDir reads "folder1"
+	}
+
+	// Override CopyDirFromEmbedFunc so that it copies from our subfolder.
+	origCopyDirFunc := utils.CopyDirFromEmbedFunc
+	utils.CopyDirFromEmbedFunc = func(src, dest string) error {
+		// Instead of using src, copy from our known subfolder.
+		return copyDir(subDir, dest)
+	}
+	defer func() { utils.CopyDirFromEmbedFunc = origCopyDirFunc }()
+
+	copyAction := &CopyAction{}
+	err := copyAction.Execute(action, data)
+	if err != nil {
+		t.Fatalf("CopyAction.Execute returned error: %v", err)
+	}
+
+	// Destination is computed as: filepath.Join(data.TemplatesDir, action.Source)
+	destDir := filepath.Join(destBase, folderName)
+	copiedFile := filepath.Join(destDir, "dummy.txt")
+	copiedData, err := os.ReadFile(copiedFile)
+	if err != nil {
+		t.Fatalf("failed to read copied file: %v", err)
+	}
+	if string(copiedData) != expectedContent {
+		t.Errorf("expected copied file content %q, got %q", expectedContent, string(copiedData))
+	}
+}
+
+func TestCopyAction_Execute_Default(t *testing.T) {
+	data := createTestTemplateData(t.TempDir())
+	action := Action{
+		Item: "invalidType",
+	}
+	copyAction := &CopyAction{}
+	err := copyAction.Execute(action, data)
+	if err == nil {
+		t.Fatalf("expected error for unknown item type, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown item type") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+//
+// RenderAction Tests
+//
+
+func TestRenderAction_Execute_Default(t *testing.T) {
+	data := createTestTemplateData(t.TempDir())
+	action := Action{
+		Item: "invalidType",
+	}
+	renderAction := &RenderAction{}
+	err := renderAction.Execute(action, data)
+	if err == nil {
+		t.Fatalf("expected error for unknown item type in RenderAction, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown item type") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestRenderAction_Execute_File(t *testing.T) {
+	tempDir := t.TempDir()
+	templatesDir := filepath.Join(tempDir, "templates")
+	if err := os.MkdirAll(templatesDir, 0755); err != nil {
+		t.Fatalf("failed to create templates directory: %v", err)
+	}
+	// Create a template file with a placeholder.
+	templateFile := "test.templ"
+	templatePath := filepath.Join(templatesDir, templateFile)
+	content := "Hello {{.ComponentName}}"
+	if err := os.WriteFile(templatePath, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to create template file: %v", err)
+	}
+
+	// Set action.Path to output file.
+	outputFile := filepath.Join(tempDir, "output.txt")
+	action := Action{
+		Item:         "file",
+		TemplateFile: templateFile,
+		Path:         outputFile,
+	}
+	data := createTestTemplateData(templatesDir)
+	// Execute file rendering.
+	err := renderActionFile(action, data)
+	if err != nil {
+		t.Fatalf("renderActionFile returned error: %v", err)
+	}
+
+	// Verify rendered content.
+	rendered, err := os.ReadFile(outputFile)
+	if err != nil {
+		t.Fatalf("failed to read output file: %v", err)
+	}
+	expected := "Hello World"
+	if string(rendered) != expected {
+		t.Errorf("expected rendered content %q, got %q", expected, string(rendered))
+	}
+}
+
+func TestRenderAction_Execute_Folder(t *testing.T) {
+	tempDir := t.TempDir()
+	// Create a source folder inside tempDir.
+	srcFolderName := "src"
+	srcDir := filepath.Join(tempDir, srcFolderName)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		t.Fatalf("failed to create source folder: %v", err)
+	}
+	// Create a template file inside the source folder.
+	templateFile := "greet.templ"
+	templatePath := filepath.Join(srcDir, templateFile)
+	if err := os.WriteFile(templatePath, []byte("Greetings, {{.ComponentName}}"), 0644); err != nil {
+		t.Fatalf("failed to write template file: %v", err)
+	}
+
+	// Set up action so that action.Source is the relative path "src".
+	action := Action{
+		Item:        "folder",
+		Source:      srcFolderName,
+		Destination: filepath.Join(tempDir, "dest"),
+	}
+	// Set data.TemplatesDir to the base directory (tempDir).
+	data := &TemplateData{
+		TemplatesDir:  tempDir,
+		ComponentName: "World",
+	}
+	err := renderActionFolder(action, data)
+	if err != nil {
+		t.Fatalf("renderActionFolder returned error: %v", err)
+	}
+
+	// Check that the file was rendered in the destination.
+	renderedFile := filepath.Join(tempDir, "dest", templateFile)
+	if _, err := os.Stat(renderedFile); os.IsNotExist(err) {
+		t.Fatalf("expected rendered file %s in destination, but it does not exist", renderedFile)
+	}
+	renderedContent, err := os.ReadFile(renderedFile)
+	if err != nil {
+		t.Fatalf("failed to read rendered file: %v", err)
+	}
+	expectedOutput := "Greetings, World"
+	if string(renderedContent) != expectedOutput {
+		t.Errorf("expected rendered content %q, got %q", expectedOutput, string(renderedContent))
+	}
+}
+
+func TestRenderAction_Execute_Folder_Direct(t *testing.T) {
+	// Create a temporary base directory.
+	tempDir := t.TempDir()
+
+	// Create a source folder inside tempDir with a template file.
+	srcFolderName := "src"
+	srcDir := filepath.Join(tempDir, srcFolderName)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		t.Fatalf("failed to create source folder: %v", err)
+	}
+	templateFile := "greet.templ"
+	templatePath := filepath.Join(srcDir, templateFile)
+	templateContent := "Hello {{.ComponentName}}"
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+		t.Fatalf("failed to write template file: %v", err)
+	}
+
+	// Destination folder where the rendered output will be placed.
+	destDir := filepath.Join(tempDir, "dest")
+
+	// Set up the action with item "folder" and a relative Source.
+	// Since TemplateData.TemplatesDir will be set to tempDir,
+	// the base folder for templates is filepath.Join(tempDir, srcFolderName).
+	action := Action{
+		Item:        "folder",
+		Source:      srcFolderName,
+		Destination: destDir,
+	}
+
+	// Set up template data.
+	data := &TemplateData{
+		TemplatesDir:  tempDir,
+		ComponentName: "World",
+	}
+
+	// Call Execute on RenderAction (which dispatches to renderActionFolder).
+	renderAction := &RenderAction{}
+	err := renderAction.Execute(action, data)
+	if err != nil {
+		t.Fatalf("RenderAction.Execute returned error: %v", err)
+	}
+
+	// Verify that the template file was rendered in the destination.
+	renderedFile := filepath.Join(destDir, templateFile)
+	if _, err := os.Stat(renderedFile); os.IsNotExist(err) {
+		t.Fatalf("Expected rendered file %s in destination, but it does not exist", renderedFile)
+	}
+	renderedContent, err := os.ReadFile(renderedFile)
+	if err != nil {
+		t.Fatalf("failed to read rendered file: %v", err)
+	}
+	expectedOutput := "Hello World"
+	if string(renderedContent) != expectedOutput {
+		t.Errorf("Unexpected rendered content: got %q, want %q", string(renderedContent), expectedOutput)
+	}
+}
+
 // UTILITY FUNCTIONS
 
 func fileExists(path string) bool {
@@ -386,4 +620,34 @@ func fileExists(path string) bool {
 
 func getFileContent(path string) ([]byte, error) {
 	return os.ReadFile(path)
+}
+
+// createTestTemplateData returns minimal TemplateData for testing.
+func createTestTemplateData(templatesDir string) *TemplateData {
+	return &TemplateData{
+		TemplatesDir:  templatesDir,
+		ComponentName: "World", // so that {{.ComponentName}} becomes "World"
+	}
+}
+
+// copyDir is a simple helper that recursively copies a directory from src to dest.
+func copyDir(src, dest string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		destPath := filepath.Join(dest, rel)
+		if info.IsDir() {
+			return os.MkdirAll(destPath, info.Mode())
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(destPath, data, info.Mode())
+	})
 }
