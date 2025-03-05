@@ -108,7 +108,7 @@ func TestFileExists(t *testing.T) {
 		}
 
 		// Check if the file exists
-		exists, err := FileExists(testFile)
+		exists, err := FileExistsFunc(testFile)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
@@ -122,7 +122,7 @@ func TestFileExists(t *testing.T) {
 		nonExistentFile := filepath.Join(tempDir, "non_existent.txt")
 
 		// Check for a non-existent file
-		exists, err := FileExists(nonExistentFile)
+		exists, err := FileExistsFunc(nonExistentFile)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
@@ -135,7 +135,7 @@ func TestFileExists(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// Check if the directory is detected as a file
-		exists, err := FileExists(tempDir)
+		exists, err := FileExistsFunc(tempDir)
 		if err == nil {
 			t.Errorf("Expected error for directory, but got none")
 		}
@@ -151,7 +151,7 @@ func TestFileExists(t *testing.T) {
 
 	t.Run("Empty path", func(t *testing.T) {
 		// Check for an empty path
-		exists, err := FileExists("")
+		exists, err := FileExistsFunc("")
 		if err == nil {
 			t.Errorf("Expected error for empty path, but got none")
 		}
