@@ -32,7 +32,7 @@ a11y-results
 .tempo-lastrun
 
 # tests
-coverage.out
+profile.cov
 
 #devbox
 .devbox
