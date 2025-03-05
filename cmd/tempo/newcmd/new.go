@@ -117,6 +117,8 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 
 			if data.DryRun {
 				cmdCtx.Logger.Info("Dry Run Mode: No changes will be made.\n")
+				cmdCtx.Logger.Reset()
+				return nil
 			}
 
 			// Step 2: Check if "define component" command has been executed
@@ -148,17 +150,16 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 			}
 
 			// Step 5: Log success and asset information
-			if !data.DryRun {
-				componentPath := filepath.Join(data.GoPackage, data.ComponentName)
-				assetPath := filepath.Join(data.AssetsDir, data.ComponentName)
+			componentPath := filepath.Join(data.GoPackage, data.ComponentName)
+			assetPath := filepath.Join(data.AssetsDir, data.ComponentName)
 
-				cmdCtx.Logger.Success("Templ component files have been created").
-					WithAttrs(
-						"component", data.ComponentName,
-						"component_path", componentPath,
-						"asset_path", assetPath,
-					)
-			}
+			cmdCtx.Logger.Success("Templ component files have been created").
+				WithAttrs(
+					"component", data.ComponentName,
+					"component_path", componentPath,
+					"asset_path", assetPath,
+				)
+
 			cmdCtx.Logger.Reset()
 
 			return nil
