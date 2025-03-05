@@ -123,7 +123,7 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 
 			// Step 2: Check if "define component" command has been executed
 			pathToComponentActionsFile := filepath.Join(data.ActionsDir, "component.json")
-			exists, err := utils.FileExists(pathToComponentActionsFile)
+			exists, err := utils.FileExistsFunc(pathToComponentActionsFile)
 			if err != nil {
 				return err
 			}
@@ -192,7 +192,7 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 
 			// Step 2: Check if "define variant" command has been executed
 			pathToVariantActionsFile := filepath.Join(data.ActionsDir, "variant.json")
-			exists, err := utils.FileExists(pathToVariantActionsFile)
+			exists, err := utils.FileExistsFunc(pathToVariantActionsFile)
 			if err != nil {
 				return err
 			}
@@ -216,7 +216,7 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 			// Step 4: Check if the component variant already exists with the same name
 			// Display a warning and stop if `--force` is not set
 			outputPath := filepath.Join(data.GoPackage, data.ComponentName, "css", "variants", data.VariantName+".templ")
-			if exists, err := utils.FileExists(outputPath); err != nil {
+			if exists, err := utils.FileExistsFunc(outputPath); err != nil {
 				return err
 			} else if exists {
 				handleEntityExistence("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
@@ -427,7 +427,7 @@ func retrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, c
 
 	// Step 2: Check if the action file exists
 	if resolvedPath != "" {
-		exists, err := utils.FileExists(resolvedPath)
+		exists, err := utils.FileExistsFunc(resolvedPath)
 		if err != nil {
 			return nil, err
 		} else if exists {
@@ -454,7 +454,7 @@ func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
 	// Step 1: Resolve the action file path relative to the actions folder, if provided
 	if ActionsDir != "" {
 		resolvedPath := filepath.Join(ActionsDir, actionFileFlag)
-		exists, err := utils.FileExists(resolvedPath)
+		exists, err := utils.FileExistsFunc(resolvedPath)
 		if err != nil {
 			return "", err
 		} else if exists {
@@ -464,7 +464,7 @@ func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
 
 	// Step 2: Check if the provided actionFileFlag is a valid full path
 	// Check the actionFileFlag as an absolute path
-	exists, err := utils.FileExists(actionFileFlag)
+	exists, err := utils.FileExistsFunc(actionFileFlag)
 	if err != nil {
 		return "", errors.Wrap("error checking action file path", err, actionFileFlag)
 	}

@@ -3,6 +3,7 @@ package initcmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -84,11 +85,17 @@ func getFlags() []cli.Flag {
 //
 // - configuration file does not already exist.
 func validateInitPrerequisites(configFilePath string) error {
-	exists, err := utils.FileExists(configFilePath)
+	exists, err := utils.FileExistsFunc(configFilePath)
 	if err != nil {
 		return errors.Wrap("Error checking configuration file", err)
 	}
 	if exists {
+		// Check if the file is writable
+		file, err := os.OpenFile(configFilePath, os.O_WRONLY, 0644)
+		if err != nil {
+			return errors.Wrap("Failed to write the configuration file", err)
+		}
+		file.Close()
 		return errors.Wrap("Configuration file already exists", configFilePath)
 	}
 	return nil

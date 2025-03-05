@@ -48,6 +48,9 @@ func FileOrDirExists(path string) (exists bool, isDir bool, err error) {
 	return true, info.IsDir(), nil
 }
 
+// FileExistsFunc is a function variable to allow testing overrides.
+var FileExistsFunc = FileExists
+
 // FileExists checks if a file exists at the specified path.
 // It wraps FileOrDirExists and ensures the path points to a file, not a directory.
 func FileExists(path string) (bool, error) {

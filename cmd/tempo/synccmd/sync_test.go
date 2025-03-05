@@ -190,7 +190,7 @@ func TestSyncWorkerPool_BasicExecution(t *testing.T) {
 	// Validate that output files were processed
 	for _, file := range testFiles {
 		outputFile := filepath.Join(outputDir, file+".templ")
-		exists, _ := utils.FileExists(outputFile)
+		exists, _ := utils.FileExistsFunc(outputFile)
 		if !exists {
 			t.Errorf("Expected output file %s to exist", outputFile)
 		}
