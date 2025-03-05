@@ -25,7 +25,7 @@ jobs:
         run: go mod verify
 
       - name: Run go test
-        run: go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'testutils|internal/templates') -covermode=atomic -coverprofile="profile.cov"
+        run: go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=profile.cov
 
       - name: Send Coverage
         uses: shogo82148/actions-goveralls@v1

@@ -23,23 +23,23 @@ tasks:
     desc: Run all tests and generate coverage report.
     silent: false
     cmds:
-      - go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -coverprofile=coverage.out
+      - go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=profile.cov
       - task: test/view-total-coverage
 
   test/view-total-coverage:
-    desc: Display total test coverage from coverage.out
+    desc: Display total test coverage from profile.cov
     silent: true
     internal: true
     cmds:
       - echo ""
       - echo "Total Coverage:"
-      - go tool cover -func=coverage.out | grep total | awk -F '[[:space:]]+' '{print $NF}'
+      - go tool cover -func=profile.cov | grep total | awk -F '[[:space:]]+' '{print $NF}'
 
   test/view-coverage:
     desc: View the HTML coverage report.
     internal: true
     cmds:
-      - go tool cover -html=coverage.out
+      - go tool cover -html=profile.cov
       - echo "Coverage report displayed in your default browser."
 
   test/coverage:
