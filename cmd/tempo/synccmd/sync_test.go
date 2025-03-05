@@ -3,6 +3,7 @@ package synccmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -392,10 +393,6 @@ func TestQueueFilesForProcessing(t *testing.T) {
 	verifyFileProcessing(t, wpOpts, lastRunTimestamp, len(processedJobs)+len(skippedFiles), 0)
 }
 
-/* ------------------------------------------------------------------------- */
-/* Testing Helpers                                                           */
-/* ------------------------------------------------------------------------- */
-
 func TestValidateSyncPrerequisites(t *testing.T) {
 	tempDir := t.TempDir() // Temporary directory for test isolation
 
@@ -580,8 +577,90 @@ func TestResolveSyncFlags(t *testing.T) {
 	}
 }
 
+func TestQueueFilesForProcessing_NonDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+	// Create a file instead of a directory to use as InputDir.
+	filePath := filepath.Join(tempDir, "not_a_dir")
+	if err := os.WriteFile(filePath, []byte("content"), 0644); err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	opts := worker.WorkerPoolOptions{
+		InputDir:     filePath, // This is a file, not a directory.
+		OutputDir:    t.TempDir(),
+		IsProduction: false,
+	}
+	manager := worker.NewWorkerPoolManager(opts)
+	err := queueFilesForProcessing(opts, manager, 0)
+	// Expect no error.
+	if err != nil {
+		t.Errorf("expected nil error when inputDir is not a directory, got: %v", err)
+	}
+
+	// Close the job channel to drain it.
+	close(manager.JobChan)
+	var jobs []worker.Job
+	for job := range manager.JobChan {
+		jobs = append(jobs, job)
+	}
+	if len(jobs) != 0 {
+		t.Errorf("expected 0 jobs enqueued when inputDir is a file, got %d", len(jobs))
+	}
+}
+
+func TestEnqueueJob(t *testing.T) {
+	manager := &worker.WorkerPoolManager{
+		JobChan: make(chan worker.Job, 1),
+	}
+	// Should succeed initially.
+	ok := enqueueJob(manager, "input", "output")
+	if !ok {
+		t.Errorf("expected enqueueJob to succeed, but it failed")
+	}
+	// Now the channel is full, so enqueueJob should return false.
+	ok = enqueueJob(manager, "input", "output")
+	if ok {
+		t.Errorf("expected enqueueJob to fail when channel is full, but it succeeded")
+	}
+}
+
+func TestShouldExcludeDir(t *testing.T) {
+	excludeDir := "/tmp/exclude"
+	absPath := "/tmp/exclude/subdir"
+	if !shouldExcludeDir(excludeDir, absPath) {
+		t.Errorf("expected path %q to be excluded", absPath)
+	}
+	absPath = "/tmp/include/subdir"
+	if shouldExcludeDir(excludeDir, absPath) {
+		t.Errorf("expected path %q not to be excluded", absPath)
+	}
+}
+
+func TestHandleError(t *testing.T) {
+	manager := worker.NewWorkerPoolManager(worker.WorkerPoolOptions{
+		InputDir:     "dummy",
+		OutputDir:    "dummy",
+		IsProduction: false,
+	})
+	manager.ErrorsChan = make(chan worker.ProcessingError, 1)
+	fakeErr := errors.New("test error")
+	handleError(manager, "some/path", fakeErr)
+	close(manager.ErrorsChan)
+
+	count := 0
+	for pe := range manager.ErrorsChan {
+		count++
+		if !utils.ContainsSubstring(pe.Message, "test error") {
+			t.Errorf("expected error message to contain 'test error', got: %s", pe.Message)
+		}
+	}
+	if count == 0 {
+		t.Errorf("expected at least one error from handleError, got 0")
+	}
+}
+
 /* ------------------------------------------------------------------------- */
-/* Helper Functions                                                          */
+/* Testing Helpers                                                           */
 /* ------------------------------------------------------------------------- */
 
 // setupTestFiles creates mock input files
