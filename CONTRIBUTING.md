@@ -78,4 +78,5 @@ default:             # Run clean and build tasks
 install:             # Install the binary using Go install
 test:                # Run all tests and generate coverage report
 test/coverage:       # Run go tests and use go tool cover
+test/force:          # Clean go tests cache
 ```
