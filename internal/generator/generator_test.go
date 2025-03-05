@@ -2,9 +2,11 @@ package generator
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 // MockActionHandler is a mock implementation of ActionHandler for testing.
@@ -123,5 +125,83 @@ func TestProcessActions(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestHandleDryRun_File tests the "file" branch of handleDryRun using testutils.MockLogger.
+func TestHandleDryRun_File(t *testing.T) {
+	action := Action{
+		Item:         "file",
+		Path:         "output-{{.ComponentName}}.txt",
+		TemplateFile: "template-{{.ComponentName}}.txt",
+	}
+	data := &TemplateData{
+		ComponentName: "World",
+	}
+	mockLog := &testutils.MockLogger{}
+
+	handleDryRun(mockLog, action, data)
+
+	if len(mockLog.Logs) == 0 {
+		t.Fatalf("Expected an info message, got none")
+	}
+	msg := mockLog.Logs[0]
+	if !strings.Contains(msg, "output-World.txt") {
+		t.Errorf("Expected resolved output path 'output-World.txt' in message, got: %s", msg)
+	}
+	if !strings.Contains(msg, "template-World.txt") {
+		t.Errorf("Expected resolved template 'template-World.txt' in message, got: %s", msg)
+	}
+	if !strings.Contains(msg, "Dry Run: Would execute action:") {
+		t.Errorf("Expected message to mention dry-run action, got: %s", msg)
+	}
+}
+
+// TestHandleDryRun_Folder tests the "folder" branch of handleDryRun using testutils.MockLogger.
+func TestHandleDryRun_Folder(t *testing.T) {
+	action := Action{
+		Item:        "folder",
+		Source:      "base-{{.ComponentName}}",
+		Destination: "dest-{{.ComponentName}}",
+	}
+	data := &TemplateData{
+		ComponentName: "World",
+	}
+	mockLog := &testutils.MockLogger{}
+
+	handleDryRun(mockLog, action, data)
+
+	if len(mockLog.Logs) == 0 {
+		t.Fatalf("Expected an info message, got none")
+	}
+	msg := mockLog.Logs[0]
+	// Rather than checking an exact formatted string, we verify that the resolved values appear.
+	if !strings.Contains(msg, "base-World") {
+		t.Errorf("Expected output to contain 'base-World', got: %s", msg)
+	}
+	if !strings.Contains(msg, "dest-World") {
+		t.Errorf("Expected output to contain 'dest-World', got: %s", msg)
+	}
+	if !strings.Contains(msg, "Dry Run: Would execute action") {
+		t.Errorf("Expected message to mention dry-run action, got: %s", msg)
+	}
+}
+
+// TestHandleDryRun_Unknown tests the default branch of handleDryRun with an unknown action type.
+func TestHandleDryRun_Unknown(t *testing.T) {
+	action := Action{
+		Item: "unknown",
+	}
+	data := &TemplateData{}
+	mockLog := &testutils.MockLogger{}
+
+	handleDryRun(mockLog, action, data)
+
+	if len(mockLog.Logs) == 0 {
+		t.Fatalf("Expected a warning message, got none")
+	}
+	msg := mockLog.Logs[0]
+	if !strings.Contains(msg, "Dry Run: Unknown action type") {
+		t.Errorf("Expected warning message to mention unknown action type, got: %s", msg)
 	}
 }
