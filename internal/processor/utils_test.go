@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/indaco/tempo/internal/processor/transformers"
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestProcessWithTransformation_Success(t *testing.T) {

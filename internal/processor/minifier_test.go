@@ -8,7 +8,7 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/indaco/tempo/internal/processor/transformers"
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestMinifierProcessor_Process(t *testing.T) {

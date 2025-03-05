@@ -59,7 +59,7 @@ clean: ## Clean the build directory and Go cache
 .PHONY: test
 test: ## Run all tests and generate coverage report.
 	@echo "$(color_bold_cyan)* Run all tests and generate coverage report.$(color_reset)"
-	@$(GO) test -count=1 -timeout 30s $(shell go list ./... | grep -Ev 'testutils|internal/templates') -coverprofile=coverage.out
+	@$(GO) test -count=1 -timeout 30s $(shell go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -coverprofile=coverage.out
 	@echo "$(color_bold_cyan)* Total Coverage$(color_reset)"
 	@$(GO) tool cover -func=coverage.out | grep total | awk '{print $$3}'
 

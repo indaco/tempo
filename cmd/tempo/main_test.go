@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/utils"
-	"github.com/indaco/tempo/testutils"
 )
 
 // TestRunApp_Version simply verifies that running with "--version" returns the version.
@@ -86,7 +86,7 @@ func TestRunApp_Help(t *testing.T) {
 	}
 	os.Stdout = w
 
-	output, err := testutils.CaptureStdout(func() {
+	output, err := testhelpers.CaptureStdout(func() {
 		if err := runApp(args); err != nil {
 			t.Fatalf("runApp returned error: %v", err)
 		}
@@ -94,7 +94,7 @@ func TestRunApp_Help(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to capture output: %v", err)
 	}
-	testutils.ValidateCLIOutput(t, output, []string{"USAGE:", "COMMANDS:"})
+	testhelpers.ValidateCLIOutput(t, output, []string{"USAGE:", "COMMANDS:"})
 }
 
 // TestRunApp_InitAutoGen verifies that when no config file exists, the "init" command auto-generates one.

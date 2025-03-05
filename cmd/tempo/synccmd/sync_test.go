@@ -13,9 +13,10 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/indaco/tempo/internal/worker"
-	"github.com/indaco/tempo/testutils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -113,7 +114,7 @@ func TestSyncCommand(t *testing.T) {
 				SetupSyncCommand(cliCtx),
 			}
 
-			output, err := testutils.CaptureStdout(func() {
+			output, err := testhelpers.CaptureStdout(func() {
 				err := app.Run(context.Background(), tt.args)
 				if err != nil {
 					t.Fatalf("Unexpected error: %v", err)
@@ -124,7 +125,7 @@ func TestSyncCommand(t *testing.T) {
 			}
 
 			// Validate CLI output
-			testutils.ValidateCLIOutput(t, output, tt.expectedOutput)
+			testhelpers.ValidateCLIOutput(t, output, tt.expectedOutput)
 
 			// Validate expected output files
 			expectedOutputFiles := []string{}
@@ -233,7 +234,7 @@ func TestSyncWorkerPool_SummaryAsJSON(t *testing.T) {
 	}
 
 	// Capture JSON output
-	output, err := testutils.CaptureStdout(func() {
+	output, err := testhelpers.CaptureStdout(func() {
 		_ = runWorkerPool(cmdCtx, opts, &worker.SummaryOptions{Format: "json"})
 	})
 	if err != nil {
@@ -339,7 +340,7 @@ func TestWorkerErrorHandling(t *testing.T) {
 	close(errorsChan)
 
 	// Capture output using testutils
-	output, err := testutils.CaptureStdout(func() {
+	output, err := testhelpers.CaptureStdout(func() {
 		collectedErrors := worker.CollectErrors(errorsChan)
 		worker.PrintErrors(collectedErrors)
 	})
@@ -356,7 +357,7 @@ func TestWorkerErrorHandling(t *testing.T) {
 	}
 
 	// Validate output
-	testutils.ValidateCLIOutput(t, output, expectedMessages)
+	testhelpers.ValidateCLIOutput(t, output, expectedMessages)
 }
 
 /* ------------------------------------------------------------------------- */

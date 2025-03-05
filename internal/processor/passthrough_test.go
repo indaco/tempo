@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestPassthroughProcessor(t *testing.T) {

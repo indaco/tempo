@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/evanw/esbuild/pkg/api"
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestEsbuildTransformer_JSMinification(t *testing.T) {

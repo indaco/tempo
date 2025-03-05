@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testhelpers"
 )
 
 func TestLogHandler(t *testing.T) {
 	loggerInstance := NewDefaultLogger()
 	handler := NewLogHandler(loggerInstance)
-	logger := slog.New(handler)
+	slogLogger := slog.New(handler)
 
 	tests := []struct {
 		name           string
@@ -22,7 +22,7 @@ func TestLogHandler(t *testing.T) {
 		{
 			name: "Info log without attributes",
 			logFunc: func() {
-				logger.Info("Application started")
+				slogLogger.Info("Application started")
 			},
 			expectedOutput: `ℹ Application started`,
 			indent:         false,
@@ -30,7 +30,7 @@ func TestLogHandler(t *testing.T) {
 		{
 			name: "Warning log with attributes",
 			logFunc: func() {
-				logger.Warn("Low disk space",
+				slogLogger.Warn("Low disk space",
 					slog.String("disk", "C:"),
 					slog.Int("available_gb", 5),
 				)
@@ -43,7 +43,7 @@ func TestLogHandler(t *testing.T) {
 		{
 			name: "Error log with attributes",
 			logFunc: func() {
-				logger.Error("Unexpected crash",
+				slogLogger.Error("Unexpected crash",
 					slog.String("module", "auth"),
 					slog.String("reason", "panic"),
 				)
@@ -56,21 +56,21 @@ func TestLogHandler(t *testing.T) {
 		{
 			name: "Default log level (debug equivalent)",
 			logFunc: func() {
-				logger.Debug("Debugging log")
+				slogLogger.Debug("Debugging log")
 			},
-			expectedOutput: `Debugging log`, // No icon for default level
+			expectedOutput: `Debugging log`,
 			indent:         false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := testutils.CaptureStdout(tt.logFunc)
+			output, err := testhelpers.CaptureStdout(tt.logFunc)
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)
 			}
 
-			// Trim spaces for cleaner comparison
+			// Trim spaces for comparison.
 			output = strings.TrimSpace(output)
 			expected := strings.TrimSpace(tt.expectedOutput)
 
@@ -84,7 +84,7 @@ func TestLogHandler(t *testing.T) {
 func TestLogHandlerWithAttrs(t *testing.T) {
 	loggerInstance := NewDefaultLogger()
 	handler := NewLogHandler(loggerInstance)
-	logger := slog.New(handler)
+	slogLogger := slog.New(handler)
 
 	tests := []struct {
 		name           string
@@ -95,7 +95,7 @@ func TestLogHandlerWithAttrs(t *testing.T) {
 		{
 			name: "Log message with attributes",
 			logFunc: func() {
-				logger.Info("Starting application",
+				slogLogger.Info("Starting application",
 					slog.String("version", "1.0.0"),
 					slog.Int("port", 8080),
 				)
@@ -109,13 +109,11 @@ func TestLogHandlerWithAttrs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			output, err := testutils.CaptureStdout(tt.logFunc)
+			output, err := testhelpers.CaptureStdout(tt.logFunc)
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)
 			}
 
-			// Trim spaces for cleaner comparison
 			output = strings.TrimSpace(output)
 			expected := strings.TrimSpace(tt.expectedOutput)
 
@@ -130,12 +128,12 @@ func TestLogHandlerWithGroup(t *testing.T) {
 	loggerInstance := NewDefaultLogger()
 	handler := NewLogHandler(loggerInstance)
 
-	// Use WithGroup to create a grouped handler
+	// Create a grouped handler.
 	groupedHandler := handler.WithGroup("database")
-	logger := slog.New(groupedHandler)
+	slogLogger := slog.New(groupedHandler)
 
-	output, err := testutils.CaptureStdout(func() {
-		logger.Warn("Connection slow",
+	output, err := testhelpers.CaptureStdout(func() {
+		slogLogger.Warn("Connection slow",
 			slog.String("latency", "500ms"),
 		)
 	})
@@ -158,19 +156,16 @@ func TestGroupedLogHandlerWithAttrs(t *testing.T) {
 	loggerInstance := NewDefaultLogger()
 	handler := NewLogHandler(loggerInstance)
 
-	// Create a grouped handler
+	// Create a grouped handler and add additional attributes.
 	groupedHandler := handler.WithGroup("database")
-
-	// Create a new handler with additional attributes
 	newHandler := groupedHandler.WithAttrs([]slog.Attr{
 		slog.String("query", "SELECT * FROM users"),
 		slog.Int("execution_time", 120),
 	})
+	slogLogger := slog.New(newHandler)
 
-	logger := slog.New(newHandler)
-
-	output, err := testutils.CaptureStdout(func() {
-		logger.Info("Query executed")
+	output, err := testhelpers.CaptureStdout(func() {
+		slogLogger.Info("Query executed")
 	})
 	if err != nil {
 		t.Fatalf("Failed to capture stdout: %v", err)
@@ -192,12 +187,12 @@ func TestGroupedLogHandlerWithNestedGroups(t *testing.T) {
 	loggerInstance := NewDefaultLogger()
 	handler := NewLogHandler(loggerInstance)
 
-	// Create a nested grouped handler
+	// Create a nested grouped handler.
 	groupedHandler := handler.WithGroup("database").WithGroup("connection")
-	logger := slog.New(groupedHandler)
+	slogLogger := slog.New(groupedHandler)
 
-	output, err := testutils.CaptureStdout(func() {
-		logger.Warn("Slow response",
+	output, err := testhelpers.CaptureStdout(func() {
+		slogLogger.Warn("Slow response",
 			slog.String("latency", "500ms"),
 		)
 	})
