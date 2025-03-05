@@ -1029,7 +1029,11 @@ func TestNewComponent_UnwritableDirectory(t *testing.T) {
 	if err := os.Chmod(componentDir, 0000); err != nil {
 		t.Fatalf("Failed to make directory unwritable: %v", err)
 	}
-	defer os.Chmod(componentDir, 0755) // Ensure cleanup after test
+	defer func() {
+		if err := os.Chmod(componentDir, 0755); err != nil {
+			t.Errorf("Failed to restore permissions on %s: %v", componentDir, err)
+		}
+	}()
 
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
