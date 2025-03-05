@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testhelpers"
 )
 
 func TestLogger(t *testing.T) {
@@ -62,7 +62,7 @@ func TestLogger(t *testing.T) {
 			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
 				logger.WithIndent(true)
 				entry := logger.Success(msg, args...)
-				logger.WithIndent(false) // Reset after the test
+				logger.WithIndent(false) // Reset after the test.
 				return entry
 			},
 			message:  "Indented operation completed",
@@ -80,9 +80,9 @@ func TestLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := NewDefaultLogger() // Create a new logger instance per test
+			logger := NewDefaultLogger() // Create a new logger instance per test.
 
-			output, err := testutils.CaptureStdout(func() {
+			output, err := testhelpers.CaptureStdout(func() {
 				tt.logFunc(logger, tt.message, tt.args...)
 			})
 			if err != nil {
@@ -147,7 +147,7 @@ func TestLoggerWithTimestamp(t *testing.T) {
 	logger := NewDefaultLogger()
 	logger.WithTimestamp(true)
 
-	output, err := testutils.CaptureStdout(func() {
+	output, err := testhelpers.CaptureStdout(func() {
 		logger.Info("Timestamped log")
 	})
 	if err != nil {
@@ -158,6 +158,7 @@ func TestLoggerWithTimestamp(t *testing.T) {
 		t.Errorf("expected output to contain the log message, got: %q", output)
 	}
 
+	// Check for a partial timestamp (e.g., the current date in "2006-01-02" format).
 	if !strings.Contains(output, time.Now().Format("2006-01-02")) {
 		t.Errorf("expected output to contain the current date, got: %q", output)
 	}
@@ -196,7 +197,7 @@ func TestLogAttrsWithIndent(t *testing.T) {
 			logger.WithTimestamp(false)
 			logger.WithIndent(tt.indentEnabled)
 
-			output, err := testutils.CaptureStdout(func() {
+			output, err := testhelpers.CaptureStdout(func() {
 				logger.Success("Testing attributes").WithAttrs(tt.attrs...)
 			})
 			if err != nil {

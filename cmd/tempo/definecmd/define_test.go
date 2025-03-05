@@ -11,7 +11,8 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -75,7 +76,7 @@ func TestDefineCommand_Component(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testutils.ValidateCLIOutput(t, output, []string{
+		testhelpers.ValidateCLIOutput(t, output, []string{
 			"✔ Templates for the component and assets (CSS and JS) have been created",
 			"✔ Tempo action file for 'component' has been created",
 		})
@@ -176,7 +177,7 @@ func TestDefineCommand_Variant(t *testing.T) {
 	app.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		_, err := testutils.CaptureStdout(func() {
+		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "define", "component"}
 			err := app.Run(context.Background(), args)
 			// Validate error expectation
@@ -199,7 +200,7 @@ func TestDefineCommand_Variant(t *testing.T) {
 	})
 
 	t.Run("Variant normal run", func(t *testing.T) {
-		_, err := testutils.CaptureStdout(func() {
+		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "define", "variant"}
 			err := app.Run(context.Background(), args)
 			// Validate error expectation
@@ -260,7 +261,7 @@ func TestDefineCommand_Component_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testutils.ValidateCLIOutput(t, output, []string{
+		testhelpers.ValidateCLIOutput(t, output, []string{
 			"✔ Templates for the component and assets (CSS and JS) have been created",
 			"✔ Tempo action file for 'component' has been created",
 		})
@@ -280,7 +281,7 @@ func TestDefineCommand_Component_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testutils.ValidateCLIOutput(t, output, []string{
+		testhelpers.ValidateCLIOutput(t, output, []string{
 			"⚠ Templates for 'component' already exist.",
 			"  Use '--force' to overwrite them. Any changes will be lost.",
 			"  - path: " + cfg.Paths.TemplatesDir + "/component",
@@ -327,7 +328,7 @@ func TestDefineCommand_Variant_AlreadyExists(t *testing.T) {
 	app.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		_, err := testutils.CaptureStdout(func() {
+		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "define", "component"}
 			err := app.Run(context.Background(), args)
 			// Validate error expectation
@@ -350,7 +351,7 @@ func TestDefineCommand_Variant_AlreadyExists(t *testing.T) {
 	})
 
 	t.Run("Variant normal run", func(t *testing.T) {
-		_, err := testutils.CaptureStdout(func() {
+		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "define", "variant"}
 			err := app.Run(context.Background(), args)
 			// Validate error expectation
@@ -377,7 +378,7 @@ func TestDefineCommand_Variant_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testutils.ValidateCLIOutput(t, output, []string{
+		testhelpers.ValidateCLIOutput(t, output, []string{
 			"⚠ Templates for 'variant' already exist.",
 			"  Use '--force' to overwrite them. Any changes will be lost.",
 			"  - path: " + cfg.Paths.TemplatesDir + "/component-variant",
@@ -513,7 +514,7 @@ func TestHandleEntityExistence(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Capture logger output
-			output, err := testutils.CaptureStdout(func() {
+			output, err := testhelpers.CaptureStdout(func() {
 				log := logger.NewDefaultLogger()
 				handleEntityExistence(tt.entityType, tt.outputPath, tt.force, log)
 			})
@@ -523,7 +524,7 @@ func TestHandleEntityExistence(t *testing.T) {
 			}
 
 			// Validate output
-			testutils.ValidateCLIOutput(t, output, tt.expectedMsg)
+			testhelpers.ValidateCLIOutput(t, output, tt.expectedMsg)
 		})
 	}
 }

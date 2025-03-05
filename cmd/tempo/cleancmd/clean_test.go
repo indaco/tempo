@@ -9,7 +9,7 @@ import (
 
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/testutils"
+	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/urfave/cli/v3"
 )
 
@@ -75,7 +75,7 @@ func TestCleanCommand(t *testing.T) {
 			}
 
 			// Capture CLI output
-			output, err := testutils.CaptureStdout(func() {
+			output, err := testhelpers.CaptureStdout(func() {
 				app := &cli.Command{}
 				app.Commands = []*cli.Command{
 					SetupCleanCommand(cliCtx),
@@ -93,7 +93,7 @@ func TestCleanCommand(t *testing.T) {
 
 			// Validate CLI output
 			if !tt.expectError {
-				testutils.ValidateCLIOutput(t, output, tt.expectedLogs)
+				testhelpers.ValidateCLIOutput(t, output, tt.expectedLogs)
 			}
 
 			// Validate file removal
