@@ -59,7 +59,6 @@ clean: ## Clean the build directory and Go cache
 .PHONY: test
 test: ## Run all tests and generate coverage report.
 	@echo "$(color_bold_cyan)* Run all tests and generate coverage report.$(color_reset)"
-	@$(GO) clean -testcache
 	@$(GO) test -count=1 -timeout 30s $(shell go list ./... | grep -Ev 'testutils|internal/templates') -coverprofile=coverage.out
 	@echo "$(color_bold_cyan)* Total Coverage$(color_reset)"
 	@$(GO) tool cover -func=coverage.out | grep total | awk '{print $$3}'
@@ -67,8 +66,14 @@ test: ## Run all tests and generate coverage report.
 .PHONY: test/coverage
 test/coverage: ## Run go tests and use go tool cover.
 	@echo "$(color_bold_cyan)* Run go tests and use go tool cover$(color_reset)"
-	@$(MAKE) test
+	@$(MAKE) test/force
 	@$(GO) tool cover -html=coverage.out
+
+.PHONY: test/force
+test/force: ## Clean go tests cache.
+	@echo "$(color_bold_cyan)* Clean go tests cache.$(color_reset)"
+	@$(GO) clean -testcache
+	@$(MAKE) test
 
 .PHONY: build
 build: ## Build the binary with development metadata
@@ -78,7 +83,7 @@ build: ## Build the binary with development metadata
 
 .PHONY: install
 install: ## Install the binary using Go install
-	@$(MAKE) test
+	@$(MAKE) test/force
 	@echo "$(color_bold_cyan)* Install the binary using Go install$(color_reset)"
 	@cd $(CMD_DIR) && $(GO) install .
 

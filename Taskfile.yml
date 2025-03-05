@@ -23,7 +23,6 @@ tasks:
     desc: Run all tests and generate coverage report.
     silent: false
     cmds:
-      - go clean -testcache
       - go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'testutils|internal/templates') -coverprofile=coverage.out
       - task: test/view-total-coverage
 
@@ -47,9 +46,16 @@ tasks:
     desc: Run go tests and use go tool cover.
     silent: false
     deps:
-      - test
+      - test/force
     cmds:
       - task: test/view-coverage
+
+  test/force:
+    desc: Clean go tests cache.
+    silent: false
+    cmds:
+      - go clean -testcache
+      - task: test
 
   build:
     desc: "Building the binary..."
@@ -62,6 +68,6 @@ tasks:
     desc: "Install the binary using Go install"
     silent: false
     deps:
-      - test
+      - test/force
     cmds:
       - cd {{.CMD_DIR}} && go install .
