@@ -114,10 +114,10 @@ func (a *CopyAction) Execute(action Action, data *TemplateData) error {
 	switch action.Item {
 	case "file":
 		destination := filepath.Join(data.TemplatesDir, action.TemplateFile)
-		return utils.CopyFileFromEmbed(action.TemplateFile, destination)
+		return utils.CopyFileFromEmbedFunc(action.TemplateFile, destination)
 	case "folder":
 		destinationPath := filepath.Join(data.TemplatesDir, action.Source)
-		return utils.CopyDirFromEmbed(action.Source, destinationPath)
+		return utils.CopyDirFromEmbedFunc(action.Source, destinationPath)
 	default:
 		return errors.Wrap("unknown item type: %s", action.Item)
 	}
@@ -242,7 +242,7 @@ func readFile(path string) ([]byte, error) {
 
 // Helper to read directories from embedded or disk.
 func readDir(path string) ([]os.DirEntry, error) {
-	if utils.IsEmbedded(path) {
+	if utils.IsEmbeddedFunc(path) {
 		return utils.ReadEmbeddedDir(path)
 	}
 	return os.ReadDir(path) // Fallback to normal directory reading

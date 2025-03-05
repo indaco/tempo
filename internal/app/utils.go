@@ -11,7 +11,7 @@ import (
 // IsTempoProject checks if any of the prioritized Tempo config files exist.
 func IsTempoProject(pathToFile string) error {
 	for _, file := range config.TempoConfigFiles {
-		exists, isDir, err := utils.FileOrDirExists(filepath.Join(pathToFile, file))
+		exists, isDir, err := utils.FileOrDirExistsFunc(filepath.Join(pathToFile, file))
 		if err != nil {
 			return errors.Wrap("error checking config file '%s'", err, file)
 		}
