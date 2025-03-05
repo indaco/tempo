@@ -878,3 +878,236 @@ func TestNewVariant_AlreadyExists_NoForce(t *testing.T) {
 		t.Errorf("Expected variant file to remain unchanged when --force is not provided")
 	}
 }
+
+func TestNewComponent_MissingNameFlag(t *testing.T) {
+	tempDir := t.TempDir()
+	cfg := setupConfig(tempDir, nil)
+
+	// Ensure required folders exist to pass validation
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	cmd := createTestComponentCmd(cliCtx)
+	args := []string{"tempo", "new", "component"} // Missing --name flag
+
+	err := cmd.Run(context.Background(), args)
+	if err == nil {
+		t.Fatalf("Expected error due to missing --name flag, but got nil")
+	}
+	expectedErrorMsg := `Required flag "name" not set`
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
+		t.Errorf("Unexpected error message: got %q, expected to contain %q", err.Error(), expectedErrorMsg)
+	}
+}
+
+func TestNewVariant_ComponentDoesNotExist(t *testing.T) {
+	tempDir := t.TempDir()
+	cfg := setupConfig(tempDir, nil)
+
+	// Ensure required folders exist to pass validation
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	variantTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component-variant")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+	if err := os.MkdirAll(variantTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create variant template directory: %v", err)
+	}
+
+	// Ensure actions folder and variant.json exist
+	actionsFile := filepath.Join(cfg.Paths.ActionsDir, "variant.json")
+	if err := os.MkdirAll(cfg.Paths.ActionsDir, 0755); err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+	if err := os.WriteFile(actionsFile, []byte("{}"), 0644); err != nil {
+		t.Fatalf("Failed to create empty actions file: %v", err)
+	}
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	cmd := createTestVariantCmd(cliCtx)
+	args := []string{
+		"tempo", "new", "variant",
+		"--name", "outline",
+		"--component", "nonexistent-component", // This component does not exist
+	}
+
+	err := cmd.Run(context.Background(), args)
+	if err == nil {
+		t.Fatalf("Expected error due to missing component, but got nil")
+	}
+
+	expectedErrorMsg := "Cannot create variant: Component does not exist"
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
+		t.Errorf("Unexpected error message: got %q, expected to contain %q", err.Error(), expectedErrorMsg)
+	}
+}
+
+func TestNewComponent_CorruptedActionsFile(t *testing.T) {
+	tempDir := t.TempDir()
+	cfg := setupConfig(tempDir, nil)
+
+	// Ensure required folders exist to pass validation
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+
+	// Ensure actions folder exists before writing the corrupted actions file
+	actionsDir := cfg.Paths.ActionsDir
+	if err := os.MkdirAll(actionsDir, 0755); err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+
+	// Create a corrupted `component.json` file
+	actionsFile := filepath.Join(actionsDir, "component.json")
+	if err := os.WriteFile(actionsFile, []byte("INVALID_JSON"), 0644); err != nil {
+		t.Fatalf("Failed to create corrupted actions file: %v", err)
+	}
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	cmd := createTestComponentCmd(cliCtx)
+	args := []string{
+		"tempo", "new", "component",
+		"--name", "corrupted",
+	}
+
+	err := cmd.Run(context.Background(), args)
+	if err == nil {
+		t.Fatalf("Expected error due to corrupted actions file, but got nil")
+	}
+
+	// Adjust expected error message based on actual output
+	expectedErrorMsg := "failed to process actions for component"
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
+		t.Errorf("Unexpected error message: got %q, expected to contain %q", err.Error(), expectedErrorMsg)
+	}
+}
+
+func TestNewComponent_UnwritableDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+	cfg := setupConfig(tempDir, nil)
+
+	// Ensure required folders exist to pass validation
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+
+	// Ensure actions folder and `component.json` exist
+	actionsDir := cfg.Paths.ActionsDir
+	if err := os.MkdirAll(actionsDir, 0755); err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+	actionsFile := filepath.Join(actionsDir, "component.json")
+	if err := os.WriteFile(actionsFile, []byte("{}"), 0644); err != nil {
+		t.Fatalf("Failed to create actions file: %v", err)
+	}
+
+	// Create an unwritable target directory
+	componentDir := filepath.Join(cfg.App.GoPackage, "unwritable_component")
+	if err := os.MkdirAll(componentDir, 0755); err != nil {
+		t.Fatalf("Failed to create target directory: %v", err)
+	}
+	if err := os.Chmod(componentDir, 0000); err != nil {
+		t.Fatalf("Failed to make directory unwritable: %v", err)
+	}
+	defer os.Chmod(componentDir, 0755) // Ensure cleanup after test
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	cmd := createTestComponentCmd(cliCtx)
+	args := []string{
+		"tempo", "new", "component",
+		"--name", "unwritable_component",
+		"--force", // Ensure it tries to write files
+	}
+
+	err := cmd.Run(context.Background(), args)
+	if err == nil {
+		t.Fatalf("Expected error due to unwritable directory, but got nil")
+	}
+
+	expectedErrorMsg := "failed to process actions for component"
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
+		t.Errorf("Unexpected error message: got %q, expected to contain %q", err.Error(), expectedErrorMsg)
+	}
+}
+
+func TestNewComponent_DryRun_NoChanges(t *testing.T) {
+	tempDir := t.TempDir()
+	cfg := setupConfig(tempDir, nil)
+
+	// Ensure required template folders exist
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+
+	// Ensure actions folder and `component.json` exist
+	actionsDir := cfg.Paths.ActionsDir
+	if err := os.MkdirAll(actionsDir, 0755); err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+	actionsFile := filepath.Join(actionsDir, "component.json")
+	if err := os.WriteFile(actionsFile, []byte("{}"), 0644); err != nil {
+		t.Fatalf("Failed to create actions file: %v", err)
+	}
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	cmd := createTestComponentCmd(cliCtx)
+	args := []string{
+		"tempo", "new", "component",
+		"--name", "dryrun_component",
+		"--dry-run",
+	}
+
+	output, err := testhelpers.CaptureStdout(func() {
+		err := cmd.Run(context.Background(), args)
+		if err != nil {
+			t.Fatalf("Command failed: %v", err)
+		}
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to capture stdout: %v", err)
+	}
+
+	// Validate that the dry-run message appears
+	expectedOutput := "Dry Run Mode: No changes will be made."
+	if !utils.ContainsSubstring(output, expectedOutput) {
+		t.Errorf("Expected output to contain %q, but got: %q", expectedOutput, output)
+	}
+
+	// Ensure processEntityActions was NOT called (no modifications should happen)
+	expectedFailureMsg := "failed to process actions"
+	if utils.ContainsSubstring(output, expectedFailureMsg) {
+		t.Errorf("Unexpected error during dry-run: %q", output)
+	}
+}
