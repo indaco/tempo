@@ -2,6 +2,7 @@ package textprovider
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode"
 )
@@ -9,6 +10,11 @@ import (
 // IsEmptyString checks if a string is empty.
 func IsEmptyString(s string) bool {
 	return s == ""
+}
+
+// IsValidValue checks if a given value is in the allowedValues list.
+func IsValidValue(value string, allowedValues []string) bool {
+	return slices.Contains(allowedValues, value)
 }
 
 // NormalizePath normalizes a path by removing dots, leading/trailing slashes, and white spaces.

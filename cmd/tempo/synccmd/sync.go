@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/logger"
@@ -284,12 +285,24 @@ func resolveSyncFlags(
 	cmd *cli.Command,
 	cmdCtx *app.AppContext,
 ) (worker.WorkerPoolOptions, *worker.SummaryOptions, error) {
-	inputDir, err := resolver.ResolveString(cmd.String("input"), cmdCtx.Config.App.AssetsDir, "input folder")
+	inputDir, err := resolver.ResolveString(
+		cmd.String("input"),
+		cmdCtx.Config.App.AssetsDir,
+		"input folder",
+		config.DefaultAssetsDir,
+		nil,
+	)
 	if err != nil {
 		return worker.WorkerPoolOptions{}, nil, err
 	}
 
-	outputDir, err := resolver.ResolveString(cmd.String("output"), cmdCtx.Config.App.GoPackage, "output folder")
+	outputDir, err := resolver.ResolveString(
+		cmd.String("output"),
+		cmdCtx.Config.App.GoPackage,
+		"output folder",
+		config.DefaultGoPackage,
+		nil,
+	)
 	if err != nil {
 		return worker.WorkerPoolOptions{}, nil, err
 	}
@@ -318,7 +331,13 @@ func resolveSyncFlags(
 	}
 
 	// Summary options
-	summaryFormat, err := resolver.ResolveString(cmd.String("summary"), cmdCtx.Config.Processor.SummaryFormat, "summary")
+	summaryFormat, err := resolver.ResolveString(
+		cmd.String("summary"),
+		cmdCtx.Config.Processor.SummaryFormat,
+		"summary",
+		config.DefaultSummaryFormat,
+		[]string{"compact", "long", "json", "none"},
+	)
 	if err != nil {
 		return worker.WorkerPoolOptions{}, nil, err
 	}

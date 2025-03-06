@@ -378,17 +378,35 @@ func createVariantData(cmd *cli.Command, cfg *config.Config) (*generator.Templat
 
 // createBaseTemplateData initializes common fields for TemplateData.
 func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	moduleName, err := resolver.ResolveString(cmd.String("module"), cfg.App.GoModule, "module name")
+	moduleName, err := resolver.ResolveString(
+		cmd.String("module"),
+		cfg.App.GoModule,
+		"module name",
+		"",
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	packageName, err := resolver.ResolveString(cmd.String("package"), cfg.App.GoPackage, "package")
+	packageName, err := resolver.ResolveString(
+		cmd.String("package"),
+		cfg.App.GoPackage,
+		"package",
+		config.DefaultGoPackage,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	assetsDir, err := resolver.ResolveString(cmd.String("assets"), cfg.App.AssetsDir, "assets folder")
+	assetsDir, err := resolver.ResolveString(
+		cmd.String("assets"),
+		cfg.App.AssetsDir,
+		"assets folder",
+		config.DefaultAssetsDir,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}

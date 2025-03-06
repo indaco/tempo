@@ -114,9 +114,9 @@ func resolveFlagsToTemplateFuncProvider(cmd *cli.Command) ([]config.TemplateFunc
 	var providers []config.TemplateFuncProvider
 
 	// Resolve values with priority: CLI > Config
-	name, _ := resolver.ResolveString(cmd.String("name"), "", "provider name")
-	url, _ := resolver.ResolveString(cmd.String("url"), "", "repository URL")
-	path, _ := resolver.ResolveString(cmd.String("path"), "", "local path")
+	name, _ := resolver.ResolveString(cmd.String("name"), "", "provider name", "", nil)
+	url, _ := resolver.ResolveString(cmd.String("url"), "", "repository URL", "", nil)
+	path, _ := resolver.ResolveString(cmd.String("path"), "", "local path", "", nil)
 
 	if name == "" {
 		if url != "" {
