@@ -504,7 +504,7 @@ func TestResolveSyncFlags(t *testing.T) {
 				IsProduction: false,
 			},
 			expectedSummary: worker.SummaryOptions{
-				Format:     worker.SummaryFormat("long"), // Default from config
+				Format:     worker.SummaryFormat("compact"), // Default from config
 				ReportFile: "",
 			},
 			expectedForce: false,

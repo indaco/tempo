@@ -64,7 +64,7 @@ const (
 	DefaultGoPackage        = "components"
 	DefaultAssetsDir        = "assets"
 	DefaultCssLayer         = "components"
-	DefaultSummaryFormat    = "long"
+	DefaultSummaryFormat    = "compact"
 	DefaultGuardMarkText    = "tempo"
 	DefaultWatermarkTipFlag = true
 )

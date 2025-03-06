@@ -102,7 +102,7 @@ func getFlags() []cli.Flag {
 		&cli.StringFlag{
 			Name:    "summary",
 			Aliases: []string{"s"},
-			Usage:   "Summary format: text, json, compact, none (default: text)",
+			Usage:   "Summary format: compact, long, json, none (default: compact)",
 		},
 		&cli.BoolFlag{
 			Name:  "verbose-summary",
