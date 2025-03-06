@@ -153,80 +153,91 @@ func (m *Metrics) ToJSONFile(errors []ProcessingError, skippedFiles []Processing
 
 // summaryAsText returns the summary in human-readable text format.
 func (m *Metrics) summaryAsText(skippedFiles []ProcessingError, verbose bool, compact bool) string {
-	faint := color.New(color.Faint).SprintFunc()
-
 	var sb strings.Builder
 	sb.WriteString("\n📋 Processing Summary:\n")
 
 	if compact {
-		sb.WriteString(fmt.Sprintf("Files: %d | Dirs: %d | Skipped: %d | Errors: %d | Time: %s\n",
-			m.FilesProcessed, m.DirectoriesProcessed, m.SkippedFiles, m.ErrorsEncountered, m.ElapsedTime))
+		sb.WriteString(m.generateCompactSummary())
 		return sb.String()
 	}
 
-	sb.WriteString(fmt.Sprintf("  - Total files processed: %d\n", m.FilesProcessed))
-	sb.WriteString(fmt.Sprintf("  - Total directories processed: %d\n", m.DirectoriesProcessed))
-	sb.WriteString(fmt.Sprintf("  - Total errors encountered: %d\n", m.ErrorsEncountered))
-	sb.WriteString(fmt.Sprintf("  - Total skipped files: %d\n", m.SkippedFiles))
-	sb.WriteString(fmt.Sprintf("  - Elapsed time: %s\n", m.ElapsedTime))
+	sb.WriteString(m.generateDetailedSummary())
 
 	if !verbose {
-		msg := "For more details, use the `--verbose-summary` flag."
-		sb.WriteString("\n" + faint(msg) + "\n")
+		sb.WriteString("\n" + color.New(color.Faint).Sprint("For more details, use the `--verbose-summary` flag.") + "\n")
 	}
 
-	// Categorized Skipped File Breakdown
 	if verbose && len(skippedFiles) > 0 {
-
-		sb.WriteString("\n📌 Skipped Files Breakdown:\n")
-
-		// Group skipped files by type
-		categorized := map[SkipType][]string{
-			SkipUnsupportedFile:  {},
-			SkipMismatchedPath:   {},
-			SkipMissingTemplFile: {},
-			SkipUnchangedFile:    {},
-			SkipQueueFull:        {},
-		}
-
-		for _, file := range skippedFiles {
-			//reasonMsg := faint(fmt.Sprintf("(Reason: %s)", file.Reason))
-			entry := fmt.Sprintf("    - file: %s", faint(file.FilePath))
-			categorized[file.SkipType] = append(categorized[file.SkipType], entry)
-		}
-
-		// Define colors
-		colorMap := map[SkipType]func(a ...any) string{
-			SkipUnsupportedFile:  color.New(color.FgBlue, color.Bold).SprintFunc(),
-			SkipMismatchedPath:   color.New(color.FgYellow, color.Bold).SprintFunc(),
-			SkipMissingTemplFile: color.New(color.FgMagenta, color.Bold).SprintFunc(),
-			SkipUnchangedFile:    color.New(color.FgCyan, color.Bold).SprintFunc(),
-			SkipQueueFull:        color.New(color.FgRed, color.Bold).SprintFunc(),
-		}
-
-		// Output categorized skipped files
-		formatSkippedCategory(&sb, "Unsupported File Types", categorized[SkipUnsupportedFile], colorMap[SkipUnsupportedFile],
-			"Only CSS and JS files are supported. Ensure your files have valid extensions and are placed correctly.")
-
-		formatSkippedCategory(&sb, "Mismatched Output Structure", categorized[SkipMismatchedPath], colorMap[SkipMismatchedPath],
-			"The input folder structure must mirror the output structure. Check your file paths or adjust the configuration.")
-
-		formatSkippedCategory(&sb, "Missing Templ File", categorized[SkipMissingTemplFile], colorMap[SkipMissingTemplFile],
-			"Each CSS or JS file must have a corresponding .templ file. Verify that all expected .templ files exist.")
-
-		formatSkippedCategory(&sb, "Unchanged Files", categorized[SkipUnchangedFile], colorMap[SkipUnchangedFile],
-			"These files haven't changed since the last run. Use '--force' to process them anyway if needed.")
-
-		formatSkippedCategory(&sb, "Queue Overflow (Increase Workers)", categorized[SkipQueueFull], colorMap[SkipQueueFull], "Consider increasing the number of workers (--workers) to prevent queue overflow.")
+		m.appendSkippedFilesBreakdown(&sb, skippedFiles)
 	}
 
-	bold := color.New(color.Bold).SprintFunc()
-	redIcon := color.New(color.FgRed, color.Bold).Sprint("✘")
 	if m.ErrorsEncountered > 0 {
+		bold := color.New(color.Bold).SprintFunc()
+		redIcon := color.New(color.FgRed, color.Bold).Sprint("✘")
 		sb.WriteString("\n" + redIcon + bold(" Some errors occurred. Check logs for details."))
 	}
 
 	return sb.String()
+}
+
+// generateCompactSummary creates a one-line summary.
+func (m *Metrics) generateCompactSummary() string {
+	return fmt.Sprintf("Files: %d | Dirs: %d | Skipped: %d | Errors: %d | Time: %s\n",
+		m.FilesProcessed, m.DirectoriesProcessed, m.SkippedFiles, m.ErrorsEncountered, m.ElapsedTime)
+}
+
+// generateDetailedSummary creates a multi-line summary.
+func (m *Metrics) generateDetailedSummary() string {
+	return fmt.Sprintf("  - Total files processed: %d\n  - Total directories processed: %d\n  - Total errors encountered: %d\n  - Total skipped files: %d\n  - Elapsed time: %s\n",
+		m.FilesProcessed, m.DirectoriesProcessed, m.ErrorsEncountered, m.SkippedFiles, m.ElapsedTime)
+}
+
+// appendSkippedFilesBreakdown processes and appends skipped file details.
+func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles []ProcessingError) {
+	sb.WriteString("\n📌 Skipped Files Breakdown:\n")
+
+	categorized := m.groupSkippedFiles(skippedFiles)
+
+	colorMap := map[SkipType]func(a ...any) string{
+		SkipUnsupportedFile:  color.New(color.FgBlue, color.Bold).SprintFunc(),
+		SkipMismatchedPath:   color.New(color.FgYellow, color.Bold).SprintFunc(),
+		SkipMissingTemplFile: color.New(color.FgMagenta, color.Bold).SprintFunc(),
+		SkipUnchangedFile:    color.New(color.FgCyan, color.Bold).SprintFunc(),
+		SkipQueueFull:        color.New(color.FgRed, color.Bold).SprintFunc(),
+	}
+
+	// Output categorized skipped files
+	formatSkippedCategory(sb, "Unsupported File Types", categorized[SkipUnsupportedFile], colorMap[SkipUnsupportedFile],
+		"Only CSS and JS files are supported. Ensure your files have valid extensions and are placed correctly.")
+
+	formatSkippedCategory(sb, "Mismatched Output Structure", categorized[SkipMismatchedPath], colorMap[SkipMismatchedPath],
+		"The input folder structure must mirror the output structure. Check your file paths or adjust the configuration.")
+
+	formatSkippedCategory(sb, "Missing Templ File", categorized[SkipMissingTemplFile], colorMap[SkipMissingTemplFile],
+		"Each CSS or JS file must have a corresponding .templ file. Verify that all expected .templ files exist.")
+
+	formatSkippedCategory(sb, "Unchanged Files", categorized[SkipUnchangedFile], colorMap[SkipUnchangedFile],
+		"These files haven't changed since the last run. Use '--force' to process them anyway if needed.")
+
+	formatSkippedCategory(sb, "Queue Overflow (Increase Workers)", categorized[SkipQueueFull], colorMap[SkipQueueFull], "Consider increasing the number of workers (--workers) to prevent queue overflow.")
+}
+
+// groupSkippedFiles organizes skipped files into categories.
+func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType][]string {
+	categorized := map[SkipType][]string{
+		SkipUnsupportedFile:  {},
+		SkipMismatchedPath:   {},
+		SkipMissingTemplFile: {},
+		SkipUnchangedFile:    {},
+		SkipQueueFull:        {},
+	}
+
+	for _, file := range skippedFiles {
+		entry := fmt.Sprintf("    - file: %s", color.New(color.Faint).Sprint(file.FilePath))
+		categorized[file.SkipType] = append(categorized[file.SkipType], entry)
+	}
+
+	return categorized
 }
 
 // summaryAsJSON returns the summary as a JSON string.
