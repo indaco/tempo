@@ -48,7 +48,7 @@ func TestSyncCommand(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	// Ensure required folders exist before running "tempo run"
+	// Ensure required folders exist before running "tempo sync"
 	_ = os.MkdirAll(inputDir, 0755)
 	_ = os.MkdirAll(outputDir, 0755)
 	_ = os.MkdirAll(filepath.Join(TemplatesDir, "component"), 0755)
@@ -66,25 +66,25 @@ func TestSyncCommand(t *testing.T) {
 	}{
 		{
 			name:           "Basic Execution",
-			args:           []string{"tempo", "run"},
+			args:           []string{"tempo", "sync"},
 			expectedOutput: []string{"Processing files..."},
 			expectedFiles:  []string{"file1.templ", "file2.templ"},
 		},
 		{
 			name:           "Run with Summary in JSON",
-			args:           []string{"tempo", "run", "--summary", "json"},
+			args:           []string{"tempo", "sync", "--summary", "json"},
 			expectedOutput: []string{"Processing files...", `"metrics":`, `"errors":`, `"skipped_files":`},
 			expectedFiles:  []string{"file1.templ", "file2.templ"},
 		},
 		{
 			name:           "Run with Forced Processing",
-			args:           []string{"tempo", "run", "--force"},
+			args:           []string{"tempo", "sync", "--force"},
 			expectedOutput: []string{"Processing files..."},
 			expectedFiles:  []string{"file1.templ", "file2.templ"},
 		},
 		{
 			name:           "Run with Excluded Directory",
-			args:           []string{"tempo", "run", "--exclude", "excluded"},
+			args:           []string{"tempo", "sync", "--exclude", "excluded"},
 			expectedOutput: []string{"Processing files..."},
 			expectedFiles:  []string{"file1.templ", "file2.templ"}, // Exclude file3.css
 		},
@@ -103,7 +103,7 @@ func TestSyncCommand(t *testing.T) {
 			_ = os.MkdirAll(excludedDir, 0755)
 			testutils.CreateFile(t, filepath.Join(excludedDir, "file3.css"), "excluded content")
 
-			// Ensure expected output files already exist before running `run`
+			// Ensure expected output files already exist before running `sync`
 			for _, file := range tt.expectedFiles {
 				outputFilePath := filepath.Join(outputDir, file)
 				testutils.CreateFile(t, outputFilePath, "/* [tempo] BEGIN */\n/* [tempo] END */")

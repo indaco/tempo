@@ -25,7 +25,7 @@ import (
 // SetupSyncCommand initializes the "process" CLI command.
 func SetupSyncCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
-		Name:                   "run",
+		Name:                   "sync",
 		Description:            "Process & sync asset files into component templates",
 		Aliases:                []string{"s"},
 		UseShortOptionHandling: true,
