@@ -156,6 +156,7 @@ func (m *Metrics) summaryAsText(skippedFiles []ProcessingError, verbose bool, co
 	faint := color.New(color.Faint).SprintFunc()
 
 	var sb strings.Builder
+	sb.WriteString("\n📋 Processing Summary:\n")
 
 	if compact {
 		sb.WriteString(fmt.Sprintf("Files: %d | Dirs: %d | Skipped: %d | Errors: %d | Time: %s\n",
@@ -163,7 +164,6 @@ func (m *Metrics) summaryAsText(skippedFiles []ProcessingError, verbose bool, co
 		return sb.String()
 	}
 
-	sb.WriteString("\n📋 Processing Summary:\n")
 	sb.WriteString(fmt.Sprintf("  - Total files processed: %d\n", m.FilesProcessed))
 	sb.WriteString(fmt.Sprintf("  - Total directories processed: %d\n", m.DirectoriesProcessed))
 	sb.WriteString(fmt.Sprintf("  - Total errors encountered: %d\n", m.ErrorsEncountered))
