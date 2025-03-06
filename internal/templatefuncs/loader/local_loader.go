@@ -23,7 +23,7 @@ func RegisterFunctionsFromPath(packagePath string, logger logger.LoggerInterface
 		return fmt.Errorf("failed to import package: %s", err)
 	}
 
-	// Step 4: Register functions
+	// Step 3: Register functions
 	functions := provider.GetFunctions()
 	if len(functions) == 0 {
 		return fmt.Errorf("invalid function provider: No functions found in Provider")

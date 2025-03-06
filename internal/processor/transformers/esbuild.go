@@ -11,7 +11,6 @@ type EsbuildTransformer struct {
 }
 
 func (e *EsbuildTransformer) Transform(input string) (string, error) {
-
 	result := api.Transform(input, api.TransformOptions{
 		Loader:            e.Loader,
 		MinifySyntax:      true,
