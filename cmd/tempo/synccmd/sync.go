@@ -372,10 +372,8 @@ func handleSummary(
 		return errors.Wrap("Failed to generate summary", err)
 	}
 
-	// Print to stdout
-	if summaryOpts.Format == "text" || summaryOpts.Format == "json" {
-		logger.Default(summary)
-	}
+	// Print summary
+	logger.Default(summary)
 
 	// Handle Summary Export to JSON File
 	if summaryOpts.ReportFile != "" {
