@@ -155,7 +155,7 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	sb.WriteString("processor:\n")
 	sb.WriteString("  # Number of concurrent workers (numCPUs * 2).\n")
 	sb.WriteString(fmt.Sprintf("  workers: %d\n\n", cfg.Processor.Workers))
-	sb.WriteString("  # Summary format: text, json, none.\n")
+	sb.WriteString("  # Summary format: compact, long, json, none.\n")
 	sb.WriteString(fmt.Sprintf("  summary_format: %s\n\n", cfg.Processor.SummaryFormat))
 
 	// Write templates configuration

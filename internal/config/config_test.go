@@ -26,7 +26,7 @@ func TestDefaultConfig(t *testing.T) {
 		},
 		Processor: Processor{
 			Workers:       runtime.NumCPU() * 2,
-			SummaryFormat: "long",
+			SummaryFormat: "compact",
 		},
 		Templates: Templates{
 			Extensions:        DefaultTemplateExtensions,

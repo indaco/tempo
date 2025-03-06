@@ -6,50 +6,173 @@ import (
 
 func TestResolveString(t *testing.T) {
 	tests := []struct {
-		name        string
-		cliValue    string
-		configValue string
-		fieldName   string
-		expected    string
-		expectError bool
+		name         string
+		cliValue     string
+		configValue  string
+		fieldName    string
+		defaultValue string
+		allowed      []string
+		expected     string
+		expectError  bool
 	}{
+		// Case to cover the missing line
 		{
-			name:        "CLI value provided",
-			cliValue:    "cliValue",
-			configValue: "configValue",
-			fieldName:   "TestField",
-			expected:    "cliValue",
-			expectError: false,
+			name:         "CLI and config empty, returns default value",
+			cliValue:     "",
+			configValue:  "",
+			fieldName:    "input directory",
+			defaultValue: "./default-input",
+			allowed:      nil, // No validation, so default should be used
+			expected:     "./default-input",
+			expectError:  false,
 		},
 		{
-			name:        "Config value provided",
-			cliValue:    "",
-			configValue: "configValue",
-			fieldName:   "TestField",
-			expected:    "configValue",
-			expectError: false,
+			name:         "CLI and config empty, no default, should return error",
+			cliValue:     "",
+			configValue:  "",
+			fieldName:    "required-field",
+			defaultValue: "",
+			allowed:      nil, // No validation
+			expected:     "",
+			expectError:  true, // Should return an error
 		},
 		{
-			name:        "Both values empty",
-			cliValue:    "",
-			configValue: "",
-			fieldName:   "TestField",
-			expected:    "",
-			expectError: true,
+			name:         "CLI and config empty, returns default value",
+			cliValue:     "",
+			configValue:  "",
+			fieldName:    "input directory",
+			defaultValue: "./default-input",
+			allowed:      nil, // No validation, so default should be used
+			expected:     "./default-input",
+			expectError:  false,
 		},
 		{
-			name:        "Empty CLI value with non-empty config value",
-			cliValue:    "",
-			configValue: "fallbackValue",
-			fieldName:   "AnotherField",
-			expected:    "fallbackValue",
-			expectError: false,
+			name:         "CLI and Config both invalid, falls back to default",
+			cliValue:     "invalidCLI",
+			configValue:  "invalidConfig",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"}, // Validation enabled
+			expected:     "long",                                      // Should return default
+			expectError:  false,
+		},
+		// Tests with allowed values
+		{
+			name:         "CLI value provided and valid",
+			cliValue:     "compact",
+			configValue:  "long",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "compact",
+			expectError:  false,
+		},
+		{
+			name:         "Config value provided and valid",
+			cliValue:     "",
+			configValue:  "json",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "json",
+			expectError:  false,
+		},
+		{
+			name:         "Both CLI and config values empty",
+			cliValue:     "",
+			configValue:  "",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "long",
+			expectError:  false,
+		},
+		{
+			name:         "CLI value invalid, falls back to default",
+			cliValue:     "invalidValue",
+			configValue:  "json",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "long",
+			expectError:  false,
+		},
+		{
+			name:         "Config value invalid, falls back to default",
+			cliValue:     "",
+			configValue:  "invalidValue",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "long",
+			expectError:  false,
+		},
+		{
+			name:         "CLI and Config both invalid, uses default",
+			cliValue:     "invalidCLI",
+			configValue:  "invalidConfig",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "long",
+			expectError:  false,
+		},
+		{
+			name:         "CLI value valid, config invalid (uses CLI)",
+			cliValue:     "json",
+			configValue:  "invalidConfig",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "json",
+			expectError:  false,
+		},
+		{
+			name:         "Empty CLI value with valid config (uses config)",
+			cliValue:     "",
+			configValue:  "compact",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{"long", "compact", "json", "none"},
+			expected:     "compact",
+			expectError:  false,
+		},
+		{
+			name:         "Allowed values list is empty (accepts any value)",
+			cliValue:     "json",
+			configValue:  "compact",
+			fieldName:    "summary",
+			defaultValue: "long",
+			allowed:      []string{}, // No validation → should accept any value
+			expected:     "json",     // Should return "json" instead of "long"
+			expectError:  false,
+		},
+		// Tests with no validation (e.g., input directory)
+		{
+			name:         "CLI value provided with no validation",
+			cliValue:     "/home/user/data",
+			configValue:  "",
+			fieldName:    "input directory",
+			defaultValue: "./default-input",
+			allowed:      nil, // No validation → accept any string
+			expected:     "/home/user/data",
+			expectError:  false,
+		},
+		{
+			name:         "Config value provided with no validation",
+			cliValue:     "",
+			configValue:  "/var/logs",
+			fieldName:    "log directory",
+			defaultValue: "./logs",
+			allowed:      nil, // No validation → accept any string
+			expected:     "/var/logs",
+			expectError:  false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ResolveString(tt.cliValue, tt.configValue, tt.fieldName)
+			result, err := ResolveString(tt.cliValue, tt.configValue, tt.fieldName, tt.defaultValue, tt.allowed)
 
 			if tt.expectError {
 				if err == nil {
