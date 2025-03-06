@@ -3,11 +3,13 @@ package worker
 import (
 	"encoding/json"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/utils"
 )
 
 // TestMetrics_IncrementCounters ensures that metrics are updated correctly.
@@ -141,8 +143,8 @@ func TestMetrics_PrintSummary(t *testing.T) {
 		"📋 Processing Summary:",
 		"- Total files processed: 1",
 		"- Total directories processed: 1",
-		"- Total errors encountered: 1",
 		"- Total skipped files: 1",
+		"- Total errors encountered: 1",
 		"Elapsed time:",
 		"📌 Skipped Files Breakdown:",
 		"• Reason: Unsupported File Types",
@@ -195,7 +197,38 @@ func TestMetrics_Reset(t *testing.T) {
 	}
 }
 
-func TestSummaryAsText(t *testing.T) {
+func TestSummaryAsText_Long(t *testing.T) {
+	metrics := &Metrics{
+		FilesProcessed:       10,
+		DirectoriesProcessed: 2,
+		ErrorsEncountered:    1,
+		SkippedFiles:         3,
+		ElapsedTime:          "2.345s",
+	}
+
+	skippedFiles := []ProcessingError{
+		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+	}
+
+	expectedOutput := "📋 Processing Summary:\n" +
+		"  - Total files processed: 10\n" +
+		"  - Total directories processed: 2\n" +
+		"  - Total skipped files: 3\n" +
+		"  - Total errors encountered: 1\n" +
+		"  - Elapsed time: 2.345s\n\n" +
+		"For more details, use the `--verbose-summary` flag.\n\n" +
+		"✘ Some errors occurred. Check logs for details."
+
+	result := metrics.summaryAsText(skippedFiles, false, false)
+
+	if strings.TrimSpace(result) != strings.TrimSpace(expectedOutput) {
+		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)
+	}
+}
+
+func TestSummaryAsText_Long_Verbose(t *testing.T) {
 	metrics := &Metrics{
 		FilesProcessed:       10,
 		DirectoriesProcessed: 2,
@@ -214,8 +247,8 @@ func TestSummaryAsText(t *testing.T) {
 📋 Processing Summary:
   - Total files processed: 10
   - Total directories processed: 2
-  - Total errors encountered: 1
   - Total skipped files: 3
+  - Total errors encountered: 1
   - Elapsed time: 2.345s
 
 📌 Skipped Files Breakdown:
@@ -237,6 +270,211 @@ func TestSummaryAsText(t *testing.T) {
 	result := metrics.summaryAsText(skippedFiles, true, false)
 
 	if strings.TrimSpace(result) != strings.TrimSpace(expectedOutput) {
+		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)
+	}
+}
+
+func TestSummaryAsText_Compact(t *testing.T) {
+	metrics := &Metrics{
+		FilesProcessed:       10,
+		DirectoriesProcessed: 2,
+		ErrorsEncountered:    1,
+		SkippedFiles:         3,
+		ElapsedTime:          "2.345s",
+	}
+
+	skippedFiles := []ProcessingError{
+		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+	}
+
+	expectedOutput := `
+📋 Processing Summary:
+Files: 10 | Dirs: 2 | Skipped: 3 | Errors: 1 | Time: 2.345s
+`
+	result := metrics.summaryAsText(skippedFiles, true, true)
+
+	if strings.TrimSpace(result) != strings.TrimSpace(expectedOutput) {
+		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)
+	}
+}
+
+func TestSummaryAsJSON(t *testing.T) {
+	metrics := &Metrics{
+		FilesProcessed:       10,
+		DirectoriesProcessed: 2,
+		ErrorsEncountered:    1,
+		SkippedFiles:         3,
+		ElapsedTime:          "2.345s",
+	}
+
+	skippedFiles := []ProcessingError{
+		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+	}
+
+	expectedJSON := `{
+          "metrics": {
+            "files_processed": 10,
+            "directories_processed": 2,
+            "errors_encountered": 1,
+            "skipped_files": 3,
+            "start_time": "0001-01-01T00:00:00Z",
+            "elapsed_time": "2.345s"
+          },
+          "errors": [],
+          "skipped_files": {
+            "mismatched_output": [
+              {
+                "file_path": "output/script.js",
+                "reason": "Mismatched output structure",
+                "skip_type": "mismatched_output"
+              }
+            ],
+            "missing_templ": null,
+            "queue_full": null,
+            "unchanged_file": [
+              {
+                "file_path": "input/template.templ",
+                "reason": "Unchanged file",
+                "skip_type": "unchanged_file"
+              }
+            ],
+            "unsupported_file": [
+              {
+                "file_path": "assets/styles.css",
+                "reason": "Unsupported file type",
+                "skip_type": "unsupported_file"
+              }
+            ]
+          }
+        }`
+
+	result, err := metrics.summaryAsJSON([]ProcessingError{}, skippedFiles)
+	if err != nil {
+		t.Fatalf("Failed to run summaryAsJSON: %v", err)
+	}
+
+	// Normalize and compare JSON objects
+	var expectedObj, resultObj map[string]interface{}
+
+	if err := json.Unmarshal([]byte(expectedJSON), &expectedObj); err != nil {
+		t.Fatalf("Failed to unmarshal expected JSON: %v", err)
+	}
+
+	if err := json.Unmarshal([]byte(result), &resultObj); err != nil {
+		t.Fatalf("Failed to unmarshal result JSON: %v", err)
+	}
+
+	if !reflect.DeepEqual(expectedObj, resultObj) {
+		t.Errorf("JSON output mismatch.\nExpected:\n%s\nGot:\n%s", expectedJSON, result)
+	}
+}
+
+func TestSummaryAsString_FormatJSON(t *testing.T) {
+	metrics := &Metrics{
+		FilesProcessed:       10,
+		DirectoriesProcessed: 2,
+		ErrorsEncountered:    1,
+		SkippedFiles:         3,
+		ElapsedTime:          "2.345s",
+	}
+
+	skippedFiles := []ProcessingError{
+		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+	}
+
+	expectedJSON := `{
+          "metrics": {
+            "files_processed": 10,
+            "directories_processed": 2,
+            "errors_encountered": 1,
+            "skipped_files": 3,
+            "start_time": "0001-01-01T00:00:00Z"
+          },
+          "errors": [],
+          "skipped_files": {
+            "mismatched_output": [
+              {
+                "file_path": "output/script.js",
+                "reason": "Mismatched output structure",
+                "skip_type": "mismatched_output"
+              }
+            ],
+            "missing_templ": null,
+            "queue_full": null,
+            "unchanged_file": [
+              {
+                "file_path": "input/template.templ",
+                "reason": "Unchanged file",
+                "skip_type": "unchanged_file"
+              }
+            ],
+            "unsupported_file": [
+              {
+                "file_path": "assets/styles.css",
+                "reason": "Unsupported file type",
+                "skip_type": "unsupported_file"
+              }
+            ]
+          }
+        }`
+
+	// Generate actual JSON output
+	result, err := metrics.SummaryAsString([]ProcessingError{}, skippedFiles, &SummaryOptions{Format: FormatJSON})
+	if err != nil {
+		t.Fatalf("Failed to run SummaryAsString with FormatJSON: %v", err)
+	}
+
+	// Normalize and compare JSON objects
+	var expectedObj, resultObj map[string]any
+
+	if err := json.Unmarshal([]byte(expectedJSON), &expectedObj); err != nil {
+		t.Fatalf("Failed to unmarshal expected JSON: %v", err)
+	}
+
+	if err := json.Unmarshal([]byte(result), &resultObj); err != nil {
+		t.Fatalf("Failed to unmarshal result JSON: %v", err)
+	}
+
+	delete(expectedObj["metrics"].(map[string]any), "elapsed_time")
+	delete(resultObj["metrics"].(map[string]any), "elapsed_time")
+
+	if !reflect.DeepEqual(expectedObj, resultObj) {
+		t.Errorf("JSON output mismatch.\nExpected:\n%s\nGot:\n%s", expectedJSON, result)
+	}
+}
+
+func TestSummaryAsString_FormatCompact(t *testing.T) {
+	metrics := &Metrics{
+		FilesProcessed:       10,
+		DirectoriesProcessed: 2,
+		ErrorsEncountered:    1,
+		SkippedFiles:         3,
+		ElapsedTime:          "2.345s",
+	}
+
+	skippedFiles := []ProcessingError{
+		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+	}
+
+	// Generate actual JSON output
+	result, err := metrics.SummaryAsString([]ProcessingError{}, skippedFiles, &SummaryOptions{Format: FormatCompact})
+	if err != nil {
+		t.Fatalf("Failed to run SummaryAsString with FormatCompact: %v", err)
+	}
+	expectedOutput := `
+📋 Processing Summary:
+Files: 10 | Dirs: 2 | Skipped: 3 | Errors: 1
+`
+
+	if !utils.ContainsSubstring(strings.TrimSpace(result), strings.TrimSpace(expectedOutput)) {
 		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)
 	}
 }

@@ -101,25 +101,25 @@ func (m *Metrics) SummaryAsString(errors []ProcessingError, skippedFiles []Proce
 	defer m.mu.Unlock()
 
 	// Update elapsed time before returning the summary
-	m.ElapsedTime = time.Since(m.StartTime).String()
+	m.ElapsedTime = formatElapsedTime(time.Since(m.StartTime))
 
-	// Ensure a valid format, defaulting to "long"
-	if summaryOpts.Format != FormatJSON && summaryOpts.Format != FormatLong && summaryOpts.Format != FormatCompact {
-		summaryOpts.Format = FormatLong
-	}
-
-	// Return JSON-formatted summary
-	if summaryOpts.Format == FormatJSON {
+	// Determine format using a switch statement
+	switch summaryOpts.Format {
+	case FormatJSON:
 		return m.summaryAsJSON(errors, skippedFiles)
-	}
-
-	// Return compact summary
-	if summaryOpts.Format == FormatCompact {
+	case FormatLong:
+		return m.summaryAsText(skippedFiles, summaryOpts.IsVerbose, false), nil
+	case FormatCompact, "": // Default to compact
+		fallthrough
+	default:
 		return m.summaryAsText(skippedFiles, summaryOpts.IsVerbose, true), nil
 	}
+}
 
-	// Default to long format
-	return m.summaryAsText(skippedFiles, summaryOpts.IsVerbose, false), nil
+// formatElapsedTime ensures the elapsed time is formatted consistently.
+func formatElapsedTime(duration time.Duration) string {
+	seconds := duration.Seconds()
+	return fmt.Sprintf("%.3fs", seconds) // Fixed format with 3 decimal places
 }
 
 // PrintSummary prints the summary in text format.
@@ -188,8 +188,8 @@ func (m *Metrics) generateCompactSummary() string {
 
 // generateDetailedSummary creates a multi-line summary.
 func (m *Metrics) generateDetailedSummary() string {
-	return fmt.Sprintf("  - Total files processed: %d\n  - Total directories processed: %d\n  - Total errors encountered: %d\n  - Total skipped files: %d\n  - Elapsed time: %s\n",
-		m.FilesProcessed, m.DirectoriesProcessed, m.ErrorsEncountered, m.SkippedFiles, m.ElapsedTime)
+	return fmt.Sprintf("  - Total files processed: %d\n  - Total directories processed: %d\n  - Total skipped files: %d\n  - Total errors encountered: %d\n  - Elapsed time: %s\n",
+		m.FilesProcessed, m.DirectoriesProcessed, m.SkippedFiles, m.ErrorsEncountered, m.ElapsedTime)
 }
 
 // appendSkippedFilesBreakdown processes and appends skipped file details.
