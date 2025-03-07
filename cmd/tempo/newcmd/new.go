@@ -62,10 +62,6 @@ func getCoreFlags() []cli.Flag {
 			Usage:   "The directory where asset files (e.g., CSS, JS) will be generated (default: assets)",
 		},
 		&cli.BoolFlag{
-			Name:  "watermark",
-			Usage: "Whether or not include comments as watermark in generated files",
-		},
-		&cli.BoolFlag{
 			Name:  "force",
 			Usage: "Force overwriting if already exists",
 		},
@@ -104,7 +100,7 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 		Aliases:                []string{"c"},
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--watermark] [--force] [--dry-run]",
+		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
 		Before:                 validateNewComponentPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
@@ -175,7 +171,7 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 		Aliases:                []string{"v"},
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--watermark] [--force] [--dry-run]",
+		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
 		Before:                 validateNewVariantPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
@@ -413,7 +409,6 @@ func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.Te
 
 	TemplatesDir, ActionsDir := config.DerivedFolderPaths(cfg.TempoRoot)
 	isWithJs := resolver.ResolveBool(cmd.Bool("js"), cfg.App.WithJs)
-	isWatermarkTip := resolver.ResolveBool(cmd.Bool("watermark"), cfg.Templates.WatermarkTip)
 	isForce := cmd.Bool("force")
 	isDryRun := cmd.Bool("dry-run")
 
@@ -426,7 +421,6 @@ func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.Te
 		AssetsDir:    assetsDir,
 		WithJs:       isWithJs,
 		CssLayer:     cfg.App.CssLayer,
-		WatermarkTip: isWatermarkTip,
 		GuardMarker:  cfg.Templates.GuardMarker,
 		Force:        isForce,
 		DryRun:       isDryRun,

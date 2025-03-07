@@ -13,6 +13,8 @@ package generator
 // - WithJs: Indicates whether or not JavaScript is required for the component.
 // - CssLayer: The name of the CSS layer to associate with component styles.
 // - GuardMarker: A text placeholder or sentinel used in template files to mark auto-generated sections.
+// - Force: If true, existing files will be overwritten without prompting for confirmation.
+// - DryRun: If true, no files will be written; instead, the process will simulate changes and display what would happen.
 type TemplateData struct {
 	TemplatesDir  string
 	ActionsDir    string
@@ -24,7 +26,6 @@ type TemplateData struct {
 	WithJs        bool
 	CssLayer      string
 	GuardMarker   string
-	WatermarkTip  bool
 	Force         bool
 	DryRun        bool
 }
