@@ -358,7 +358,7 @@ func TestSummaryAsJSON(t *testing.T) {
 	}
 
 	// Normalize and compare JSON objects
-	var expectedObj, resultObj map[string]interface{}
+	var expectedObj, resultObj map[string]any
 
 	if err := json.Unmarshal([]byte(expectedJSON), &expectedObj); err != nil {
 		t.Fatalf("Failed to unmarshal expected JSON: %v", err)

@@ -71,9 +71,19 @@ test/coverage: ## Run go tests and use go tool cover.
 
 .PHONY: test/force
 test/force: ## Clean go tests cache.
-	@echo "$(color_bold_cyan)* Clean go tests cache.$(color_reset)"
+	@echo "$(color_bold_cyan)* Clean go tests cache and run all tests.$(color_reset)"
 	@$(GO) clean -testcache
 	@$(MAKE) test
+
+.PHONY: modernize
+modernize: ## Run go-modernize
+	@echo "$(color_bold_cyan)* Running go-modernize$(color_reset)"
+	@modernize -test ./...
+
+.PHONY: lint
+lint: ## Run golangci-lint
+	@echo "$(color_bold_cyan)* Running golangci-lint$(color_reset)"
+	@golangci-lint run ./...
 
 .PHONY: build
 build: ## Build the binary with development metadata
@@ -83,6 +93,8 @@ build: ## Build the binary with development metadata
 
 .PHONY: install
 install: ## Install the binary using Go install
+	@$(MAKE) modernize
+	@$(MAKE) lint
 	@$(MAKE) test/force
 	@echo "$(color_bold_cyan)* Install the binary using Go install$(color_reset)"
 	@cd $(CMD_DIR) && $(GO) install .

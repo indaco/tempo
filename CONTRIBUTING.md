@@ -11,10 +11,10 @@ To set up a development environment for this repository, you can use [devbox](ht
 1. Install devbox by following [these instructions](https://www.jetify.com/devbox/docs/installing_devbox/).
 2. Clone this repository to your local machine.
 
-    ```bash
-    git clone https://github.com/indaco/tempo.git
-    cd tempo
-    ```
+   ```bash
+   git clone https://github.com/indaco/tempo.git
+   cd tempo
+   ```
 
 3. Run `devbox install` to install all dependencies specified in `devbox.json`.
 4. Enter the environment with `devbox shell --pure`.
@@ -24,8 +24,9 @@ To set up a development environment for this repository, you can use [devbox](ht
 
 If you prefer not to use Devbox, ensure you have the following tools installed:
 
-- `golangci-lint`: For linting Go code.
-- `go-task` or `make`: For running project tasks.
+- [golangci-lint](https://golangci-lint.run/): For linting Go code.
+- [go-task](https://taskfile.dev/) or `make`: For running project tasks.
+- [modernize](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize): Run the modernizer analyzer to simplify code by using modern constructs.
 
 ## Setting Up Git Hooks
 
@@ -41,24 +42,24 @@ For users not using `devbox`, follow the steps below to manually install the Git
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/indaco/tempo.git
-    cd tempo
-    ```
+   ```bash
+   git clone https://github.com/indaco/tempo.git
+   cd tempo
+   ```
 
 2. Install the Git Hooks
 
-    **Unix-based systems (Linux, macOS):**
+   **Unix-based systems (Linux, macOS):**
 
-    ```bash
-    sh .scripts/setup-hooks.sh
-    ```
+   ```bash
+   sh .scripts/setup-hooks.sh
+   ```
 
-    **Windows systems:**
+   **Windows systems:**
 
-    ```cmd
-    .scripts\setup-hooks.bat
-    ```
+   ```cmd
+   .scripts\setup-hooks.bat
+   ```
 
 ## Running Tasks
 
@@ -76,7 +77,9 @@ build:               # Build the binary
 clean:               # Clean the build directory and Go cache
 default:             # Run clean and build tasks
 install:             # Install the binary using Go install
+lint:                # Run golangci-lint
+modernize:           # Run go-modernize
 test:                # Run all tests and generate coverage report
 test/coverage:       # Run go tests and use go tool cover
-test/force:          # Clean go tests cache
+test/force:          # Clean go tests cache and run all tests
 ```
