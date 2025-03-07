@@ -40,7 +40,7 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 			tempoConfigPath := filepath.Join(userBaseFolder, configFileName)
 
 			// Step 2: ensure configuration file does not already exist
-			if err := validateInitPrerequisites(tempoConfigPath); err != nil {
+			if err := validateInitPrerequisites(cmdCtx.CWD, tempoConfigPath); err != nil {
 				return err
 			}
 
@@ -83,8 +83,16 @@ func getFlags() []cli.Flag {
 
 // validateInitPrerequisites ensures all the prerequisites for the init command are satisfied.
 //
-// - configuration file does not already exist.
-func validateInitPrerequisites(configFilePath string) error {
+// - A valid go.mod file must be present.
+// - Configuration file does not already exist.
+func validateInitPrerequisites(workingDir, configFilePath string) error {
+	goModPath := filepath.Join(workingDir, "go.mod")
+	if _, err := os.Stat(goModPath); os.IsNotExist(err) {
+		return errors.Wrap("missing go.mod file. Run 'go mod init' to create one")
+	} else if err != nil {
+		return errors.Wrap("error checking go.mod file", err)
+	}
+
 	exists, err := utils.FileExistsFunc(configFilePath)
 	if err != nil {
 		return errors.Wrap("Error checking configuration file", err)

@@ -101,6 +101,14 @@ func TestRunApp_Help(t *testing.T) {
 func TestRunApp_InitAutoGen(t *testing.T) {
 	// Create a temporary directory that does not contain a config file.
 	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	goModPath := filepath.Join(tempDir, "go.mod")
+	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	configPath := filepath.Join(tempDir, "tempo.yaml")
 	os.Remove(configPath) // Ensure it's missing.
 
