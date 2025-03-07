@@ -12,6 +12,7 @@ import (
 	"slices"
 
 	"github.com/indaco/tempo/internal/errors"
+	"golang.org/x/mod/modfile"
 )
 
 /* ------------------------------------------------------------------------- */
@@ -244,4 +245,23 @@ func RebasePathToOutput(inputPath, inputDir, outputDir string) string {
 
 	// Convert to `.templ` extension
 	return ToTemplFilename(newPath)
+}
+
+// GetModuleName extracts the module name from the go.mod file.
+func GetModuleName(goModPath string) (string, error) {
+	content, err := os.ReadFile(goModPath)
+	if err != nil {
+		return "", errors.Wrap("error reading go.mod file")
+	}
+
+	parsedModFile, err := modfile.Parse(goModPath, content, nil)
+	if err != nil {
+		return "", errors.Wrap("error parsing go.mod file")
+	}
+
+	if parsedModFile.Module == nil || parsedModFile.Module.Mod.Path == "" {
+		return "", errors.Wrap("module path not found in go.mod file")
+	}
+
+	return parsedModFile.Module.Mod.Path, nil
 }

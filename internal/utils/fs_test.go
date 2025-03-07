@@ -752,3 +752,88 @@ func TestRebasePathToOutput(t *testing.T) {
 		})
 	}
 }
+
+// TestGetModuleName tests the GetModuleName function
+func TestGetModuleName(t *testing.T) {
+	tests := []struct {
+		name           string
+		goModContent   string
+		expectedModule string
+		expectError    bool
+	}{
+		{
+			name:           "Valid go.mod file",
+			goModContent:   "module example.com/myproject\ngo 1.18",
+			expectedModule: "example.com/myproject",
+			expectError:    false,
+		},
+		{
+			name:           "go.mod file missing module declaration",
+			goModContent:   "go 1.18",
+			expectedModule: "",
+			expectError:    true,
+		},
+		{
+			name: "Malformed go.mod file",
+			goModContent: `module example.com/myproject
+go 1.18
+require (
+	example.com/somelib v1.2.3
+	invalid_line_here`,
+			expectedModule: "",
+			expectError:    true,
+		},
+		{
+			name:           "Empty go.mod file",
+			goModContent:   "",
+			expectedModule: "",
+			expectError:    true,
+		},
+		{
+			name:           "File does not exist",
+			goModContent:   "", // No need to create a file for this case
+			expectedModule: "",
+			expectError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var tempFile string
+			if !tt.expectError || tt.name != "File does not exist" {
+				file, err := os.CreateTemp("", "go.mod")
+				if err != nil {
+					t.Fatalf("failed to create temp file: %v", err)
+				}
+				defer os.Remove(file.Name())
+
+				if _, err := file.WriteString(tt.goModContent); err != nil {
+					t.Fatalf("failed to write to temp file: %v", err)
+				}
+
+				file.Close()
+				tempFile = file.Name()
+			} else {
+				tempFile = "nonexistent.go.mod" // Simulate missing file
+			}
+
+			moduleName, err := GetModuleName(tempFile)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("expected an error but got none")
+				}
+				if moduleName != "" {
+					t.Errorf("expected empty module name, got %q", moduleName)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if moduleName != tt.expectedModule {
+					t.Errorf("expected module name %q, got %q", tt.expectedModule, moduleName)
+				}
+			}
+		})
+	}
+}
