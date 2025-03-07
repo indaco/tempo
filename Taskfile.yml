@@ -51,11 +51,23 @@ tasks:
       - task: test/view-coverage
 
   test/force:
-    desc: Clean go tests cache.
+    desc: Clean go tests cache and run all tests.
     silent: false
     cmds:
       - go clean -testcache
       - task: test
+
+  modernize:
+    desc: Run go-modernize
+    silent: false
+    cmds:
+      - modernize -test ./...
+
+  lint:
+    desc: Run golangci-lint
+    silent: false
+    cmds:
+      - golangci-lint run ./...
 
   build:
     desc: "Building the binary..."
@@ -68,6 +80,8 @@ tasks:
     desc: "Install the binary using Go install"
     silent: false
     deps:
+      - modernize
+      - lint
       - test/force
     cmds:
       - cd {{.CMD_DIR}} && go install .
