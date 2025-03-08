@@ -36,7 +36,7 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 
 			// Step 1: resolve base folder for tempo files & config
 			userBaseFolder := cmd.String("base-folder")
-			TempoRoot := filepath.Join(userBaseFolder, cmdCtx.Config.TempoRoot)
+			tempoRoot := filepath.Join(userBaseFolder, cmdCtx.Config.TempoRoot)
 			tempoConfigPath := filepath.Join(userBaseFolder, configFileName)
 
 			// Step 2: ensure configuration file does not already exist
@@ -45,11 +45,14 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 			}
 
 			// Step 3: Resolve derived folders
-			TemplatesDir, ActionsDir := config.DerivedFolderPaths(userBaseFolder)
+			templatesDir, actionsDir := config.DerivedFolderPaths(userBaseFolder)
 
 			// Step 4: Generate and write the configuration file
 			cmdCtx.Logger.Info("Generating", tempoConfigPath)
-			cfg := prepareConfig(TempoRoot, TemplatesDir, ActionsDir)
+			cfg, err := prepareConfig(cmdCtx.CWD, tempoRoot, templatesDir, actionsDir)
+			if err != nil {
+				return errors.Wrap("Failed to prepare the configuration file", err)
+			}
 			if err := writeConfigFile(tempoConfigPath, cfg); err != nil {
 				return errors.Wrap("Failed to write the configuration file", err, tempoConfigPath)
 			}
@@ -114,17 +117,22 @@ func validateInitPrerequisites(workingDir, configFilePath string) error {
 /* ------------------------------------------------------------------------- */
 
 // prepareConfig creates a new Config instance with the provided base folder, templates folder, and actions folder.
-func prepareConfig(TempoRoot, TemplatesDir, ActionsDir string) *config.Config {
+func prepareConfig(workingDir, tempoRoot, templatesDir, actionsDir string) (*config.Config, error) {
+	moduleName, err := utils.GetModuleName(workingDir)
+	if err != nil {
+		return nil, err
+	}
 	return &config.Config{
-		TempoRoot: path.Base(TempoRoot),
+		TempoRoot: path.Base(tempoRoot),
 		App: config.App{
+			GoModule:  moduleName,
 			GoPackage: config.DefaultGoPackage,
 			AssetsDir: config.DefaultAssetsDir,
 			CssLayer:  config.DefaultCssLayer,
 		},
 		Paths: config.Paths{
-			TemplatesDir: TemplatesDir,
-			ActionsDir:   ActionsDir,
+			TemplatesDir: templatesDir,
+			ActionsDir:   actionsDir,
 		},
 		Processor: config.Processor{
 			Workers:       config.DefaultNumWorkers,
@@ -134,7 +142,7 @@ func prepareConfig(TempoRoot, TemplatesDir, ActionsDir string) *config.Config {
 			Extensions:  config.DefaultTemplateExtensions,
 			GuardMarker: config.DefaultGuardMarkText,
 		},
-	}
+	}, nil
 }
 
 // writeConfigFile writes the configuration to a YAML file with proper formatting and comments.
@@ -148,7 +156,7 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	// Write app-specific configuration
 	sb.WriteString("app:\n")
 	sb.WriteString("  # The name of the Go module being worked on.\n")
-	sb.WriteString(fmt.Sprintf("  # go_module: %s\n\n", cfg.App.GoModule))
+	sb.WriteString(fmt.Sprintf("  go_module: %s\n\n", cfg.App.GoModule))
 	sb.WriteString("  # The Go package name where components will be organized and generated.\n")
 	sb.WriteString(fmt.Sprintf("  go_package: %s\n\n", cfg.App.GoPackage))
 	sb.WriteString("  # The directory where asset files (CSS, JS) will be generated.\n")

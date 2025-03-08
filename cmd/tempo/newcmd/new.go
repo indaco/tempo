@@ -47,11 +47,6 @@ func SetupNewCommand(cmdCtx *app.AppContext) *cli.Command {
 func getCoreFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:    "module",
-			Aliases: []string{"m"},
-			Usage:   "The name of the Go module being worked on",
-		},
-		&cli.StringFlag{
 			Name:    "package",
 			Aliases: []string{"p"},
 			Usage:   "The Go package name where components will be generated (default: components)",
@@ -100,15 +95,16 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 		Aliases:                []string{"c"},
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
+		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
 		Before:                 validateNewComponentPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
 			// Step 1: Create template data
-			data, err := createComponentData(cmd, cmdCtx.Config)
+			data, err := createComponentData(cmdCtx.CWD, cmd, cmdCtx.Config)
+			fmt.Printf("%v#", data)
 			if err != nil {
-				return errors.Wrap("Failed to create template data", err)
+				return errors.Wrap("Failed to create template data for component", err)
 			}
 
 			if data.DryRun {
@@ -171,13 +167,13 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 		Aliases:                []string{"v"},
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--module value | -m] [--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
+		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
 		Before:                 validateNewVariantPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
 			// Step 1: Create variant data
-			data, err := createVariantData(cmd, cmdCtx.Config)
+			data, err := createVariantData(cmdCtx.CWD, cmd, cmdCtx.Config)
 			if err != nil {
 				return errors.Wrap("failed to create variant data", err)
 			}
@@ -348,20 +344,32 @@ func processEntityActions(logger logger.LoggerInterface, pathToActionsFile strin
 }
 
 // createComponentData initializes TemplateData for a component.
-func createComponentData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	data, err := createBaseTemplateData(cmd, cfg)
+func createComponentData(workingDir string, cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
+	fmt.Printf("DEBUG: Entering createComponentData. Working dir: %s\n", workingDir)
+
+	data, err := createBaseTemplateData(workingDir, cmd, cfg)
 	if err != nil {
+		fmt.Printf("DEBUG: createBaseTemplateData failed with error: %v\n", err)
 		return nil, err
 	}
 
+	fmt.Println("DEBUG: createBaseTemplateData succeeded")
+
 	// Add component-specific fields
 	data.ComponentName = gonameprovider.ToGoPackageName(cmd.String("name"))
+	fmt.Printf("DEBUG: Component name set to: %s\n", data.ComponentName)
+
 	return data, nil
 }
 
 // createVariantData initializes TemplateData for a variant.
-func createVariantData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	data, err := createBaseTemplateData(cmd, cfg)
+func createVariantData(
+	workingDir string,
+	cmd *cli.Command,
+	cfg *config.Config,
+) (*generator.TemplateData, error) {
+	data, err := createBaseTemplateData(workingDir, cmd, cfg)
+	fmt.Printf("%v#", data)
 	if err != nil {
 		return nil, err
 	}
@@ -373,17 +381,20 @@ func createVariantData(cmd *cli.Command, cfg *config.Config) (*generator.Templat
 }
 
 // createBaseTemplateData initializes common fields for TemplateData.
-func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	moduleName, err := resolver.ResolveString(
-		cmd.String("module"),
-		cfg.App.GoModule,
-		"module name",
-		"",
-		nil,
-	)
+func createBaseTemplateData(
+	workingDir string,
+	cmd *cli.Command,
+	cfg *config.Config,
+) (*generator.TemplateData, error) {
+	fmt.Printf("DEBUG: Entering createBaseTemplateData. Working dir: %s\n", workingDir)
+
+	moduleName, err := utils.GetModuleName(workingDir)
 	if err != nil {
+		fmt.Printf("DEBUG: GetModuleName failed with error: %v\n", err)
 		return nil, err
 	}
+
+	fmt.Printf("DEBUG: Module name retrieved: %s\n", moduleName)
 
 	packageName, err := resolver.ResolveString(
 		cmd.String("package"),

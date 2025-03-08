@@ -85,7 +85,6 @@ func DefaultConfig() *Config {
 	return &Config{
 		TempoRoot: DefaultBaseDir,
 		App: App{
-			GoModule:  "github.com/example/demotempo",
 			GoPackage: DefaultGoPackage,
 			WithJs:    false,
 			CssLayer:  DefaultCssLayer,

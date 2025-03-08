@@ -753,7 +753,6 @@ func TestRebasePathToOutput(t *testing.T) {
 	}
 }
 
-// TestGetModuleName tests the GetModuleName function
 func TestGetModuleName(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -763,20 +762,20 @@ func TestGetModuleName(t *testing.T) {
 	}{
 		{
 			name:           "Valid go.mod file",
-			goModContent:   "module example.com/myproject\ngo 1.18",
+			goModContent:   "module example.com/myproject\ngo 1.23",
 			expectedModule: "example.com/myproject",
 			expectError:    false,
 		},
 		{
 			name:           "go.mod file missing module declaration",
-			goModContent:   "go 1.18",
+			goModContent:   "go 1.23",
 			expectedModule: "",
 			expectError:    true,
 		},
 		{
 			name: "Malformed go.mod file",
 			goModContent: `module example.com/myproject
-go 1.18
+go 1.23
 require (
 	example.com/somelib v1.2.3
 	invalid_line_here`,
@@ -799,25 +798,29 @@ require (
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var tempFile string
+			var tempDir string
 			if !tt.expectError || tt.name != "File does not exist" {
-				file, err := os.CreateTemp("", "go.mod")
+				// Create a temporary directory
+				tempDir = t.TempDir()
+
+				// Create go.mod inside the temporary directory
+				goModPath := filepath.Join(tempDir, "go.mod")
+				file, err := os.Create(goModPath)
 				if err != nil {
-					t.Fatalf("failed to create temp file: %v", err)
+					t.Fatalf("failed to create go.mod file: %v", err)
 				}
-				defer os.Remove(file.Name())
+				defer os.Remove(goModPath)
 
 				if _, err := file.WriteString(tt.goModContent); err != nil {
-					t.Fatalf("failed to write to temp file: %v", err)
+					t.Fatalf("failed to write to go.mod file: %v", err)
 				}
 
 				file.Close()
-				tempFile = file.Name()
 			} else {
-				tempFile = "nonexistent.go.mod" // Simulate missing file
+				tempDir = "nonexistent-dir" // Simulate missing directory
 			}
 
-			moduleName, err := GetModuleName(tempFile)
+			moduleName, err := GetModuleName(tempDir)
 
 			if tt.expectError {
 				if err == nil {

@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/indaco/tempo/internal/config"
@@ -24,4 +25,14 @@ func ValidateGeneratedFiles(t *testing.T, paths []string) {
 			t.Errorf("Expected file not found: %s", path)
 		}
 	}
+}
+
+func CreateModFile(tempDir string) error {
+	// Create go.mod inside tempDir (the correct working directory)
+	goModPath := filepath.Join(tempDir, "go.mod")
+	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }

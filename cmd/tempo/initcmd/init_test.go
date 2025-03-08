@@ -42,9 +42,7 @@ func TestInitCommand(t *testing.T) {
 			baseFolder := filepath.Join(tempDir, tt.baseFolder)
 
 			// Create go.mod inside tempDir (the correct working directory)
-			goModPath := filepath.Join(tempDir, "go.mod")
-			err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644)
-			if err != nil {
+			if err := testutils.CreateModFile(tempDir); err != nil {
 				t.Fatalf("Failed to create go.mod file: %v", err)
 			}
 
@@ -91,9 +89,7 @@ func TestInitCommand_FailsOnExistingConfigFile(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create go.mod inside tempDir (the correct working directory)
-	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.18\n"), 0644)
-	if err != nil {
+	if err := testutils.CreateModFile(tempDir); err != nil {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
@@ -105,7 +101,7 @@ func TestInitCommand_FailsOnExistingConfigFile(t *testing.T) {
 
 	// Create an existing config file
 	configFile := filepath.Join(tempDir, "tempo.yaml")
-	err = os.WriteFile(configFile, []byte("test content"), 0644)
+	err := os.WriteFile(configFile, []byte("test content"), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create config file: %v", err)
 	}
@@ -132,9 +128,7 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create go.mod inside tempDir (the correct working directory)
-	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.18\n"), 0644)
-	if err != nil {
+	if err := testutils.CreateModFile(tempDir); err != nil {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
@@ -189,7 +183,17 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 }
 
 func TestPrepareConfig_DefaultExtensions(t *testing.T) {
-	cfg := prepareConfig("tempo-root", "templates", "actions")
+	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
+	cfg, err := prepareConfig(tempDir, "tempo-root", "templates", "actions")
+	if err != nil {
+		t.Fatalf("Failed to get config: %v", err)
+	}
 
 	if len(cfg.Templates.Extensions) == 0 {
 		t.Fatalf("Expected extensions to have a default value, got empty slice")
@@ -205,9 +209,7 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create go.mod inside tempDir (the correct working directory)
-	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.18\n"), 0644)
-	if err != nil {
+	if err := testutils.CreateModFile(tempDir); err != nil {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
@@ -226,7 +228,7 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 	}
 
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err = app.Run(context.Background(), args)
+	err := app.Run(context.Background(), args)
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -250,15 +252,25 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 
 func TestWriteConfigFile_WithFunctionProviders(t *testing.T) {
 	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	configFile := filepath.Join(tempDir, "tempo.yaml")
 
-	cfg := prepareConfig("tempo-root", "templates", "actions")
+	cfg, err := prepareConfig(tempDir, "tempo-root", "templates", "actions")
+	if err != nil {
+		t.Fatalf("Failed to get config: %v", err)
+	}
+
 	cfg.Templates.FunctionProviders = []config.TemplateFuncProvider{
 		{Name: "default", Type: "path", Value: "./providers/default"},
 		{Name: "custom", Type: "url", Value: "https://github.com/user/custom-provider.git"},
 	}
 
-	err := writeConfigFile(configFile, cfg)
+	err = writeConfigFile(configFile, cfg)
 	if err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}
@@ -283,9 +295,7 @@ func TestInitCommand_FailsOnConfigFileCheckError(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create go.mod inside tempDir (the correct working directory)
-	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.18\n"), 0644)
-	if err != nil {
+	if err := testutils.CreateModFile(tempDir); err != nil {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
@@ -308,8 +318,7 @@ func TestInitCommand_FailsOnConfigFileCheckError(t *testing.T) {
 
 	// Step 2: Run `init`, expecting an error
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err = app.Run(context.Background(), args)
-
+	err := app.Run(context.Background(), args)
 	if err == nil {
 		t.Fatal("Expected error due to file existence check failure, but got none")
 	}
@@ -367,7 +376,7 @@ func TestValidateInitPrerequisites_FailsOnGoModStatError(t *testing.T) {
 
 	// Step 2: Create go.mod inside the directory BEFORE restricting access
 	goModPath := filepath.Join(restrictedDir, "go.mod")
-	if err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.18\n"), 0644); err != nil {
+	if err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644); err != nil {
 		t.Fatalf("Failed to create go.mod: %v", err)
 	}
 
@@ -375,7 +384,11 @@ func TestValidateInitPrerequisites_FailsOnGoModStatError(t *testing.T) {
 	if err := os.Chmod(restrictedDir, 0000); err != nil {
 		t.Fatalf("Failed to restrict directory permissions: %v", err)
 	}
-	defer os.Chmod(restrictedDir, 0755) // Cleanup: Restore permissions
+	defer func() {
+		if err := os.Chmod(restrictedDir, 0755); err != nil {
+			t.Errorf("Failed to restore permissions on %s: %v", restrictedDir, err)
+		}
+	}()
 
 	// Step 4: Run validation
 	err := validateInitPrerequisites(restrictedDir, filepath.Join(tempDir, "tempo.yaml"))
