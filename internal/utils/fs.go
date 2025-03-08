@@ -249,19 +249,25 @@ func RebasePathToOutput(inputPath, inputDir, outputDir string) string {
 
 // GetModuleName extracts the module name from the go.mod file.
 func GetModuleName(goModPath string) (string, error) {
-	content, err := os.ReadFile(goModPath)
+	goModFile := filepath.Join(goModPath, "go.mod")
+	fmt.Printf("DEBUG: Checking go.mod at %s\n", goModFile)
+	content, err := os.ReadFile(goModFile)
 	if err != nil {
-		return "", errors.Wrap("error reading go.mod file")
+		fmt.Printf("DEBUG: Error reading go.mod file: %v\n", err)
+		return "", errors.Wrap("error reading go.mod file", err)
 	}
 
-	parsedModFile, err := modfile.Parse(goModPath, content, nil)
+	parsedModFile, err := modfile.Parse(goModFile, content, nil)
 	if err != nil {
-		return "", errors.Wrap("error parsing go.mod file")
+		fmt.Printf("DEBUG: Error parsing go.mod file: %v\n", err)
+		return "", errors.Wrap("error parsing go.mod file", err)
 	}
 
 	if parsedModFile.Module == nil || parsedModFile.Module.Mod.Path == "" {
+		fmt.Println("DEBUG: Module path not found in go.mod file")
 		return "", errors.Wrap("module path not found in go.mod file")
 	}
 
+	fmt.Printf("DEBUG: Found module name: %s\n", parsedModFile.Module.Mod.Path)
 	return parsedModFile.Module.Mod.Path, nil
 }

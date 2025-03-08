@@ -14,7 +14,6 @@ func TestDefaultConfig(t *testing.T) {
 	expected := &Config{
 		TempoRoot: DefaultBaseDir,
 		App: App{
-			GoModule:  "github.com/example/demotempo",
 			GoPackage: "components",
 			WithJs:    false,
 			CssLayer:  "components",
@@ -114,9 +113,6 @@ func TestEnsureDefaults(t *testing.T) {
 	defaultConfig := DefaultConfig()
 	customConfig := &Config{
 		TempoRoot: "custom-tempo",
-		App: App{
-			GoModule: "github.com/custom/module",
-		},
 		Templates: Templates{
 			GuardMarker: "custom-marker",
 		},
@@ -127,7 +123,6 @@ func TestEnsureDefaults(t *testing.T) {
 	expected := &Config{
 		TempoRoot: "custom-tempo",
 		App: App{
-			GoModule:  "github.com/custom/module",
 			GoPackage: "components",
 			WithJs:    false,
 			CssLayer:  "components",
