@@ -3,6 +3,7 @@ package newcmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
@@ -101,8 +102,7 @@ func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
 			// Step 1: Create template data
-			data, err := createComponentData(cmdCtx.CWD, cmd, cmdCtx.Config)
-			fmt.Printf("%v#", data)
+			data, err := createComponentData(cmd, cmdCtx.Config)
 			if err != nil {
 				return errors.Wrap("Failed to create template data for component", err)
 			}
@@ -173,13 +173,15 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
 			// Step 1: Create variant data
-			data, err := createVariantData(cmdCtx.CWD, cmd, cmdCtx.Config)
+			data, err := createVariantData(cmd, cmdCtx.Config)
 			if err != nil {
 				return errors.Wrap("failed to create variant data", err)
 			}
 
 			if data.DryRun {
 				cmdCtx.Logger.Info("Dry Run Mode: No changes will be made.\n")
+				cmdCtx.Logger.Reset()
+				return nil
 			}
 
 			// Step 2: Check if "define variant" command has been executed
@@ -253,10 +255,16 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 /* ------------------------------------------------------------------------- */
 
 // validateNewPrerequisites checks if the required configuration file exists for the "new" command,including:
+// - A valid go.mod file must be present.
 // - Initialized Tempo project (inherit from the main define command).
-func validateNewPrerequisites(folderPathToConfig string) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func validateNewPrerequisites(workingDir string) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-		return ctx, app.IsTempoProject(folderPathToConfig)
+		goModPath := filepath.Join(workingDir, "go.mod")
+		if _, err := os.Stat(goModPath); os.IsNotExist(err) {
+			return nil, errors.Wrap("missing go.mod file. Run 'go mod init' to create one")
+		}
+
+		return ctx, app.IsTempoProject(workingDir)
 	}
 }
 
@@ -344,32 +352,21 @@ func processEntityActions(logger logger.LoggerInterface, pathToActionsFile strin
 }
 
 // createComponentData initializes TemplateData for a component.
-func createComponentData(workingDir string, cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	fmt.Printf("DEBUG: Entering createComponentData. Working dir: %s\n", workingDir)
-
-	data, err := createBaseTemplateData(workingDir, cmd, cfg)
+func createComponentData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
+	data, err := createBaseTemplateData(cmd, cfg)
 	if err != nil {
-		fmt.Printf("DEBUG: createBaseTemplateData failed with error: %v\n", err)
 		return nil, err
 	}
 
-	fmt.Println("DEBUG: createBaseTemplateData succeeded")
-
 	// Add component-specific fields
 	data.ComponentName = gonameprovider.ToGoPackageName(cmd.String("name"))
-	fmt.Printf("DEBUG: Component name set to: %s\n", data.ComponentName)
 
 	return data, nil
 }
 
 // createVariantData initializes TemplateData for a variant.
-func createVariantData(
-	workingDir string,
-	cmd *cli.Command,
-	cfg *config.Config,
-) (*generator.TemplateData, error) {
-	data, err := createBaseTemplateData(workingDir, cmd, cfg)
-	fmt.Printf("%v#", data)
+func createVariantData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
+	data, err := createBaseTemplateData(cmd, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -381,22 +378,8 @@ func createVariantData(
 }
 
 // createBaseTemplateData initializes common fields for TemplateData.
-func createBaseTemplateData(
-	workingDir string,
-	cmd *cli.Command,
-	cfg *config.Config,
-) (*generator.TemplateData, error) {
-	fmt.Printf("DEBUG: Entering createBaseTemplateData. Working dir: %s\n", workingDir)
-
-	moduleName, err := utils.GetModuleName(workingDir)
-	if err != nil {
-		fmt.Printf("DEBUG: GetModuleName failed with error: %v\n", err)
-		return nil, err
-	}
-
-	fmt.Printf("DEBUG: Module name retrieved: %s\n", moduleName)
-
-	packageName, err := resolver.ResolveString(
+func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
+	goPackage, err := resolver.ResolveString(
 		cmd.String("package"),
 		cfg.App.GoPackage,
 		"package",
@@ -427,8 +410,8 @@ func createBaseTemplateData(
 	return &generator.TemplateData{
 		TemplatesDir: TemplatesDir,
 		ActionsDir:   ActionsDir,
-		GoModule:     moduleName,
-		GoPackage:    packageName,
+		GoModule:     cfg.App.GoModule,
+		GoPackage:    goPackage,
 		AssetsDir:    assetsDir,
 		WithJs:       isWithJs,
 		CssLayer:     cfg.App.CssLayer,
