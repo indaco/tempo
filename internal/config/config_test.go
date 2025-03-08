@@ -30,7 +30,6 @@ func TestDefaultConfig(t *testing.T) {
 		},
 		Templates: Templates{
 			Extensions:        DefaultTemplateExtensions,
-			WatermarkTip:      true,
 			GuardMarker:       "tempo",
 			FunctionProviders: []TemplateFuncProvider{},
 		},
@@ -87,7 +86,6 @@ func TestLoadConfig_WithFile(t *testing.T) {
 		},
 		Templates: Templates{
 			Extensions:        DefaultTemplateExtensions,
-			WatermarkTip:      true,
 			GuardMarker:       "custom-marker",
 			FunctionProviders: []TemplateFuncProvider{},
 		},
@@ -145,7 +143,6 @@ func TestEnsureDefaults(t *testing.T) {
 		},
 		Templates: Templates{
 			Extensions:        DefaultTemplateExtensions,
-			WatermarkTip:      true,
 			GuardMarker:       "custom-marker",
 			FunctionProviders: []TemplateFuncProvider{},
 		},

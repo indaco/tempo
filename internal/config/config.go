@@ -45,7 +45,6 @@ type TemplateFuncProvider struct {
 type Templates struct {
 	Extensions        []string               `yaml:"extensions,omitempty"`
 	GuardMarker       string                 `yaml:"guard_marker,omitempty"`
-	WatermarkTip      bool                   `yaml:"watermark,omitempty"`
 	FunctionProviders []TemplateFuncProvider `yaml:"function_providers,omitempty"`
 }
 
@@ -60,13 +59,12 @@ type Config struct {
 
 // Default values for the configuration.
 const (
-	DefaultBaseDir          = ".tempo-files"
-	DefaultGoPackage        = "components"
-	DefaultAssetsDir        = "assets"
-	DefaultCssLayer         = "components"
-	DefaultSummaryFormat    = "compact"
-	DefaultGuardMarkText    = "tempo"
-	DefaultWatermarkTipFlag = true
+	DefaultBaseDir       = ".tempo-files"
+	DefaultGoPackage     = "components"
+	DefaultAssetsDir     = "assets"
+	DefaultCssLayer      = "components"
+	DefaultSummaryFormat = "compact"
+	DefaultGuardMarkText = "tempo"
 )
 
 var (
@@ -103,7 +101,6 @@ func DefaultConfig() *Config {
 		},
 		Templates: Templates{
 			GuardMarker:       DefaultGuardMarkText,
-			WatermarkTip:      DefaultWatermarkTipFlag,
 			Extensions:        DefaultTemplateExtensions,
 			FunctionProviders: []TemplateFuncProvider{},
 		},

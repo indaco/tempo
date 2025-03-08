@@ -123,9 +123,8 @@ func prepareConfig(TempoRoot, TemplatesDir, ActionsDir string) *config.Config {
 			SummaryFormat: config.DefaultSummaryFormat,
 		},
 		Templates: config.Templates{
-			Extensions:   config.DefaultTemplateExtensions,
-			WatermarkTip: config.DefaultWatermarkTipFlag,
-			GuardMarker:  config.DefaultGuardMarkText,
+			Extensions:  config.DefaultTemplateExtensions,
+			GuardMarker: config.DefaultGuardMarkText,
 		},
 	}
 }
@@ -160,8 +159,6 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 
 	// Write templates configuration
 	sb.WriteString("templates:\n")
-	sb.WriteString("  # Whether or not to include comments as watermarks in generated files.\n")
-	sb.WriteString(fmt.Sprintf("  watermark: %s\n\n", strconv.FormatBool(cfg.Templates.WatermarkTip)))
 	sb.WriteString("  # A placeholder in template files indicating auto-generated sections.\n")
 	sb.WriteString(fmt.Sprintf("  guard_marker: %s\n\n", cfg.Templates.GuardMarker))
 	sb.WriteString("  # File extensions used for template files.\n")

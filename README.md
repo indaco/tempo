@@ -231,9 +231,6 @@ Example: Running `tempo new component --name dropdown` will generate:
   <dt><code>--js</code></dt>
   <dd>Whether or not JS is needed for the component (<em>default: false</em>)</dd>
 
-  <dt><code>--watermark</code></dt>
-  <dd>Whether or not to include comments as a watermark in generated files (<em>default: false</em>)</dd>
-
   <dt><code>--force</code></dt>
   <dd>Force overwriting if the component already exists (<em>default: false</em>)</dd>
 
@@ -455,12 +452,9 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
       workers: 4
 
       # Summary format: long, compact, json, none.
-      summary_format: long
+      summary_format: compact
 
     templates:
-      # Whether or not to include comments as watermarks in generated files.
-      watermark: true
-
       # A text placeholder or sentinel used in template files to mark auto-generated content.
       guard_marker: tempo
 
@@ -513,7 +507,6 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
 
 | Key                            | Default                     | Description                                                                                 |
 | :----------------------------- | :-------------------------- | :------------------------------------------------------------------------------------------ |
-| `templates.watermark`          | `true`                      | Whether to include comments as watermarks in generated files.                               |
 | `templates.guard_marker`       | `tempo`                     | Placeholder used in templates to mark auto-generated content.                               |
 | `templates.extensions`         | `.gotxt`, `.gotmpl`, `.tpl` | File extensions used for template files.                                                    |
 | `templates.function_providers` | `[]` _(empty)_              | A list of external function providers that can be loaded from a local path or a remote URL. |
@@ -600,7 +593,6 @@ Tempo automatically provides a set of **predefined variables** that can be used 
 | `WithJs`        | Whether JavaScript is required for the component (true/false).         |
 | `CssLayer`      | The CSS layer name associated with component styles.                   |
 | `GuardMarker`   | Placeholder used in templates to mark auto-generated sections.         |
-| `WatermarkTip`  | Whether to include watermark comments in generated files (true/false). |
 
 #### 📌 Extending Template Functions
 

@@ -1,5 +1,3 @@
-{{- if .WatermarkTip -}}/* The content of this file will be processed and transferred to  '{{ .ComponentName | goPackageName }}/css/base.templ' */ {{ end }}
-
 {{- if isEmpty .CssLayer }}
 :root {
 
