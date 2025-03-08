@@ -195,6 +195,9 @@ func renderActionFolder(action Action, data *TemplateData) error {
 /* UTILITY FUNCTIONS                                                         */
 /* ------------------------------------------------------------------------- */
 
+// LoadUserActionsFunc is a function variable to allow testing overrides.
+var LoadUserActionsFunc = LoadUserActions
+
 // LoadUserActions reads an actions.json file and parses it into a slice of JSONAction structs.
 func LoadUserActions(filePath string) ([]JSONAction, error) {
 	// Check if the file exists and is not a directory

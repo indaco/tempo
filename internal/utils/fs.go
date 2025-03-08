@@ -130,6 +130,9 @@ func RemoveIfExists(path string) error {
 	return nil
 }
 
+// CheckMissingFoldersFunc is a function variable to allow testing overrides.
+var CheckMissingFoldersFunc = CheckMissingFolders
+
 // CheckMissingFolders validates folder paths and returns a list of missing folders.
 func CheckMissingFolders(folders map[string]string) ([]string, error) {
 	var missingFolders []string
@@ -250,24 +253,19 @@ func RebasePathToOutput(inputPath, inputDir, outputDir string) string {
 // GetModuleName extracts the module name from the go.mod file.
 func GetModuleName(goModPath string) (string, error) {
 	goModFile := filepath.Join(goModPath, "go.mod")
-	fmt.Printf("DEBUG: Checking go.mod at %s\n", goModFile)
 	content, err := os.ReadFile(goModFile)
 	if err != nil {
-		fmt.Printf("DEBUG: Error reading go.mod file: %v\n", err)
 		return "", errors.Wrap("error reading go.mod file", err)
 	}
 
 	parsedModFile, err := modfile.Parse(goModFile, content, nil)
 	if err != nil {
-		fmt.Printf("DEBUG: Error parsing go.mod file: %v\n", err)
 		return "", errors.Wrap("error parsing go.mod file", err)
 	}
 
 	if parsedModFile.Module == nil || parsedModFile.Module.Mod.Path == "" {
-		fmt.Println("DEBUG: Module path not found in go.mod file")
 		return "", errors.Wrap("module path not found in go.mod file")
 	}
 
-	fmt.Printf("DEBUG: Found module name: %s\n", parsedModFile.Module.Mod.Path)
 	return parsedModFile.Module.Mod.Path, nil
 }
