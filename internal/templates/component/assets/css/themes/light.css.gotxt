@@ -1,11 +1,11 @@
-{{- if isEmpty .CssLayer }}
+{{- if isEmpty .CssLayer -}}
 :root {
 
 }
-{{- else }}
+{{- else -}}
 @layer {{ .CssLayer }} {
   :root {
 
   }
 }
-{{- end }}
+{{- end -}}

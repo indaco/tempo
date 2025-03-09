@@ -1,4 +1,4 @@
-{{- if isEmpty .CssLayer }}
+{{- if isEmpty .CssLayer -}}
 @media (prefers-color-scheme: dark) {
   :root {
 
@@ -10,7 +10,7 @@ html[data-theme='dark'],
 body.dark {
 
 }
-{{- else }}
+{{- else -}}
 @layer {{ .CssLayer }} {
   @media (prefers-color-scheme: dark) {
     :root {
@@ -24,4 +24,4 @@ body.dark {
 
   }
 }
-{{- end }}
+{{- end -}}
