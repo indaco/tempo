@@ -62,7 +62,6 @@ const (
 	DefaultBaseDir       = ".tempo-files"
 	DefaultGoPackage     = "components"
 	DefaultAssetsDir     = "assets"
-	DefaultCssLayer      = "components"
 	DefaultSummaryFormat = "compact"
 	DefaultGuardMarkText = "tempo"
 )
@@ -87,7 +86,6 @@ func DefaultConfig() *Config {
 		App: App{
 			GoPackage: DefaultGoPackage,
 			WithJs:    false,
-			CssLayer:  DefaultCssLayer,
 			AssetsDir: DefaultAssetsDir,
 		},
 		Paths: Paths{

@@ -128,7 +128,6 @@ func prepareConfig(workingDir, tempoRoot, templatesDir, actionsDir string) (*con
 			GoModule:  moduleName,
 			GoPackage: config.DefaultGoPackage,
 			AssetsDir: config.DefaultAssetsDir,
-			CssLayer:  config.DefaultCssLayer,
 		},
 		Paths: config.Paths{
 			TemplatesDir: templatesDir,
