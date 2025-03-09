@@ -9,7 +9,7 @@ import (
 
 // IsEmptyString checks if a string is empty.
 func IsEmptyString(s string) bool {
-	return s == ""
+	return strings.TrimSpace(s) == ""
 }
 
 // IsValidValue checks if a given value is in the allowedValues list.
