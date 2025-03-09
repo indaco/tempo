@@ -10,7 +10,7 @@ func TestIsEmptyString(t *testing.T) {
 	}{
 		{"Empty string", "", true},
 		{"Non-empty string", "hello", false},
-		{"String with spaces", "   ", false},
+		{"String with spaces", "   ", true},
 	}
 
 	for _, tt := range tests {

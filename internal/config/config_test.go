@@ -16,7 +16,6 @@ func TestDefaultConfig(t *testing.T) {
 		App: App{
 			GoPackage: "components",
 			WithJs:    false,
-			CssLayer:  "components",
 			AssetsDir: "assets",
 		},
 		Paths: Paths{
@@ -125,7 +124,6 @@ func TestEnsureDefaults(t *testing.T) {
 		App: App{
 			GoPackage: "components",
 			WithJs:    false,
-			CssLayer:  "components",
 			AssetsDir: "assets",
 		},
 		Paths: Paths{
