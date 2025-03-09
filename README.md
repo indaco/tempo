@@ -218,8 +218,6 @@ Example: Running `tempo new component --name dropdown` will generate:
 <details>
 <summary><strong>Component Flags</strong> (<code>tempo new component</code>)</summary>
 <dl>
-  <dt><code>--module</code> (<code>-m</code>) <em>value</em></dt>
-  <dd>The name of the Go module being worked on</dd>
 
   <dt><code>--package</code> (<code>-p</code>) <em>value</em></dt>
   <dd>The Go package name where components will be generated (<em>default: components</em>)</dd>
@@ -437,7 +435,7 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
 
     app:
       # The name of the Go module being worked on.
-      # go_module:
+      go_module: <FROM_GO.MOD>
 
       # The Go package name where components will be organized and generated.
       go_package: components
@@ -492,13 +490,13 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
 
 #### Application-Specific Settings
 
-| Key              | Default      | Description                                              |
-| :--------------- | :----------- | :------------------------------------------------------- |
-| `app.go_module`  | _(empty)_    | Name of the Go module being worked on.                   |
-| `app.go_package` | `components` | Go package name where components will be generated.      |
-| `app.assets_dir` | `assets`     | Directory where asset files (CSS, JS) will be generated. |
-| `app.with_js`    | `false`      | Whether JavaScript is required for the component.        |
-| `app.css_layer`  | `components` | CSS layer name to associate with component styles.       |
+| Key              | Default      | Description                                               |
+| :--------------- | :----------- | :-------------------------------------------------------- |
+| `app.go_module`  |              | Name of the Go module being worked on read from `go.mod`. |
+| `app.go_package` | `components` | Go package name where components will be generated.       |
+| `app.assets_dir` | `assets`     | Directory where asset files (CSS, JS) will be generated.  |
+| `app.with_js`    | `false`      | Whether JavaScript is required for the component.         |
+| `app.css_layer`  | `components` | CSS layer name to associate with component styles.        |
 
 #### Files Processing Options
 
