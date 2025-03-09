@@ -94,6 +94,8 @@ Download the pre-compiled binaries from the [releases page](https://github.com/i
 
 ## 🚀 Usage
 
+Start by creating a Go module using the `go mod init` [command](https://go.dev/ref/mod#go-mod-init).
+
 **1. Initialize tempo**
 
 ```bash
@@ -363,6 +365,8 @@ This makes `tempo sync` a great option for developers who simply want to **synch
 
 ### 🛠️ Example Standalone Workflow
 
+Start by creating a Go module using the `go mod init` [command](https://go.dev/ref/mod#go-mod-init).
+
 1. **Initialize `tempo.yaml`:**
 
    ```bash
@@ -371,37 +375,37 @@ This makes `tempo sync` a great option for developers who simply want to **synch
 
 2. **Set up your folders:**
 
-    ```bash
-    .
-    ├── assets/
-    │   └── button/
-    │       └── button.css
-    └── components/
-        └── button/
-            └── button.templ
-    ```
+   ```bash
+   .
+   ├── assets/
+   │   └── button/
+   │       └── button.css
+   └── components/
+       └── button/
+           └── button.templ
+   ```
 
 3. **Prepare .templ file with guard markers:**
 
-    ```templ
-    package button
+   ```templ
+   package button
 
-    var buttonCSSHandle = templ.NewOnceHandle()
+   var buttonCSSHandle = templ.NewOnceHandle()
 
-    templ Button() {
-      @buttonCSSHandle.Once() {
-      <style type="text/css">
-      /* [tempo] BEGIN - Do not edit! This section is auto-generated. */
-      /* [tempo] END */
-      </style>
-    }
-    ```
+   templ Button() {
+     @buttonCSSHandle.Once() {
+     <style type="text/css">
+     /* [tempo] BEGIN - Do not edit! This section is auto-generated. */
+     /* [tempo] END */
+     </style>
+   }
+   ```
 
 4. **Run the sync command:**
 
-    ```bash
-    tempo sync
-    ```
+   ```bash
+   tempo sync
+   ```
 
 5. **Result:**
 
@@ -581,42 +585,24 @@ Tempo provides a set of built-in helper functions:
 
 Tempo automatically provides a set of **predefined variables** that can be used inside templates. These variables come from the configuration and CLI context during execution.
 
-| Variable        | Description                                                            |
-| :-------------- | :--------------------------------------------------------------------- |
-| `TemplatesDir`  | The root directory containing template files.                          |
-| `ActionsDir`    | The root directory containing actions files.                           |
-| `GoModule`      | The name of the Go module being worked on.                             |
-| `GoPackage`     | The Go package name where components will be organized and generated.  |
-| `ComponentName` | The name of the component being generated.                             |
-| `VariantName`   | The name of the variant being generated (if applicable).               |
-| `AssetsDir`     | The directory where asset files (CSS, JS) will be generated.           |
-| `WithJs`        | Whether JavaScript is required for the component (true/false).         |
-| `CssLayer`      | The CSS layer name associated with component styles.                   |
-| `GuardMarker`   | Placeholder used in templates to mark auto-generated sections.         |
+| Variable        | Description                                                           |
+| :-------------- | :-------------------------------------------------------------------- |
+| `TemplatesDir`  | The root directory containing template files.                         |
+| `ActionsDir`    | The root directory containing actions files.                          |
+| `GoModule`      | The name of the Go module being worked on.                            |
+| `GoPackage`     | The Go package name where components will be organized and generated. |
+| `ComponentName` | The name of the component being generated.                            |
+| `VariantName`   | The name of the variant being generated (if applicable).              |
+| `AssetsDir`     | The directory where asset files (CSS, JS) will be generated.          |
+| `WithJs`        | Whether JavaScript is required for the component (true/false).        |
+| `CssLayer`      | The CSS layer name associated with component styles.                  |
+| `GuardMarker`   | Placeholder used in _templ_ files to mark auto-generated sections.    |
 
 #### 📌 Extending Template Functions
 
 Tempo supports external function providers, allowing you to integrate additional helper functions into your templates.
 
 See the full guide in [Extending Tempo](#-extending-tempo).
-
-##### 📝 Example: Using Registered Functions in Templates
-
-Example **component template file (component.templ.gotxt)**:
-
-```go
-package {{ .ComponentName | goPackageName }}
-
-import (
-    "{{ .GoModule }}/{{ .GoPackage | normalizePath | goPackageName }}/{{ .ComponentName | goPackageName }}/css"
-)
-
-templ {{ .ComponentName | goExportedName }}() {
-    @css.{{ .ComponentName | goExportedName }}CSS()
-
-    // continue here...
-}
-```
 
 ### Actions
 
