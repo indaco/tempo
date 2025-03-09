@@ -21,19 +21,27 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+func setupConfig(tempDir string, overrides func(cfg *config.Config)) *config.Config {
+	cfg := config.DefaultConfig()
+	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
+	cfg.App.GoPackage = filepath.Join(tempDir, "components")
+	cfg.App.AssetsDir = filepath.Join(tempDir, "assets")
+	cfg.Paths.TemplatesDir = filepath.Join(cfg.TempoRoot, "templates")
+	cfg.Paths.ActionsDir = filepath.Join(cfg.TempoRoot, "actions")
+
+	if overrides != nil {
+		overrides(cfg)
+	}
+	return cfg
+}
+
 func TestSyncCommand(t *testing.T) {
 	tempDir := os.TempDir()
 	inputDir := filepath.Join(tempDir, "input")
 	outputDir := filepath.Join(tempDir, "output")
-	TempoRoot := filepath.Join(tempDir, ".tempo-files")
-	TemplatesDir := filepath.Join(TempoRoot, "templates")
-	ActionsDir := filepath.Join(TempoRoot, "actions")
 
 	// Setup CLI config
-	cfg := config.DefaultConfig()
-	cfg.TempoRoot = TempoRoot
-	cfg.Paths.TemplatesDir = TemplatesDir
-	cfg.Paths.ActionsDir = ActionsDir
+	cfg := setupConfig(tempDir, nil)
 
 	// Write `tempo.yaml`
 	configPath := filepath.Join(tempDir, "tempo.yaml")
@@ -51,9 +59,9 @@ func TestSyncCommand(t *testing.T) {
 	// Ensure required folders exist before running "tempo sync"
 	_ = os.MkdirAll(inputDir, 0755)
 	_ = os.MkdirAll(outputDir, 0755)
-	_ = os.MkdirAll(filepath.Join(TemplatesDir, "component"), 0755)
-	_ = os.MkdirAll(filepath.Join(TemplatesDir, "component-variant"), 0755)
-	_ = os.MkdirAll(ActionsDir, 0755)
+	_ = os.MkdirAll(filepath.Join(cfg.Paths.TemplatesDir, "component"), 0755)
+	_ = os.MkdirAll(filepath.Join(cfg.Paths.TemplatesDir, "component-variant"), 0755)
+	_ = os.MkdirAll(cfg.Paths.ActionsDir, 0755)
 
 	_ = os.MkdirAll(cfg.App.AssetsDir, 0755)
 	_ = os.MkdirAll(cfg.App.GoPackage, 0755)
