@@ -19,7 +19,7 @@
       "echo '* Set Git hooks path\n'",
       "find .githooks -type f -exec chmod +x {} \\;",
       "git config core.hooksPath .githooks",
-      "echo '* Install go-modernize",
+      "echo '* Install go-modernize'",
       "go install golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest"
     ],
     "scripts": {}
