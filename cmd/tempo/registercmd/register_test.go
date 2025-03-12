@@ -41,6 +41,12 @@ func clearRegistry() {
 // TestRegisterCommand_Functions_Repo tests registering functions from a remote repository.
 func TestRegisterCommand_Functions_Repo(t *testing.T) {
 	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	cfg := setupConfig(tempDir, nil)
 	// Write a valid config file (simulate "tempo init")
 	configPath := filepath.Join(tempDir, "tempo.yaml")
@@ -94,6 +100,12 @@ func TestRegisterCommand_Functions_Repo(t *testing.T) {
 // TestRegisterCommand_Functions_Local tests registering functions from a local provider.
 func TestRegisterCommand_Functions_Local(t *testing.T) {
 	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	cfg := setupConfig(tempDir, nil)
 	// Write a config file to simulate "tempo init".
 	configPath := filepath.Join(tempDir, "tempo.yaml")
@@ -169,6 +181,12 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 // TestRegisterCommand_Functions_Both tests registering when both --url and --path are provided.
 func TestRegisterCommand_Functions_Both(t *testing.T) {
 	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	cfg := setupConfig(tempDir, nil)
 	// Write config file to simulate "tempo init".
 	configPath := filepath.Join(tempDir, "tempo.yaml")

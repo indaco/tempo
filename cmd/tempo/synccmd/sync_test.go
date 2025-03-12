@@ -40,6 +40,11 @@ func TestSyncCommand(t *testing.T) {
 	inputDir := filepath.Join(tempDir, "input")
 	outputDir := filepath.Join(tempDir, "output")
 
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
 	// Setup CLI config
 	cfg := setupConfig(tempDir, nil)
 
