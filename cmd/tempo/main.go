@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/indaco/tempo/cmd/tempo/cleancmd"
-	"github.com/indaco/tempo/cmd/tempo/definecmd"
+	"github.com/indaco/tempo/cmd/tempo/componentcmd"
 	"github.com/indaco/tempo/cmd/tempo/initcmd"
-	"github.com/indaco/tempo/cmd/tempo/newcmd"
 	"github.com/indaco/tempo/cmd/tempo/registercmd"
 	"github.com/indaco/tempo/cmd/tempo/synccmd"
+	"github.com/indaco/tempo/cmd/tempo/variantcmd"
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/errors"
@@ -52,11 +51,10 @@ func runApp(args []string) error {
 		Description: description,
 		Commands: []*cli.Command{
 			initcmd.SetupInitCommand(cliCtx),
-			definecmd.SetupDefineCommand(cliCtx),
-			newcmd.SetupNewCommand(cliCtx),
-			synccmd.SetupSyncCommand(cliCtx),
+			componentcmd.SetupComponentCommand(cliCtx),
+			variantcmd.SetupVariantCommand(cliCtx),
 			registercmd.SetupRegisterCommand(cliCtx),
-			cleancmd.SetupCleanCommand(cliCtx),
+			synccmd.SetupSyncCommand(cliCtx),
 		},
 	}
 
