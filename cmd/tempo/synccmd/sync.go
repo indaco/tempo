@@ -35,31 +35,7 @@ func SetupSyncCommand(cmdCtx *app.AppContext) *cli.Command {
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			helpers.EnableLoggerIndentation(cmdCtx.Logger)
-
-			// Step 1: Get flag values
-			opts, summaryOpts, err := resolveSyncFlags(ctx, cmd, cmdCtx)
-			if err != nil {
-				return err
-			}
-
-			// Step 2: Check prerequisites
-			if err := validateSyncPrerequisites(opts.InputDir, opts.OutputDir); err != nil {
-				return err
-			}
-
-			// Step 3: Run file processing
-			cmdCtx.Logger.Info("Processing files...")
-			if err := runWorkerPool(cmdCtx, opts, summaryOpts); err != nil {
-				return errors.Wrap("failed processing files", err)
-			} else {
-				cmdCtx.Logger.Success("Processing completed successfully without errors.")
-			}
-			helpers.ResetLogger(cmdCtx.Logger)
-
-			return nil
-		},
+		Action: runSyncCommand(cmdCtx),
 	}
 }
 
@@ -118,6 +94,37 @@ func getFlags() []cli.Flag {
 			Aliases: []string{"rf"},
 			Usage:   "Export summary to a JSON file",
 		},
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+/* Command Runner                                                            */
+/* ------------------------------------------------------------------------- */
+func runSyncCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		helpers.EnableLoggerIndentation(cmdCtx.Logger)
+
+		// Step 1: Get flag values
+		opts, summaryOpts, err := resolveSyncFlags(ctx, cmd, cmdCtx)
+		if err != nil {
+			return err
+		}
+
+		// Step 2: Check prerequisites
+		if err := validateSyncPrerequisites(opts.InputDir, opts.OutputDir); err != nil {
+			return err
+		}
+
+		// Step 3: Run file processing
+		cmdCtx.Logger.Info("Processing files...")
+		if err := runWorkerPool(cmdCtx, opts, summaryOpts); err != nil {
+			return errors.Wrap("failed processing files", err)
+		} else {
+			cmdCtx.Logger.Success("Processing completed successfully without errors.")
+		}
+		helpers.ResetLogger(cmdCtx.Logger)
+
+		return nil
 	}
 }
 

@@ -26,8 +26,8 @@ const (
 	email       = "github@mircoveltri.me"
 )
 
-// runApp encapsulates the main application logic and returns an error.
-func runApp(args []string) error {
+// runCLI encapsulates the main cli logic and returns an error.
+func runCLI(args []string) error {
 	// Get current working directory.
 	cwd := utils.GetCWD()
 
@@ -63,7 +63,7 @@ func runApp(args []string) error {
 }
 
 func main() {
-	if err := runApp(os.Args); err != nil {
+	if err := runCLI(os.Args); err != nil {
 		errors.LogErrorChain(err)
 		os.Exit(1)
 	}

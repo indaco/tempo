@@ -14,6 +14,9 @@ var actionHandlers = map[string]ActionHandler{
 	RenderActionId: &RenderAction{},
 }
 
+// Default function implementation
+var ProcessActionsFunc = ProcessActions
+
 // ProcessActions processes a list of actions using the appropriate handlers.
 func ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
 	for _, action := range actions {

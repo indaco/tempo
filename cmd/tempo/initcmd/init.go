@@ -23,7 +23,6 @@ import (
 
 // SetupInitCommand creates the "init" command for initializing a Tempo project.
 func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
-	const configFileName = "tempo.yaml"
 
 	return &cli.Command{
 		Name:                   "init",
@@ -31,38 +30,7 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 		Description:            "Initialize a Tempo project",
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			helpers.EnableLoggerIndentation(cmdCtx.Logger)
-
-			// Step 1: resolve base folder for tempo files & config
-			userBaseFolder := cmd.String("base-folder")
-			tempoRoot := filepath.Join(userBaseFolder, cmdCtx.Config.TempoRoot)
-			tempoConfigPath := filepath.Join(userBaseFolder, configFileName)
-
-			// Step 2: ensure configuration file does not already exist
-			if err := validateInitPrerequisites(cmdCtx.CWD, tempoConfigPath); err != nil {
-				return err
-			}
-
-			// Step 3: Resolve derived folders
-			templatesDir, actionsDir := config.DerivedFolderPaths(userBaseFolder)
-
-			// Step 4: Generate and write the configuration file
-			cmdCtx.Logger.Info("Generating", tempoConfigPath)
-			cfg, err := prepareConfig(cmdCtx.CWD, tempoRoot, templatesDir, actionsDir)
-			if err != nil {
-				return errors.Wrap("Failed to prepare the configuration file", err)
-			}
-			if err := writeConfigFile(tempoConfigPath, cfg); err != nil {
-				return errors.Wrap("Failed to write the configuration file", err, tempoConfigPath)
-			}
-
-			// Step 5: Log the successful initialization
-			cmdCtx.Logger.Success("Done!", "Customize it to match your project needs.")
-			helpers.ResetLogger(cmdCtx.Logger)
-
-			return nil
-		},
+		Action:                 runInitCommand(cmdCtx),
 	}
 }
 
@@ -77,6 +45,46 @@ func getFlags() []cli.Flag {
 			Name:  "base-folder",
 			Usage: "Specify the base folder for Tempo files (default: current directory)",
 		},
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+/* Command Runner                                                            */
+/* ------------------------------------------------------------------------- */
+func runInitCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		const configFileName = "tempo.yaml"
+
+		helpers.EnableLoggerIndentation(cmdCtx.Logger)
+
+		// Step 1: resolve base folder for tempo files & config
+		userBaseFolder := cmd.String("base-folder")
+		tempoRoot := filepath.Join(userBaseFolder, cmdCtx.Config.TempoRoot)
+		tempoConfigPath := filepath.Join(userBaseFolder, configFileName)
+
+		// Step 2: ensure configuration file does not already exist
+		if err := validateInitPrerequisites(cmdCtx.CWD, tempoConfigPath); err != nil {
+			return err
+		}
+
+		// Step 3: Resolve derived folders
+		templatesDir, actionsDir := config.DerivedFolderPaths(userBaseFolder)
+
+		// Step 4: Generate and write the configuration file
+		cmdCtx.Logger.Info("Generating", tempoConfigPath)
+		cfg, err := prepareConfig(cmdCtx.CWD, tempoRoot, templatesDir, actionsDir)
+		if err != nil {
+			return errors.Wrap("Failed to prepare the configuration file", err)
+		}
+		if err := writeConfigFile(tempoConfigPath, cfg); err != nil {
+			return errors.Wrap("Failed to write the configuration file", err, tempoConfigPath)
+		}
+
+		// Step 5: Log the successful initialization
+		cmdCtx.Logger.Success("Done!", "Customize it to match your project needs.")
+		helpers.ResetLogger(cmdCtx.Logger)
+
+		return nil
 	}
 }
 

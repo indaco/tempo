@@ -249,6 +249,80 @@ func GenerateActionFile(entityType string, data *TemplateData, actions []Action,
 	return nil
 }
 
+// RetrieveActionsFile retrieves actions from a JSON file.
+func RetrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, cfg *config.Config) (JSONActionList, error) {
+	// Step 1: Resolve action file path
+	resolvedPath, err := resolveActionFilePath(cfg.Paths.ActionsDir, actionFilePath)
+	if err != nil {
+		return nil, errors.Wrap("failed to resolve action file path", err)
+	}
+
+	// Step 2: Load user-defined actions
+	userActions, err := LoadUserActions(resolvedPath)
+	if err != nil {
+		return nil, errors.Wrap("failed to load user-defined actions from:", err, resolvedPath)
+	}
+
+	logger.Info("Actions loaded").
+		WithAttrs(
+			"action_file", resolvedPath,
+			"num_actions", len(userActions),
+		)
+
+	return userActions, nil
+}
+
+// ProcessEntityActions retrieves and processes actions from a JSON file.
+func ProcessEntityActions(logger logger.LoggerInterface, pathToActionsFile string, data *TemplateData, cfg *config.Config) error {
+	// Retrieve user actions
+	userActions, err := RetrieveActionsFile(logger, pathToActionsFile, cfg)
+	if err != nil {
+		return errors.Wrap("failed to get component actions file", err)
+	}
+
+	// Convert to built-in actions
+	builtInActions := userActions.ToActions(RenderActionId)
+
+	if data.Force {
+		for i := range builtInActions {
+			builtInActions[i].Force = true
+		}
+	}
+
+	// Process actions
+	if err := ProcessActionsFunc(logger, builtInActions, data); err != nil {
+		return errors.Wrap("failed to process actions", err)
+	}
+
+	return nil
+}
+
+// resolveActionFilePath resolves the path to an action file.
+func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
+	// Step 1: Resolve the action file path relative to the actions folder, if provided
+	if ActionsDir != "" {
+		resolvedPath := filepath.Join(ActionsDir, actionFileFlag)
+		exists, err := utils.FileExistsFunc(resolvedPath)
+		if err != nil {
+			return "", err
+		} else if exists {
+			return resolvedPath, nil
+		}
+	}
+
+	// Step 2: Check if the provided actionFileFlag is a valid full path
+	// Check the actionFileFlag as an absolute path
+	exists, err := utils.FileExistsFunc(actionFileFlag)
+	if err != nil {
+		return "", errors.Wrap("error checking action file path", err, actionFileFlag)
+	}
+	if !exists {
+		return "", errors.Wrap("action file does not exist", actionFileFlag)
+	}
+
+	return actionFileFlag, nil
+}
+
 // Helper to read files from embedded or disk.
 func readFile(path string) ([]byte, error) {
 	// Check if the file exists on disk

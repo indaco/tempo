@@ -3,6 +3,7 @@ package helpers
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
@@ -19,6 +20,13 @@ func BuildMissingFoldersError(missingFolders map[string]string, contextMsg strin
 	sb.WriteString("oops! It looks like some required folders are missing.\n\n")
 	sb.WriteString(contextMsg)
 	sb.WriteString("\n\nMissing folders:\n")
+
+	// Collect keys and sort them
+	keys := make([]string, 0, len(missingFolders))
+	for name := range missingFolders {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
 
 	// Append each missing folder entry
 	for name, path := range missingFolders {

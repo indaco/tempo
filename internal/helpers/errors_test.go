@@ -19,7 +19,7 @@ func TestBuildMissingFoldersError(t *testing.T) {
 				"Input directory": "./input",
 			},
 			contextMsg:   "Please ensure all required folders exist.",
-			helpCommands: []string{"tempo define -h", "tempo create -h"},
+			helpCommands: []string{"tempo component -h", "tempo variant -h"},
 			expectedError: `oops! It looks like some required folders are missing.
 
 Please ensure all required folders exist.
@@ -28,8 +28,8 @@ Missing folders:
   - Input directory: ./input
 
 💡 Need help? Run:
-  - tempo define -h
-  - tempo create -h`,
+  - tempo component -h
+  - tempo variant -h`,
 		},
 		{
 			name: "Multiple Missing Folders Without Help",
