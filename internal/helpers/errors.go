@@ -26,11 +26,11 @@ func BuildMissingFoldersError(missingFolders map[string]string, contextMsg strin
 	for name := range missingFolders {
 		keys = append(keys, name)
 	}
-	sort.Strings(keys)
+	sort.Strings(keys) // Ensure consistent ordering
 
-	// Append each missing folder entry
-	for name, path := range missingFolders {
-		fmt.Fprintf(&sb, "  - %s: %s\n", textprovider.SnakeToTitle(name), path)
+	// Append each missing folder entry in sorted order
+	for _, name := range keys {
+		fmt.Fprintf(&sb, "  - %s: %s\n", textprovider.SnakeToTitle(name), missingFolders[name])
 	}
 
 	// Append help commands if available
