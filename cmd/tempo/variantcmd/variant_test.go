@@ -26,7 +26,7 @@ func TestSetupVariantCommand(t *testing.T) {
 	}
 
 	// Check Command Description
-	expectedUsage := "Define component variant templates and create instances based on them"
+	expectedUsage := "Define variant templates and generate instances from them"
 	if command.Usage != expectedUsage {
 		t.Errorf("Expected description '%s', got '%s'", expectedUsage, command.Description)
 	}

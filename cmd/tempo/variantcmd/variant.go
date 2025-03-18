@@ -11,7 +11,7 @@ import (
 func SetupVariantCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:  "variant",
-		Usage: "Define component variant templates and create instances based on them",
+		Usage: "Define variant templates and generate instances from them",
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},
