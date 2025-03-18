@@ -153,9 +153,9 @@ VERSION:
 
 COMMANDS:
    init       Initialize a Tempo project
-   component  Define reusable component templates and generate instances from them
-   variant    Define component variant templates and create instances based on them
-   register   Register is used to extend tempo.
+   component  Define component templates and generate instances from them
+   variant    Define variant templates and generate instances from them
+   register   Register is used to extend tempo
    sync       Process & sync asset files into templ components
    help       Shows a list of commands or help for one command
 

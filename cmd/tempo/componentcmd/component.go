@@ -11,7 +11,7 @@ import (
 func SetupComponentCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:  "component",
-		Usage: "Define reusable component templates and generate instances from them",
+		Usage: "Define component templates and generate instances from them",
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},
