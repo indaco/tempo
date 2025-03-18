@@ -344,9 +344,11 @@ This command scans the `input` folder for CSS and JS files and injects their con
 
 Whenever you update your CSS or JS files, simply run `tempo sync` to propagate the changes.
 
-> [!TIP] > **Live Reload:** If you're using a live reload tool like [air](https://github.com/air-verse/air), [templier](https://github.com/romshark/templier), or [watchexec](https://github.com/watchexec/watchexec), pass `--summary none` to reduce unnecessary output.
+> [!TIP]
+> **Live Reload:** If you're using a live reload tool like [air](https://github.com/air-verse/air), [templier](https://github.com/romshark/templier), or [watchexec](https://github.com/watchexec/watchexec), pass `--summary none` to reduce unnecessary output.
 
-> [!NOTE] > **Want to use tempo without scaffolding?**
+> [!NOTE]
+> **Want to use tempo without scaffolding?**
 > Check out [Using tempo sync as a Standalone Command](#-using-tempo-sync-as-a-standalone-command).
 
 <details>
