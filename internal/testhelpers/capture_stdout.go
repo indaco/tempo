@@ -7,40 +7,48 @@ import (
 	"github.com/fatih/color"
 )
 
-// CaptureStdout captures all writes to os.Stdout during the execution of the provided function.
-// It returns the captured output as a string and restores os.Stdout to its original state afterward.
+// CaptureStdout captures all writes to os.Stdout and os.Stderr during the execution of the provided function.
+// It returns the combined captured output as a string and restores os.Stdout and os.Stderr to their original states.
 func CaptureStdout(f func()) (string, error) {
 	color.NoColor = true // Disable colors for testing
 
-	// Save the original stdout and color output
-	origStdout := os.Stdout
+	// Save original stdout, stderr, and color output
+	origStdout, origStderr := os.Stdout, os.Stderr
 	origColorOutput := color.Output
 
-	// Create a pipe to capture stdout
-	r, w, err := os.Pipe()
+	// Create pipes to capture stdout and stderr
+	rOut, wOut, err := os.Pipe()
 	if err != nil {
 		return "", err
 	}
-	os.Stdout = w
-	color.Output = w // Redirect color output to the pipe
+	rErr, wErr, err := os.Pipe()
+	if err != nil {
+		return "", err
+	}
 
-	// Create a channel to capture the output asynchronously
+	// Redirect output
+	os.Stdout, os.Stderr = wOut, wErr
+	color.Output = wOut // Redirect color output to the pipe
+
+	// Capture output concurrently
 	outputChan := make(chan string)
 	go func() {
-		var buf bytes.Buffer
-		_, _ = buf.ReadFrom(r)
-		outputChan <- buf.String()
+		var bufOut, bufErr bytes.Buffer
+		_, _ = bufOut.ReadFrom(rOut)
+		_, _ = bufErr.ReadFrom(rErr)
+		outputChan <- bufOut.String() + bufErr.String()
 	}()
 
 	// Execute the function
 	f()
 
-	// Close the pipe and restore stdout and color output
-	w.Close()
-	os.Stdout = origStdout
+	// Close pipes and restore output
+	wOut.Close()
+	wErr.Close()
+	os.Stdout, os.Stderr = origStdout, origStderr
 	color.Output = origColorOutput
 
-	// Retrieve the captured output
+	// Retrieve captured output
 	output := <-outputChan
 	return output, nil
 }
