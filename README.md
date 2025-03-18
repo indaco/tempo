@@ -344,13 +344,6 @@ This command scans the `input` folder for CSS and JS files and injects their con
 
 Whenever you update your CSS or JS files, simply run `tempo sync` to propagate the changes.
 
-> [!TIP]
-> **Live Reload:** If you're using a live reload tool like [air](https://github.com/air-verse/air), [templier](https://github.com/romshark/templier), or [watchexec](https://github.com/watchexec/watchexec), pass `--summary none` to reduce unnecessary output.
-
-> [!NOTE]
-> **Want to use tempo without scaffolding?**
-> Check out [Using tempo sync as a Standalone Command](#-using-tempo-sync-as-a-standalone-command).
-
 <details>
 <summary><strong>Flags</strong></summary>
 <dl>
@@ -382,6 +375,13 @@ Whenever you update your CSS or JS files, simply run `tempo sync` to propagate t
   <dd>Export the summary to a JSON file</dd>
 </dl>
 </details>
+
+> [!TIP]
+> **Live Reload:** If you're using a live reload tool like [air](https://github.com/air-verse/air), [templier](https://github.com/romshark/templier), or [watchexec](https://github.com/watchexec/watchexec), pass `--summary none` to reduce unnecessary output.
+
+> [!NOTE]
+> **Want to use tempo without scaffolding?**
+> Check out [Using tempo sync as a Standalone Command](#-using-tempo-sync-as-a-standalone-command).
 
 ## ⚡ Using tempo sync as a Standalone Command
 
