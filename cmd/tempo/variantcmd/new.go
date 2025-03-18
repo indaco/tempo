@@ -10,7 +10,6 @@ import (
 	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/generator"
 	"github.com/indaco/tempo/internal/helpers"
-	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/resolver"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
 	"github.com/indaco/tempo/internal/utils"
@@ -79,7 +78,7 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 			}
 
 			// Step 5: Retrieve and process actions
-			if err := processEntityActions(cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
+			if err := generator.ProcessEntityActions(cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
 				return errors.Wrap("failed to process actions for variant", err, data.ComponentName)
 			}
 
@@ -188,31 +187,6 @@ func validateVariantNewPrerequisites(cfg *config.Config) func(ctx context.Contex
 /* Helper Functions                                                          */
 /* ------------------------------------------------------------------------- */
 
-// processEntityActions retrieves and processes actions from a JSON file.
-func processEntityActions(logger logger.LoggerInterface, pathToActionsFile string, data *generator.TemplateData, cfg *config.Config) error {
-	// Retrieve user actions
-	userActions, err := retrieveActionsFile(logger, pathToActionsFile, cfg)
-	if err != nil {
-		return errors.Wrap("failed to get component actions file", err)
-	}
-
-	// Convert to built-in actions
-	builtInActions := userActions.ToActions(generator.RenderActionId)
-
-	if data.Force {
-		for i := range builtInActions {
-			builtInActions[i].Force = true
-		}
-	}
-
-	// Process actions
-	if err := generator.ProcessActions(logger, builtInActions, data); err != nil {
-		return errors.Wrap("failed to process actions", err)
-	}
-
-	return nil
-}
-
 // createVariantData initializes TemplateData for a variant.
 func createVariantData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
 	data, err := createBaseTemplateData(cmd, cfg)
@@ -268,64 +242,4 @@ func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.Te
 		Force:        isForce,
 		DryRun:       isDryRun,
 	}, nil
-}
-
-// retrieveActionsFile retrieves actions from a JSON file.
-func retrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, cfg *config.Config) (generator.JSONActionList, error) {
-	var userActions generator.JSONActionList
-
-	// Step 1: Resolve action file path
-	resolvedPath, err := resolveActionFilePath(cfg.Paths.ActionsDir, actionFilePath)
-	if err != nil {
-		return nil, errors.Wrap("failed to resolve action file path", err)
-	}
-
-	// Step 2: Check if the action file exists
-	if resolvedPath != "" {
-		exists, err := utils.FileExistsFunc(resolvedPath)
-		if err != nil {
-			return nil, err
-		} else if exists {
-			// Step 3: Load user-defined actions
-			userActions, err = generator.LoadUserActions(resolvedPath)
-			if err != nil {
-				return nil, errors.Wrap("failed to load user-defined actions from:", err, resolvedPath)
-			}
-			logger.Info("Actions loaded").
-				WithAttrs(
-					"action_file", resolvedPath,
-					"num_actions", len(userActions),
-				)
-		} else {
-			logger.Info("No user-defined actions found, proceeding with built-in actions only")
-		}
-	}
-
-	return userActions, nil
-}
-
-// resolveActionFilePath resolves the path to an action file.
-func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
-	// Step 1: Resolve the action file path relative to the actions folder, if provided
-	if ActionsDir != "" {
-		resolvedPath := filepath.Join(ActionsDir, actionFileFlag)
-		exists, err := utils.FileExistsFunc(resolvedPath)
-		if err != nil {
-			return "", err
-		} else if exists {
-			return resolvedPath, nil
-		}
-	}
-
-	// Step 2: Check if the provided actionFileFlag is a valid full path
-	// Check the actionFileFlag as an absolute path
-	exists, err := utils.FileExistsFunc(actionFileFlag)
-	if err != nil {
-		return "", errors.Wrap("error checking action file path", err, actionFileFlag)
-	}
-	if !exists {
-		return "", errors.Wrap("action file does not exist", actionFileFlag)
-	}
-
-	return actionFileFlag, nil
 }

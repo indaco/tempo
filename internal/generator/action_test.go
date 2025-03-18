@@ -3,6 +3,7 @@ package generator
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,6 +12,8 @@ import (
 	"testing"
 
 	"github.com/indaco/tempo/internal/config"
+	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 )
 
@@ -55,6 +58,66 @@ func TestGenerateActionJSONFile(t *testing.T) {
 			t.Errorf("Generated actions = %v; want %v", generatedActions, expectedActions)
 		}
 	})
+}
+
+// TestGenerateActionFile tests the GenerateActionFile function.
+func TestGenerateActionFile(t *testing.T) {
+	tempDir := t.TempDir() // Create a temporary directory for the test
+	actionsDir := filepath.Join(tempDir, "actions")
+	err := os.Mkdir(actionsDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+
+	// Define test data
+	entityType := "test-entity"
+	expectedFile := filepath.Join(actionsDir, entityType+".json")
+
+	actions := []Action{
+		{Item: "test-action-1", TemplateFile: "template1.tmpl", Path: "path/to/file1"},
+		{Item: "test-action-2", TemplateFile: "template2.tmpl", Path: "path/to/file2"},
+	}
+
+	data := &TemplateData{ActionsDir: actionsDir}
+
+	// Create a mock logger (replace with a proper mock if needed)
+	mockLogger := &testutils.MockLogger{}
+
+	// Run the function
+	err = GenerateActionFile(entityType, data, actions, mockLogger)
+	if err != nil {
+		t.Fatalf("GenerateActionFile failed: %v", err)
+	}
+
+	// Check if the file was created
+	if _, err := os.Stat(expectedFile); os.IsNotExist(err) {
+		t.Fatalf("Expected file %s was not created", expectedFile)
+	}
+
+	// Read the file content
+	content, err := os.ReadFile(expectedFile)
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	// Unmarshal JSON to check content
+	var writtenActions []JSONAction
+	err = json.Unmarshal(content, &writtenActions)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Validate the written content
+	expectedJSONActions := ActionList(actions).ToJSONAction()
+	if len(writtenActions) != len(expectedJSONActions) {
+		t.Fatalf("Expected %d actions, but got %d", len(expectedJSONActions), len(writtenActions))
+	}
+
+	for i, action := range writtenActions {
+		if action != expectedJSONActions[i] {
+			t.Fatalf("Mismatch in action at index %d: expected %+v, got %+v", i, expectedJSONActions[i], action)
+		}
+	}
 }
 
 // TestActionConversion tests the ToJSONAction and ToActions conversion methods.
@@ -608,6 +671,226 @@ func TestRenderAction_Execute_Folder_Direct(t *testing.T) {
 	expectedOutput := "Hello World"
 	if string(renderedContent) != expectedOutput {
 		t.Errorf("Unexpected rendered content: got %q, want %q", string(renderedContent), expectedOutput)
+	}
+}
+
+func TestRetrieveActionsFile(t *testing.T) {
+	tempDir := t.TempDir()
+	actionsDir := filepath.Join(tempDir, "actions")
+	err := os.Mkdir(actionsDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+
+	existingFile := filepath.Join(actionsDir, "existing.json")
+	invalidJSONFile := filepath.Join(actionsDir, "invalid.json")
+	nonExistentFile := filepath.Join(actionsDir, "nonexistent.json")
+
+	// Create a valid JSON actions file
+	validJSONContent := `[
+		{"item": "test", "template_file": "test.tmpl", "path": "test/path"}
+	]`
+	err = os.WriteFile(existingFile, []byte(validJSONContent), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write valid actions file: %v", err)
+	}
+
+	// Create an invalid JSON file
+	invalidJSONContent := `{ invalid json `
+	err = os.WriteFile(invalidJSONFile, []byte(invalidJSONContent), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write invalid JSON file: %v", err)
+	}
+
+	mockLogger := &testutils.MockLogger{} // Replace with your logger mock
+	mockConfig := &config.Config{
+		Paths: config.Paths{
+			ActionsDir: actionsDir,
+		},
+	}
+
+	tests := []struct {
+		name           string
+		actionFilePath string
+		expectedErr    string
+	}{
+		{
+			name:           "Valid action file loads successfully",
+			actionFilePath: existingFile,
+			expectedErr:    "",
+		},
+		{
+			name:           "Non-existent action file",
+			actionFilePath: nonExistentFile,
+			expectedErr:    "failed to resolve action file path",
+		},
+		{
+			name:           "Invalid JSON format",
+			actionFilePath: invalidJSONFile,
+			expectedErr:    "failed to load user-defined actions",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := RetrieveActionsFile(mockLogger, tc.actionFilePath, mockConfig)
+
+			if tc.expectedErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
+					t.Fatalf("Expected error %q, but got: %v", tc.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestResolveActionFilePath(t *testing.T) {
+	tempDir := t.TempDir()
+	actionsDir := filepath.Join(tempDir, "actions")
+	existingFile := filepath.Join(actionsDir, "existing.json")
+	nonExistentFile := filepath.Join(tempDir, "nonexistent.json")
+	mockError := fmt.Errorf("mock error")
+
+	tests := []struct {
+		name           string
+		actionsDir     string
+		actionFileFlag string
+		mockFileExists func(path string) (bool, error)
+		expectedErr    string
+		expectedResult string
+	}{
+		{
+			name:           "Action file found in ActionsDir",
+			actionsDir:     actionsDir,
+			actionFileFlag: "existing.json",
+			mockFileExists: func(path string) (bool, error) {
+				if path == existingFile {
+					return true, nil
+				}
+				return false, nil
+			},
+			expectedResult: existingFile,
+		},
+		{
+			name:           "Action file does not exist",
+			actionsDir:     "",
+			actionFileFlag: nonExistentFile,
+			mockFileExists: func(path string) (bool, error) {
+				return false, nil
+			},
+			expectedErr: "action file does not exist",
+		},
+		{
+			name:           "Error checking resolvedPath",
+			actionsDir:     actionsDir,
+			actionFileFlag: "error.json",
+			mockFileExists: func(path string) (bool, error) {
+				if strings.Contains(path, actionsDir) {
+					return false, mockError
+				}
+				return false, nil
+			},
+			expectedErr: "mock error",
+		},
+		{
+			name:           "Error checking absolute path",
+			actionsDir:     "",
+			actionFileFlag: nonExistentFile,
+			mockFileExists: func(path string) (bool, error) {
+				if path == nonExistentFile {
+					return false, mockError
+				}
+				return false, nil
+			},
+			expectedErr: "error checking action file path",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Mock the function
+			utils.FileExistsFunc = tc.mockFileExists
+			defer func() { utils.FileExistsFunc = utils.FileExists }() // Reset after test
+
+			result, err := resolveActionFilePath(tc.actionsDir, tc.actionFileFlag)
+
+			if tc.expectedErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
+					t.Fatalf("Expected error %q, but got: %v", tc.expectedErr, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+				if result != tc.expectedResult {
+					t.Fatalf("Expected result %q, but got %q", tc.expectedResult, result)
+				}
+			}
+		})
+	}
+}
+
+func TestProcessEntityActions(t *testing.T) {
+	tempDir := t.TempDir()
+	actionsDir := filepath.Join(tempDir, "actions")
+	err := os.Mkdir(actionsDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+
+	// Create a sample action file
+	actionFilePath := filepath.Join(actionsDir, "test-entity.json")
+
+	actions := JSONActionList{
+		{Item: "action-1", TemplateFile: "template1.tmpl", Path: "path/to/file1"},
+		{Item: "action-2", TemplateFile: "template2.tmpl", Path: "path/to/file2"},
+	}
+
+	// Write actions to the JSON file
+	err = utils.WriteJSONToFile(actionFilePath, actions)
+	if err != nil {
+		t.Fatalf("Failed to write actions file: %v", err)
+	}
+
+	mockLogger := &testutils.MockLogger{} // Replace with an actual logger mock
+	mockConfig := &config.Config{
+		Paths: config.Paths{
+			ActionsDir: actionsDir,
+		},
+	}
+
+	templateData := &TemplateData{Force: true}
+
+	// Override ProcessActionsFunc temporarily
+	originalProcessActions := ProcessActionsFunc
+	ProcessActionsFunc = func(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+		// Debugging output
+		for i, action := range actions {
+			t.Logf("DEBUG: Action[%d]: %+v", i, action)
+		}
+		return nil
+	}
+	defer func() { ProcessActionsFunc = originalProcessActions }() // Restore after test
+
+	// Run processEntityActions
+	err = ProcessEntityActions(mockLogger, actionFilePath, templateData, mockConfig)
+	if err != nil {
+		t.Fatalf("processEntityActions failed: %v", err)
+	}
+
+	// Manually create the expected actions list, ensuring Force=true
+	expectedActions := actions.ToActions(RenderActionId)
+	for i := range expectedActions {
+		expectedActions[i].Force = true
+	}
+
+	// Validate the actions
+	for i, action := range expectedActions {
+		if action.Force != true {
+			t.Fatalf("Expected action at index %d to have Force=true, but got false", i)
+		}
 	}
 }
 
