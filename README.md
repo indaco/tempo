@@ -152,12 +152,12 @@ VERSION:
    v0.1.0
 
 COMMANDS:
-   init            Initialize a Tempo project
-   component       Define templates and actions for component or variant
-   variant         Generate a component or variant based on defined templates
-   register        Register is used to extend tempo
-   sync            Process & sync asset files into component templates
-   help            Shows a list of commands or help for one command
+   init       Initialize a Tempo project
+   component  Define reusable component templates and generate instances from them
+   variant    Define component variant templates and create instances based on them
+   register   Register is used to extend tempo.
+   sync       Process & sync asset files into templ components
+   help       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h     show help
@@ -170,22 +170,22 @@ Initialize a tempo project by generating a `tempo.yaml` configuration file. This
 
 For a full list of configuration options, See the [Configuration](#️-configuration) section for details.
 
-### define
+### component
 
-Define templates and actions for component or variant
+Define reusable component templates and generate instances from them.
+
+#### Define a Component
 
 ```bash
-tempo define component
-tempo define variant
+tempo component define
 ```
 
-- **component** – Creates a scaffold for defining the structure of a new UI component, including a template and an action file.
-- **variant** – Similar to component, but focused on defining a variant of an existing component (e.g., an _outline_ button variant).
+Creates a scaffold for defining a UI component, including template files and an action JSON file.
 
-These definitions are used later by `tempo new` to generate real instances of components.
+These definitions are later used by `tempo component new` to generate real components.
 
 <details>
-<summary><strong>Flags</strong></summary>
+<summary><strong>Flags</strong> (<code>tempo component define</code>) </summary>
 <dl>
   <dt><code>--force</code></dt>
   <dd>Force overwriting if already exists (<em>default: false</em>)</dd>
@@ -198,26 +198,23 @@ These definitions are used later by `tempo new` to generate real instances of co
 </dl>
 </details>
 
-### new
-
-Generate a component or variant based on defined templates
+#### Generate a Component
 
 ```bash
-tempo new component --name button
-tempo new variant --name outline --component button
+tempo component new --name button
 ```
 
-- **component** – Uses the templates and actions created with tempo define to generate a real component inside assets/ and components/.
-- **variant** – Similar to component, but generates a new variant inside an existing component folder.
+Uses the templates and actions created with `tempo component define` to generate a real component inside _assets/_ and _components/_.
 
-Example: Running `tempo new component --name dropdown` will generate:
+Example: Running `tempo component new --name dropdown` will generate:
 
-- components/dropdown/ (with .templ and .go files).
+- `assets/dropdown/` _(CSS & JS files)_
+- `components/dropdown/` _(with .templ and .go files)_
 
 <details>
-<summary><strong>Component Flags</strong> (<code>tempo new component</code>)</summary>
-<dl>
+<summary><strong>Flags</strong> (<code>tempo component new</code>)</summary>
 
+<dl>
   <dt><code>--package</code> (<code>-p</code>) <em>value</em></dt>
   <dd>The Go package name where components will be generated (<em>default: components</em>)</dd>
 
@@ -238,15 +235,68 @@ Example: Running `tempo new component --name dropdown` will generate:
 </dl>
 </details>
 
-<details>
-<summary><strong>Variant Flags</strong> (<code>tempo new variant</code>)</summary>
+### variant
 
-This command shares all the flags from `new component`, plus:
+Define component variant templates and create instances based on them.
+
+#### Define a Variant
+
+```bash
+tempo variant define
+```
+
+Creates a scaffold for defining a **variant** of an existing component (e.g., an **outline** button variant), including template files and an action JSON file.
+
+These definitions are later used by `tempo variant new` to generate real component variants.
+
+<details>
+<summary><strong>Flags</strong> (<code>tempo variant define</code>) </summary>
 
 <dl>
-  <dt><code>--component</code> (<code>-c</code>) <em>value</em></dt>
-  <dd>Name of the component or entity to which this variant belongs</dd>
+  <dt><code>--force</code></dt>
+  <dd>Force overwriting if the variant definition already exists (<em>default: false</em>)</dd>
+  <dt><code>--dry-run</code></dt>
+  <dd>Preview actions without making changes (<em>default: false</em>)</dd>
 </dl>
+
+</details>
+
+#### Generate a Variant
+
+```bash
+tempo variant new --name outline --component button
+```
+
+Uses the templates and actions created with `tempo variant define` to generate a real instance of a variant inside the corresponding component folder.
+
+Example: Running `tempo variant new --name outline --component` button will generate:
+
+- `components/button/variant/outline.templ`
+- `assets/button/css/variant/outline.css`
+
+<details>
+<summary><strong>Flags</strong> (<code>tempo variant new</code>)</summary>
+
+<dl>
+  <dt><code>--package</code> (<code>-p</code>) <em>value</em></dt>
+  <dd>The Go package name where components will be generated (<em>default: components</em>)</dd>
+
+  <dt><code>--assets</code> (<code>-a</code>) <em>value</em></dt>
+  <dd>The directory where asset files (e.g., CSS, JS) will be generated (<em>default: assets</em>)</dd>
+
+  <dt><code>--name</code> (<code>-n</code>) <em>value</em> <strong>(required)</strong></dt>
+  <dd>The name of the variant being generated</dd>
+
+  <dt><code>--component</code> (<code>-c</code>) <em>value</em> <strong>(required)</strong></dt>
+  <dd>Name of the component or entity to which this variant belongs</dd>
+
+  <dt><code>--force</code></dt>
+  <dd>Force overwriting if the variant already exists (<em>default: false</em>)</dd>
+
+  <dt><code>--dry-run</code></dt>
+  <dd>Preview actions without making changes (<em>default: false</em>)</dd>
+</dl>
+
 </details>
 
 ### register
