@@ -786,13 +786,6 @@ func TestVariantCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 	})
 }
 
-// !@TODO
-func TestVariantCommand_NewSubCmd_CorruptedActionsFile(t *testing.T) {
-}
-
-// !@TODO
-func TestVariantCommand_NewSubCmd_UnwritableDirectory(t *testing.T) {}
-
 func TestVariantCommand_NewSubCmd_AlreadyExists_NoForce(t *testing.T) {
 	tempDir := t.TempDir()
 

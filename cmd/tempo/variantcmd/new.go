@@ -26,84 +26,7 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 		Flags:                  flags,
 		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
 		Before:                 validateVariantNewPrerequisites(cmdCtx.Config),
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			helpers.EnableLoggerIndentation(cmdCtx.Logger)
-
-			// Step 1: Create variant data
-			data, err := createVariantData(cmd, cmdCtx.Config)
-			if err != nil {
-				return errors.Wrap("failed to create variant data", err)
-			}
-
-			if data.DryRun {
-				cmdCtx.Logger.Info("Dry Run Mode: No changes will be made.\n")
-				cmdCtx.Logger.Reset()
-				return nil
-			}
-
-			// Step 2: Check if "define variant" command has been executed
-			pathToVariantActionsFile := filepath.Join(data.ActionsDir, "variant.json")
-			exists, err := utils.FileExistsFunc(pathToVariantActionsFile)
-			if err != nil {
-				return err
-			}
-			if !exists {
-				return errors.Wrap("Cannot find actions folder. Did you run 'tempo variant define' before?")
-			}
-
-			// Step 3: Ensure the component folder exists before adding a variant
-			componentFolderPath := filepath.Join(data.GoPackage, data.ComponentName)
-			if exists, err := utils.DirExists(componentFolderPath); err != nil {
-				return errors.Wrap("Error checking component folder", err, data.ComponentName)
-			} else if !exists {
-				cmdCtx.Logger.Error("Cannot create variant: Component does not exist").
-					WithAttrs(
-						"variant", data.VariantName,
-						"component", data.ComponentName,
-					)
-				return errors.Wrap("Cannot create variant: Component does not exist", data.ComponentName)
-			}
-
-			// Step 4: Check if the component variant already exists with the same name
-			// Display a warning and stop if `--force` is not set
-			outputPath := filepath.Join(data.GoPackage, data.ComponentName, "css", "variants", data.VariantName+".templ")
-			if exists, err := utils.FileExistsFunc(outputPath); err != nil {
-				return err
-			} else if exists {
-				utils.CheckEntityForNew("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
-
-				if !data.Force {
-					return nil
-				}
-			}
-
-			// Step 5: Retrieve and process actions
-			if err := generator.ProcessEntityActions(cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
-				return errors.Wrap("failed to process actions for variant", err, data.ComponentName)
-			}
-
-			// Step 6: Log success and asset information
-			if !data.DryRun {
-				// Define paths for components and assets
-				componentPath := filepath.Join(data.GoPackage, data.ComponentName, "css", "variant")
-				assetPath := filepath.Join(data.AssetsDir, data.ComponentName, "css", "variants")
-
-				// Log the success message with structured attributes
-				cmdCtx.Logger.Success("Templ component for the variant and asset files (CSS) have been created").
-					WithAttrs(
-						"variant", data.VariantName,
-						"component", data.ComponentName,
-						"component_path", componentPath,
-						"asset_path", assetPath,
-					)
-
-				cmdCtx.Logger.Blank()
-				cmdCtx.Logger.Hint(fmt.Sprintf("Update %s/css/base.templ to conditionally load the variant's styles.", data.ComponentName))
-			}
-			cmdCtx.Logger.Reset()
-
-			return nil
-		},
+		Action:                 runVariantNewSubCommand(cmdCtx),
 	}
 }
 
@@ -150,6 +73,86 @@ func getNewFlags() []cli.Flag {
 /* ------------------------------------------------------------------------- */
 /* Command Runner                                                            */
 /* ------------------------------------------------------------------------- */
+func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		helpers.EnableLoggerIndentation(cmdCtx.Logger)
+
+		// Step 1: Create variant data
+		data, err := createVariantData(cmd, cmdCtx.Config)
+		if err != nil {
+			return errors.Wrap("failed to create variant data", err)
+		}
+
+		if data.DryRun {
+			cmdCtx.Logger.Info("Dry Run Mode: No changes will be made.\n")
+			cmdCtx.Logger.Reset()
+			return nil
+		}
+
+		// Step 2: Check if "define variant" command has been executed
+		pathToVariantActionsFile := filepath.Join(data.ActionsDir, "variant.json")
+		exists, err := utils.FileExistsFunc(pathToVariantActionsFile)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return errors.Wrap("Cannot find actions folder. Did you run 'tempo variant define' before?")
+		}
+
+		// Step 3: Ensure the component folder exists before adding a variant
+		componentFolderPath := filepath.Join(data.GoPackage, data.ComponentName)
+		if exists, err := utils.DirExists(componentFolderPath); err != nil {
+			return errors.Wrap("Error checking component folder", err, data.ComponentName)
+		} else if !exists {
+			cmdCtx.Logger.Error("Cannot create variant: Component does not exist").
+				WithAttrs(
+					"variant", data.VariantName,
+					"component", data.ComponentName,
+				)
+			return errors.Wrap("Cannot create variant: Component does not exist", data.ComponentName)
+		}
+
+		// Step 4: Check if the component variant already exists with the same name
+		// Display a warning and stop if `--force` is not set
+		outputPath := filepath.Join(data.GoPackage, data.ComponentName, "css", "variants", data.VariantName+".templ")
+		if exists, err := utils.FileExistsFunc(outputPath); err != nil {
+			return err
+		} else if exists {
+			utils.CheckEntityForNew("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
+
+			if !data.Force {
+				return nil
+			}
+		}
+
+		// Step 5: Retrieve and process actions
+		if err := generator.ProcessEntityActions(cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
+			return errors.Wrap("failed to process actions for variant", err, data.ComponentName)
+		}
+
+		// Step 6: Log success and asset information
+		if !data.DryRun {
+			// Define paths for components and assets
+			componentPath := filepath.Join(data.GoPackage, data.ComponentName, "css", "variant")
+			assetPath := filepath.Join(data.AssetsDir, data.ComponentName, "css", "variants")
+
+			// Log the success message with structured attributes
+			cmdCtx.Logger.Success("Templ component for the variant and asset files (CSS) have been created").
+				WithAttrs(
+					"variant", data.VariantName,
+					"component", data.ComponentName,
+					"component_path", componentPath,
+					"asset_path", assetPath,
+				)
+
+			cmdCtx.Logger.Blank()
+			cmdCtx.Logger.Hint(fmt.Sprintf("Update %s/css/base.templ to conditionally load the variant's styles.", data.ComponentName))
+		}
+		cmdCtx.Logger.Reset()
+
+		return nil
+	}
+}
 
 /* ------------------------------------------------------------------------- */
 /* Prerequisites Validation                                                  */

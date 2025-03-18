@@ -73,36 +73,43 @@ func setupRegisterFunctionsSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) 
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--name value | -n] [--url value | -u] [--path value | -p] [--force]",
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			helpers.EnableLoggerIndentation(cmdCtx.Logger)
+		Action:                 runRegisterFunctionsSubCommand(cmdCtx),
+	}
+}
 
-			forceClone := cmd.Bool("force")
+/* ------------------------------------------------------------------------- */
+/* Command Runner                                                            */
+/* ------------------------------------------------------------------------- */
+func runRegisterFunctionsSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
-			providers, err := resolveFlagsToTemplateFuncProvider(cmd)
+		forceClone := cmd.Bool("force")
+
+		providers, err := resolveFlagsToTemplateFuncProvider(cmd)
+		if err != nil {
+			return err
+		}
+
+		// Register each provider
+		for _, provider := range providers {
+			switch provider.Type {
+			case "url":
+				err = registerFunctionsFromRepo(cmdCtx, forceClone, provider)
+			case "path":
+				err = registerFunctionsFromLocal(cmdCtx, provider)
+			default:
+				err = fmt.Errorf("unknown provider type: %s", provider.Type)
+			}
+
 			if err != nil {
 				return err
 			}
+		}
 
-			// Register each provider
-			for _, provider := range providers {
-				switch provider.Type {
-				case "url":
-					err = registerFunctionsFromRepo(cmdCtx, forceClone, provider)
-				case "path":
-					err = registerFunctionsFromLocal(cmdCtx, provider)
-				default:
-					err = fmt.Errorf("unknown provider type: %s", provider.Type)
-				}
-
-				if err != nil {
-					return err
-				}
-			}
-
-			cmdCtx.Logger.Success("Functions successfully registered!")
-			helpers.ResetLogger(cmdCtx.Logger)
-			return nil
-		},
+		cmdCtx.Logger.Success("Functions successfully registered!")
+		helpers.ResetLogger(cmdCtx.Logger)
+		return nil
 	}
 }
 

@@ -38,7 +38,7 @@ func TestRunApp_Version(t *testing.T) {
 	}
 	os.Stdout = w
 
-	err = runApp(args)
+	err = runCLI(args)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestRunApp_Help(t *testing.T) {
 	os.Stdout = w
 
 	output, err := testhelpers.CaptureStdout(func() {
-		if err := runApp(args); err != nil {
+		if err := runCLI(args); err != nil {
 			t.Fatalf("runApp returned error: %v", err)
 		}
 	})
@@ -107,7 +107,7 @@ func TestRunApp_InitAutoGen(t *testing.T) {
 
 	// Run the command and capture output
 	output, err := testhelpers.CaptureStdout(func() {
-		_ = runApp([]string{"tempo", "init", "--base-folder", tempDir})
+		_ = runCLI([]string{"tempo", "init", "--base-folder", tempDir})
 	})
 
 	if err != nil {
