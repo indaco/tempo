@@ -27,9 +27,9 @@ func TestSetupComponentCommand(t *testing.T) {
 	}
 
 	// Check Command Description
-	expectedDesc := "Define reusable component templates and generate instances from them"
-	if command.Description != expectedDesc {
-		t.Errorf("Expected description '%s', got '%s'", expectedDesc, command.Description)
+	expectedUsage := "Define reusable component templates and generate instances from them"
+	if command.Usage != expectedUsage {
+		t.Errorf("Expected description '%s', got '%s'", expectedUsage, command.Description)
 	}
 
 	// Check Subcommands Exist

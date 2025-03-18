@@ -21,9 +21,8 @@ import (
 // SetupRegisterCommand sets up the "register" command for registering external functions.
 func SetupRegisterCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
-		Name:        "register",
-		Aliases:     []string{"r"},
-		Description: "Register is used to extend tempo.",
+		Name:  "register",
+		Usage: "Register is used to extend tempo.",
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},
@@ -80,6 +79,7 @@ func setupRegisterFunctionsSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) 
 /* ------------------------------------------------------------------------- */
 /* Command Runner                                                            */
 /* ------------------------------------------------------------------------- */
+
 func runRegisterFunctionsSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		helpers.EnableLoggerIndentation(cmdCtx.Logger)

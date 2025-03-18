@@ -26,8 +26,7 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 
 	return &cli.Command{
 		Name:                   "init",
-		Aliases:                []string{"i"},
-		Description:            "Initialize a Tempo project",
+		Usage:                  "Initialize a Tempo project",
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
 		Action:                 runInitCommand(cmdCtx),
@@ -51,6 +50,7 @@ func getFlags() []cli.Flag {
 /* ------------------------------------------------------------------------- */
 /* Command Runner                                                            */
 /* ------------------------------------------------------------------------- */
+
 func runInitCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		const configFileName = "tempo.yaml"
