@@ -21,20 +21,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func setupConfig(tempDir string, overrides func(cfg *config.Config)) *config.Config {
-	cfg := config.DefaultConfig()
-	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
-	cfg.App.GoPackage = filepath.Join(tempDir, "components")
-	cfg.App.AssetsDir = filepath.Join(tempDir, "assets")
-	cfg.Paths.TemplatesDir = filepath.Join(cfg.TempoRoot, "templates")
-	cfg.Paths.ActionsDir = filepath.Join(cfg.TempoRoot, "actions")
-
-	if overrides != nil {
-		overrides(cfg)
-	}
-	return cfg
-}
-
 func TestSyncCommand(t *testing.T) {
 	tempDir := os.TempDir()
 	inputDir := filepath.Join(tempDir, "input")
@@ -46,7 +32,7 @@ func TestSyncCommand(t *testing.T) {
 	}
 
 	// Setup CLI config
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	// Write `tempo.yaml`
 	configPath := filepath.Join(tempDir, "tempo.yaml")
