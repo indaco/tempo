@@ -99,84 +99,54 @@ func TestRunApp_Help(t *testing.T) {
 
 // TestRunApp_InitAutoGen verifies that when no config file exists, the "init" command auto-generates one.
 func TestRunApp_InitAutoGen(t *testing.T) {
-	// Create a temporary directory that does not contain a config file.
-	tempDir := t.TempDir()
-
-	// Create go.mod inside tempDir (the correct working directory)
-	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create go.mod file: %v", err)
-	}
+	tempDir, origDir := setupTempDir(t)
+	defer restoreWorkingDir(t, origDir)
 
 	configPath := filepath.Join(tempDir, "tempo.yaml")
 	os.Remove(configPath) // Ensure it's missing.
 
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
-	}
-	defer func() {
-		if err := os.Chdir(origDir); err != nil {
-			t.Fatalf("failed to restore working directory: %v", err)
-		}
-	}()
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("failed to change directory: %v", err)
-	}
-
-	// Run the init command to trigger auto-generation.
-	args := []string{"tempo", "init", "--base-folder", tempDir}
-
-	// Capture stdout and stderr.
-	origStdout, origStderr := os.Stdout, os.Stderr
-	rOut, wOut, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("failed to create stdout pipe: %v", err)
-	}
-	rErr, wErr, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("failed to create stderr pipe: %v", err)
-	}
-	os.Stdout = wOut
-	os.Stderr = wErr
-
-	err = runApp(args)
-
-	if err := wOut.Close(); err != nil {
-		t.Fatalf("failed to close stdout writer: %v", err)
-	}
-	if err := wErr.Close(); err != nil {
-		t.Fatalf("failed to close stderr writer: %v", err)
-	}
-
-	var bufOut, bufErr bytes.Buffer
-	if _, err := io.Copy(&bufOut, rOut); err != nil {
-		t.Fatalf("failed to copy stdout: %v", err)
-	}
-	if _, err := io.Copy(&bufErr, rErr); err != nil {
-		t.Fatalf("failed to copy stderr: %v", err)
-	}
-	os.Stdout = origStdout
-	os.Stderr = origStderr
+	// Run the command and capture output
+	output, err := testhelpers.CaptureStdout(func() {
+		_ = runApp([]string{"tempo", "init", "--base-folder", tempDir})
+	})
 
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf("Failed to capture output: %v", err)
 	}
 
-	// Verify that tempo.yaml now exists.
+	// Verify that tempo.yaml now exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("Expected tempo.yaml to be auto-generated, but it does not exist")
 	}
 
-	// Check output if available.
-	output := bufOut.String() + bufErr.String()
-	// In CI the output might not include auto-generation messages.
-	if output != "" {
-		if !utils.ContainsSubstring(output, "Generating") || !utils.ContainsSubstring(output, "Done!") {
-			t.Logf("Output did not contain expected messages: %s", output)
-		}
-	} else {
-		t.Log("No output captured; auto-generation messages may be logged elsewhere in CI.")
+	// Validate output messages
+	testhelpers.ValidateCLIOutput(t, output, []string{"Generating", "Done!"})
+}
+
+// setupTempDir initializes a temporary directory and returns it along with the original working directory.
+func setupTempDir(t *testing.T) (string, string) {
+	tempDir := t.TempDir()
+
+	goModPath := filepath.Join(tempDir, "go.mod")
+	if err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+
+	return tempDir, origDir
+}
+
+// restoreWorkingDir restores the original working directory after the test.
+func restoreWorkingDir(t *testing.T, origDir string) {
+	if err := os.Chdir(origDir); err != nil {
+		t.Fatalf("Failed to restore working directory: %v", err)
 	}
 }
