@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"slices"
@@ -130,21 +129,16 @@ func RemoveIfExists(path string) error {
 	return nil
 }
 
-// CheckMissingFoldersFunc is a function variable to allow testing overrides.
 var CheckMissingFoldersFunc = CheckMissingFolders
 
-// CheckMissingFolders validates folder paths and returns a list of missing folders.
-func CheckMissingFolders(folders map[string]string) ([]string, error) {
-	var missingFolders []string
+func CheckMissingFolders(folders map[string]string) (map[string]string, error) {
+	missingFolders := make(map[string]string)
 
 	for name, path := range folders {
 		if exists, err := DirExists(path); err != nil || !exists {
-			missingFolders = append(missingFolders, fmt.Sprintf("  - %s: %s", name, path))
+			missingFolders[name] = path
 		}
 	}
-
-	// Sort the missingFolders slice to ensure consistent order
-	sort.Strings(missingFolders)
 
 	return missingFolders, nil
 }

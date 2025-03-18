@@ -45,3 +45,12 @@ func TitleCase(word string) string {
 
 	return string(runes)
 }
+
+// SnakeToTitle converts a snake_case string to Title Case.
+func SnakeToTitle(s string) string {
+	words := strings.Split(s, "_")
+	for i, word := range words {
+		words[i] = TitleCase(word)
+	}
+	return strings.Join(words, " ")
+}

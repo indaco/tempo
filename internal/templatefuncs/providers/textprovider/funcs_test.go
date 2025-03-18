@@ -160,3 +160,32 @@ func TestTitleCase(t *testing.T) {
 		}
 	}
 }
+
+// TestSnakeToTitle tests the SnakeToTitle function.
+func TestSnakeToTitle(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello_world", "Hello World"},
+		{"this_is_a_test", "This Is A Test"},
+		{"snake_case_to_title", "Snake Case To Title"},
+		{"singleword", "Singleword"},
+		{"multiple__underscores", "Multiple  Underscores"},
+		{"_leading_underscore", " Leading Underscore"},
+		{"trailing_underscore_", "Trailing Underscore "},
+		{"", ""},
+		{"__double_leading", "  Double Leading"},
+		{"double_trailing__", "Double Trailing  "},
+		{"a_b_c", "A B C"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := SnakeToTitle(tt.input)
+			if result != tt.expected {
+				t.Errorf("SnakeToTitle(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}

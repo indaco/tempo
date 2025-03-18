@@ -3,6 +3,7 @@ package utils
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -375,7 +376,7 @@ func TestRemoveIfExists(t *testing.T) {
 }
 
 func TestCheckMissingFolders(t *testing.T) {
-	// Setup: Create temporary directories
+	// Setup: Create a temporary directory
 	tempDir := t.TempDir()
 	existingDir := filepath.Join(tempDir, "existing")
 	if err := os.Mkdir(existingDir, 0755); err != nil {
@@ -385,14 +386,14 @@ func TestCheckMissingFolders(t *testing.T) {
 	tests := []struct {
 		name            string
 		folders         map[string]string
-		expectedMissing []string
+		expectedMissing map[string]string
 	}{
 		{
 			name: "All Folders Exist",
 			folders: map[string]string{
 				"Existing Folder": existingDir,
 			},
-			expectedMissing: nil,
+			expectedMissing: map[string]string{},
 		},
 		{
 			name: "One Missing Folder",
@@ -400,7 +401,9 @@ func TestCheckMissingFolders(t *testing.T) {
 				"Existing Folder": existingDir,
 				"Missing Folder":  filepath.Join(tempDir, "missing"),
 			},
-			expectedMissing: []string{"  - Missing Folder: " + filepath.Join(tempDir, "missing")},
+			expectedMissing: map[string]string{
+				"Missing Folder": filepath.Join(tempDir, "missing"),
+			},
 		},
 		{
 			name: "All Folders Missing",
@@ -408,9 +411,9 @@ func TestCheckMissingFolders(t *testing.T) {
 				"Missing Folder 1": filepath.Join(tempDir, "missing1"),
 				"Missing Folder 2": filepath.Join(tempDir, "missing2"),
 			},
-			expectedMissing: []string{
-				"  - Missing Folder 1: " + filepath.Join(tempDir, "missing1"),
-				"  - Missing Folder 2: " + filepath.Join(tempDir, "missing2"),
+			expectedMissing: map[string]string{
+				"Missing Folder 1": filepath.Join(tempDir, "missing1"),
+				"Missing Folder 2": filepath.Join(tempDir, "missing2"),
 			},
 		},
 	}
@@ -422,14 +425,9 @@ func TestCheckMissingFolders(t *testing.T) {
 				t.Errorf("Unexpected error: %v", err)
 			}
 
-			if len(missingFolders) != len(tt.expectedMissing) {
-				t.Errorf("Expected %d missing folders, got %d", len(tt.expectedMissing), len(missingFolders))
-			}
-
-			for i, missing := range missingFolders {
-				if missing != tt.expectedMissing[i] {
-					t.Errorf("Expected missing folder: %s, got: %s", tt.expectedMissing[i], missing)
-				}
+			// Compare the actual result with the expected result
+			if !reflect.DeepEqual(missingFolders, tt.expectedMissing) {
+				t.Errorf("Expected missing folders: %+v, got: %+v", tt.expectedMissing, missingFolders)
 			}
 		})
 	}
