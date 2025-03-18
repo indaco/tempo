@@ -148,3 +148,50 @@ func TestVariantCommand_DefineSubCmd_Func_HandleEntityExistence(t *testing.T) {
 		})
 	}
 }
+
+// func TestHandleEntityExistence(t *testing.T) {
+// 	tests := []struct {
+// 		name         string
+// 		entityType   string
+// 		entityName   string
+// 		outputPath   string
+// 		force        bool
+// 		shouldWarn   bool
+// 		expectedPath string
+// 	}{
+// 		{"Component Exists Without Force", "component", "button", "/mock/path/button", false, true, "/mock/path/button/button"},
+// 		{"Component Exists With Force", "component", "button", "/mock/path/button", true, false, "/mock/path/button/button"},
+// 		{"Variant Exists Without Force", "variant", "outline", "/mock/path/button/css/variants/outline.templ", false, true, "/mock/path/button/css/variants/outline.templ"},
+// 		{"Variant Exists With Force", "variant", "outline", "/mock/path/button/css/variants/outline.templ", true, false, "/mock/path/button/css/variants/outline.templ"},
+// 		{"Unknown Entity Type", "unknown", "mystery", "/mock/path/unknown", false, true, "/mock/path/unknown"}, // NEW CASE
+// 	}
+
+// 	for _, tc := range tests {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			output, err := testhelpers.CaptureStdout(func() {
+// 				logger := logger.NewDefaultLogger()
+// 				handleEntityExistence(tc.entityType, tc.entityName, tc.outputPath, tc.force, logger)
+// 			})
+
+// 			if err != nil {
+// 				t.Fatalf("Failed to capture stdout: %v", err)
+// 			}
+
+// 			// Verify the warning or overwrite messages
+// 			if tc.shouldWarn {
+// 				if !strings.Contains(output, "Use '--force' to overwrite it.") {
+// 					t.Errorf("Expected warning message, got: %s", output)
+// 				}
+// 			} else {
+// 				if !strings.Contains(output, "Overwriting due to '--force' flag.") {
+// 					t.Errorf("Expected overwrite message, got: %s", output)
+// 				}
+// 			}
+
+// 			// Check if the correct path was used in the log output
+// 			if !strings.Contains(output, tc.expectedPath) {
+// 				t.Errorf("Expected path %q in output, but got: %s", tc.expectedPath, output)
+// 			}
+// 		})
+// 	}
+// }

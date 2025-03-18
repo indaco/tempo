@@ -26,7 +26,7 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
-		Before:                 validateNewVariantPrerequisites(cmdCtx.Config),
+		Before:                 validateVariantNewPrerequisites(cmdCtx.Config),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			helpers.EnableLoggerIndentation(cmdCtx.Logger)
 
@@ -49,7 +49,7 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 				return err
 			}
 			if !exists {
-				return errors.Wrap("Cannot find actions folder. Did you run 'tempo define variant' before?")
+				return errors.Wrap("Cannot find actions folder. Did you run 'tempo variant define' before?")
 			}
 
 			// Step 3: Ensure the component folder exists before adding a variant
@@ -156,15 +156,15 @@ func getNewFlags() []cli.Flag {
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateNewVariantPrerequisites checks prerequisites for the "new variant" subcommand, including:
+// validateVariantNewPrerequisites checks prerequisites for the "new variant" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
 // - Existence of the component templates folder.
 // - Existence of the variant templates folder.
-func validateNewVariantPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func validateVariantNewPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		foldersToCheck := map[string]string{
-			"Component directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
-			"Variant directory":   filepath.Join(cfg.Paths.TemplatesDir, "component-variant"),
+			"component_directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
+			"variant_directory":   filepath.Join(cfg.Paths.TemplatesDir, "component-variant"),
 		}
 
 		missingFolders, err := utils.CheckMissingFolders(foldersToCheck)
@@ -175,8 +175,8 @@ func validateNewVariantPrerequisites(cfg *config.Config) func(ctx context.Contex
 		if len(missingFolders) > 0 {
 			return nil, helpers.BuildMissingFoldersError(
 				missingFolders,
-				"Have you run 'tempo define' or 'tempo create' to set up your components?\nMake sure your templates, actions, and implementations exist before creating a new variant.",
-				[]string{"tempo define -h", "tempo create -h"},
+				"Have you run 'tempo component define' or 'tempo variant define' to set up your components?\nMake sure your templates, actions, and implementations exist before creating a new variant.",
+				[]string{"tempo component -h", "tempo define -h"},
 			)
 		}
 
