@@ -2,11 +2,13 @@ package generator
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
 )
 
@@ -232,6 +234,20 @@ func GenerateActionJSONFile(filePath string, actions ActionList) error {
 /* ------------------------------------------------------------------------- */
 /* HELPER FUNCTIONS                                                          */
 /* ------------------------------------------------------------------------- */
+
+// GenerateActionFile generates an action file for the given entity type.
+func GenerateActionFile(entityType string, data *TemplateData, actions []Action, logger logger.LoggerInterface) error {
+	actionFileName := fmt.Sprintf("%s.json", entityType)
+	actionsPath := filepath.Join(data.ActionsDir, actionFileName)
+
+	if err := GenerateActionJSONFile(actionsPath, actions); err != nil {
+		return errors.Wrap("Failed to generate action file for %s", entityType, err)
+	}
+
+	logger.Success(fmt.Sprintf("Tempo action file for '%s' has been created", entityType)).
+		WithAttrs("action_file_path", actionsPath)
+	return nil
+}
 
 // Helper to read files from embedded or disk.
 func readFile(path string) ([]byte, error) {

@@ -1,9 +1,8 @@
-package newcmd
+package variantcmd
 
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
@@ -14,157 +13,16 @@ import (
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/resolver"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
-	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
 )
 
-/* ------------------------------------------------------------------------- */
-/* Command Setup                                                             */
-/* ------------------------------------------------------------------------- */
-
-func SetupNewCommand(cmdCtx *app.AppContext) *cli.Command {
-	coreFlags := getCoreFlags()
-	componentFlags := getComponentFlags()
-	variantFlags := getVariantFlags()
-
+// setupVariantNewSubCommand creates the "variant" subcommand for generating files for a variant.
+func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
+	flags := getNewFlags()
 	return &cli.Command{
-		Name:        "new",
-		Aliases:     []string{"n"},
-		Description: "Generate a component or variant based on defined templates",
-		Before:      validateNewPrerequisites(cmdCtx.CWD),
-		Commands: []*cli.Command{
-			setupNewComponentSubCommand(cmdCtx, append(coreFlags, componentFlags...)),
-			setupNewVariantSubCommand(cmdCtx, append(coreFlags, variantFlags...)),
-		},
-	}
-}
-
-/* ------------------------------------------------------------------------- */
-/* Flag Generation                                                           */
-/* ------------------------------------------------------------------------- */
-
-// getCoreFlags generates the core CLI flags shared across subcommands.
-func getCoreFlags() []cli.Flag {
-	return []cli.Flag{
-		&cli.StringFlag{
-			Name:    "package",
-			Aliases: []string{"p"},
-			Usage:   "The Go package name where components will be generated (default: components)",
-		},
-		&cli.StringFlag{
-			Name:    "assets",
-			Aliases: []string{"a"},
-			Usage:   "The directory where asset files (e.g., CSS, JS) will be generated (default: assets)",
-		},
-		&cli.BoolFlag{
-			Name:  "force",
-			Usage: "Force overwriting if already exists",
-		},
-		&cli.BoolFlag{
-			Name:  "dry-run",
-			Usage: "Preview actions without making changes",
-		},
-	}
-}
-
-// getComponentFlags generates flags specific to the "component" subcommand.
-func getComponentFlags() []cli.Flag {
-	return []cli.Flag{
-		&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Usage: "Name of the component", Required: true},
-		&cli.BoolFlag{Name: "js", Usage: "Whether or not JS is needed for the component"},
-	}
-}
-
-// getVariantFlags generates flags specific to the "variant" subcommand.
-func getVariantFlags() []cli.Flag {
-	return []cli.Flag{
-		&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Usage: "The name of the variant being generated", Required: true},
-		&cli.StringFlag{Name: "component", Aliases: []string{"c"}, Usage: "Name of the component or entity", Required: true},
-	}
-}
-
-/* ------------------------------------------------------------------------- */
-/* Subcommand Setup                                                          */
-/* ------------------------------------------------------------------------- */
-
-// setupNewComponentSubCommand creates the "component" subcommand for generating files for a new component.
-func setupNewComponentSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
-	return &cli.Command{
-		Name:                   "component",
-		Description:            "Uses the templates and actions created with `tempo define` to generate a real component",
-		Aliases:                []string{"c"},
-		UseShortOptionHandling: true,
-		Flags:                  flags,
-		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
-		Before:                 validateNewComponentPrerequisites(cmdCtx.Config),
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			helpers.EnableLoggerIndentation(cmdCtx.Logger)
-
-			// Step 1: Create template data
-			data, err := createComponentData(cmd, cmdCtx.Config)
-			if err != nil {
-				return errors.Wrap("Failed to create template data for component", err)
-			}
-
-			if data.DryRun {
-				cmdCtx.Logger.Info("Dry Run Mode: No changes will be made.\n")
-				cmdCtx.Logger.Reset()
-				return nil
-			}
-
-			// Step 2: Check if "define component" command has been executed
-			pathToComponentActionsFile := filepath.Join(data.ActionsDir, "component.json")
-			exists, err := utils.FileExistsFunc(pathToComponentActionsFile)
-			if err != nil {
-				return err
-			}
-			if !exists {
-				return errors.Wrap("Cannot find actions folder. Did you run 'tempo define component' before?")
-			}
-
-			// Step 3: Check if the component already exists
-			// Display a warning and stop if `--force` is not set
-			outputPath := filepath.Join(data.GoPackage, data.ComponentName)
-			if exists, err = utils.DirExists(outputPath); err != nil {
-				return err
-			} else if exists {
-				handleEntityExistence("component", data.ComponentName, data.GoPackage, data.Force, cmdCtx.Logger)
-
-				if !data.Force {
-					return nil
-				}
-			}
-
-			// Step 4: Retrieve and process actions
-			if err := processEntityActions(cmdCtx.Logger, pathToComponentActionsFile, data, cmdCtx.Config); err != nil {
-				return errors.Wrap("failed to process actions for component", err, data.ComponentName)
-			}
-
-			// Step 5: Log success and asset information
-			componentPath := filepath.Join(data.GoPackage, data.ComponentName)
-			assetPath := filepath.Join(data.AssetsDir, data.ComponentName)
-
-			cmdCtx.Logger.Success("Templ component files have been created").
-				WithAttrs(
-					"component", data.ComponentName,
-					"component_path", componentPath,
-					"asset_path", assetPath,
-				)
-
-			cmdCtx.Logger.Reset()
-
-			return nil
-		},
-	}
-}
-
-// setupNewVariantSubCommand creates the "variant" subcommand for generating files for a variant.
-func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Command {
-	return &cli.Command{
-		Name:                   "variant",
-		Description:            "Uses the templates and actions created with `tempo define` to generate a real component variant",
-		Aliases:                []string{"v"},
+		Name:                   "new",
+		Description:            "Generate a variant instance from a template",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
@@ -213,7 +71,7 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 			if exists, err := utils.FileExistsFunc(outputPath); err != nil {
 				return err
 			} else if exists {
-				handleEntityExistence("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
+				utils.CheckEntityForNew("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
 
 				if !data.Force {
 					return nil
@@ -251,48 +109,52 @@ func setupNewVariantSubCommand(cmdCtx *app.AppContext, flags []cli.Flag) *cli.Co
 }
 
 /* ------------------------------------------------------------------------- */
-/* Prerequisites Validation                                                  */
+/* Flag Generation                                                           */
 /* ------------------------------------------------------------------------- */
 
-// validateNewPrerequisites checks if the required configuration file exists for the "new" command,including:
-// - A valid go.mod file must be present.
-// - Initialized Tempo project (inherit from the main define command).
-func validateNewPrerequisites(workingDir string) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-		goModPath := filepath.Join(workingDir, "go.mod")
-		if _, err := os.Stat(goModPath); os.IsNotExist(err) {
-			return nil, errors.Wrap("missing go.mod file. Run 'go mod init' to create one")
-		}
-
-		return ctx, app.IsTempoProject(workingDir)
+// getNewFlags generates the core CLI flags shared across subcommands.
+func getNewFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:    "package",
+			Aliases: []string{"p"},
+			Usage:   "The Go package name where components will be generated (default: components)",
+		},
+		&cli.StringFlag{
+			Name:    "assets",
+			Aliases: []string{"a"},
+			Usage:   "The directory where asset files (e.g., CSS, JS) will be generated (default: assets)",
+		},
+		&cli.StringFlag{
+			Name:     "name",
+			Aliases:  []string{"n"},
+			Usage:    "The name of the variant being generated",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     "component",
+			Aliases:  []string{"c"},
+			Usage:    "Name of the component or entity",
+			Required: true,
+		},
+		&cli.BoolFlag{
+			Name:  "force",
+			Usage: "Force overwriting if already exists",
+		},
+		&cli.BoolFlag{
+			Name:  "dry-run",
+			Usage: "Preview actions without making changes",
+		},
 	}
 }
 
-// validateNewComponentPrerequisites checks prerequisites for the "new component" subcommand, including:
-// - Initialized Tempo project (inherited from the main define command).
-// - Existence of the component templates folder.
-func validateNewComponentPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-		foldersToCheck := map[string]string{
-			"Templates directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
-		}
+/* ------------------------------------------------------------------------- */
+/* Command Runner                                                            */
+/* ------------------------------------------------------------------------- */
 
-		missingFolders, err := utils.CheckMissingFolders(foldersToCheck)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(missingFolders) > 0 {
-			return nil, helpers.BuildMissingFoldersError(
-				missingFolders,
-				"Have you run 'tempo define' or 'tempo create' to set up your components?\nMake sure your templates, actions, and implementations exist before creating a new component.",
-				[]string{"tempo define -h", "tempo create -h"},
-			)
-		}
-
-		return ctx, nil
-	}
-}
+/* ------------------------------------------------------------------------- */
+/* Prerequisites Validation                                                  */
+/* ------------------------------------------------------------------------- */
 
 // validateNewVariantPrerequisites checks prerequisites for the "new variant" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
@@ -349,19 +211,6 @@ func processEntityActions(logger logger.LoggerInterface, pathToActionsFile strin
 	}
 
 	return nil
-}
-
-// createComponentData initializes TemplateData for a component.
-func createComponentData(cmd *cli.Command, cfg *config.Config) (*generator.TemplateData, error) {
-	data, err := createBaseTemplateData(cmd, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add component-specific fields
-	data.ComponentName = gonameprovider.ToGoPackageName(cmd.String("name"))
-
-	return data, nil
 }
 
 // createVariantData initializes TemplateData for a variant.
@@ -479,25 +328,4 @@ func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
 	}
 
 	return actionFileFlag, nil
-}
-
-func handleEntityExistence(entityType, entityName, outputPath string, force bool, logr logger.LoggerInterface) {
-	// Select logging function and action message based on `force` flag
-	logFunc, action := logr.Warning, "Use '--force' to overwrite it. Any changes will be lost."
-	if force {
-		logFunc, action = logr.Info, "Overwriting due to '--force' flag."
-	}
-
-	// Determine the appropriate path format based on entity type
-	paths := map[string]string{
-		"component": filepath.Join(outputPath, entityName),
-		"variant":   outputPath,
-	}
-	path, exists := paths[entityType]
-	if !exists {
-		path = outputPath
-	}
-
-	msg := fmt.Sprintf("%s '%s' already exists.\n  %s\n", textprovider.TitleCase(entityType), entityName, action)
-	logFunc(msg).WithAttrs("path", path)
 }

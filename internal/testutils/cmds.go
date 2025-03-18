@@ -8,9 +8,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func SetupDefineComponent(app *cli.Command, t *testing.T) (string, error) {
+func SetupComponentDefine(app *cli.Command, t *testing.T) (string, error) {
 	output, err := testhelpers.CaptureStdout(func() {
-		args := []string{"tempo", "define", "component"}
+		args := []string{"tempo", "component", "define"}
 		if err := app.Run(context.Background(), args); err != nil {
 			t.Fatalf("Failed to set up component structure with 'define component': %v", err)
 		}
@@ -19,9 +19,9 @@ func SetupDefineComponent(app *cli.Command, t *testing.T) (string, error) {
 	return output, err
 }
 
-func SetupDefineVariant(app *cli.Command, t *testing.T) (string, error) {
+func SetupVariantDefine(app *cli.Command, t *testing.T) (string, error) {
 	output, err := testhelpers.CaptureStdout(func() {
-		args := []string{"tempo", "define", "variant"}
+		args := []string{"tempo", "variant", "define"}
 		if err := app.Run(context.Background(), args); err != nil {
 			t.Fatalf("Failed to set up component variant structure with 'define variant': %v", err)
 		}
