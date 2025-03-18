@@ -21,7 +21,7 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	flags := getNewFlags()
 	return &cli.Command{
 		Name:                   "new",
-		Description:            "Generate a variant instance from a template",
+		Usage:                  "Generate a variant instance from a template",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
@@ -73,6 +73,7 @@ func getNewFlags() []cli.Flag {
 /* ------------------------------------------------------------------------- */
 /* Command Runner                                                            */
 /* ------------------------------------------------------------------------- */
+
 func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		helpers.EnableLoggerIndentation(cmdCtx.Logger)

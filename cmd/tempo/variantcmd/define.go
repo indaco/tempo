@@ -19,7 +19,7 @@ func setupVariantDefineSubCommand(cmdCtx *app.AppContext) *cli.Command {
 
 	return &cli.Command{
 		Name:                   "define",
-		Description:            "Define a new variant template",
+		Usage:                  "Define a new variant template",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--force] [--dryrun]",

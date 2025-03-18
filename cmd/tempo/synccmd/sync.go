@@ -27,8 +27,7 @@ import (
 func SetupSyncCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "sync",
-		Description:            "Process & sync asset files into component templates",
-		Aliases:                []string{"s"},
+		Usage:                  "Process & sync asset files into templ components",
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
 		ArgsUsage:              "[--input value | -i] [--output value | -o] [--exclude value | -e] [--workers value | -w] [--prod | -p] [--force | -f] [--summary format | -s] [--verbose-summary] [--track-time] [--report-file file | --rf]",
@@ -100,6 +99,7 @@ func getFlags() []cli.Flag {
 /* ------------------------------------------------------------------------- */
 /* Command Runner                                                            */
 /* ------------------------------------------------------------------------- */
+
 func runSyncCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.Command) error {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		helpers.EnableLoggerIndentation(cmdCtx.Logger)

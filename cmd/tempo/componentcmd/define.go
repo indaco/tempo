@@ -23,7 +23,7 @@ func setupComponentDefineSubCommand(cmdCtx *app.AppContext) *cli.Command {
 
 	return &cli.Command{
 		Name:                   "define",
-		Description:            "Define a new component template",
+		Usage:                  "Define a new component template",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--js] [--force] [--dryrun]",

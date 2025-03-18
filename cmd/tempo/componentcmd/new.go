@@ -23,7 +23,7 @@ func setupComponentNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	flags := getNewFlags()
 	return &cli.Command{
 		Name:                   "new",
-		Description:            "Generate a component instance from a template",
+		Usage:                  "Generate a component instance from a template",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
 		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
