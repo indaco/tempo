@@ -146,7 +146,7 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 func validateComponentNewPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	return func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		foldersToCheck := map[string]string{
-			"Templates directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
+			"templates_directory": filepath.Join(cfg.Paths.TemplatesDir, "component"),
 		}
 
 		missingFolders, err := utils.CheckMissingFolders(foldersToCheck)
@@ -157,8 +157,8 @@ func validateComponentNewPrerequisites(cfg *config.Config) func(ctx context.Cont
 		if len(missingFolders) > 0 {
 			return nil, helpers.BuildMissingFoldersError(
 				missingFolders,
-				"Have you run 'tempo define' or 'tempo create' to set up your components?\nMake sure your templates, actions, and implementations exist before creating a new component.",
-				[]string{"tempo define -h", "tempo create -h"},
+				"Have you run 'tempo component define' or 'tempo component new' to set up your components?\nMake sure your templates, actions, and implementations exist before creating a new component.",
+				[]string{"tempo component -h"},
 			)
 		}
 

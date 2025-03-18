@@ -19,20 +19,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func setupConfig(tempDir string, overrides func(cfg *config.Config)) *config.Config {
-	cfg := config.DefaultConfig()
-	cfg.TempoRoot = filepath.Join(tempDir, ".tempo-files")
-	cfg.App.GoPackage = filepath.Join(tempDir, "custom-package")
-	cfg.App.AssetsDir = filepath.Join(tempDir, "custom-assets")
-	cfg.Paths.TemplatesDir = filepath.Join(cfg.TempoRoot, "templates")
-	cfg.Paths.ActionsDir = filepath.Join(cfg.TempoRoot, "actions")
-
-	if overrides != nil {
-		overrides(cfg)
-	}
-	return cfg
-}
-
 func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -41,7 +27,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
@@ -63,7 +49,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component" to set up the required folder structure and files
+	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -77,7 +63,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 		testutils.ValidateGeneratedFiles(t, expectedFiles)
 	})
 
-	// Step 2: Run "new component" to test the command
+	// Step 2: Run "component new" to test the command
 	t.Run("Component with default config", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -114,7 +100,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
 		Config: cfg,
@@ -134,7 +120,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component"
+	// Step 1: Run "component define"
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -142,7 +128,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 		}
 	})
 
-	// Step 2: Run "new component" to test the command
+	// Step 2: Run "component new" to test the command
 	t.Run("Component with configs by flags", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -185,7 +171,7 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
 		Config: cfg,
@@ -205,7 +191,7 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 		},
 	}
 
-	// Setup the required folders for "define component".
+	// Setup the required folders for "component define".
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(appCmd, t)
 		if err != nil {
@@ -215,7 +201,7 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 	})
 
-	// Run the "new component" command with --dry-run flag.
+	// Run the "component new" command with --dry-run flag.
 	t.Run("Component Dry Run", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -238,10 +224,83 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 	})
 }
 
+func TestComponentCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create go.mod inside tempDir (the correct working directory)
+	if err := testutils.CreateModFile(tempDir); err != nil {
+		t.Fatalf("Failed to create go.mod file: %v", err)
+	}
+
+	cfg := testutils.SetupConfig(tempDir, nil)
+
+	// Write `tempo.yaml` to the current working directory
+	configPath := filepath.Join(tempDir, "tempo.yaml")
+	if err := testutils.WriteConfigToFile(configPath, cfg); err != nil {
+		t.Fatalf("Failed to create mock config file: %v", err)
+	}
+
+	// Ensure required template folders exist
+	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
+	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
+		t.Fatalf("Failed to create component template directory: %v", err)
+	}
+
+	// Ensure actions folder and `component.json` exist
+	actionsDir := cfg.Paths.ActionsDir
+	if err := os.MkdirAll(actionsDir, 0755); err != nil {
+		t.Fatalf("Failed to create actions directory: %v", err)
+	}
+	actionsFile := filepath.Join(actionsDir, "component.json")
+	if err := os.WriteFile(actionsFile, []byte("{}"), 0644); err != nil {
+		t.Fatalf("Failed to create actions file: %v", err)
+	}
+
+	cliCtx := &app.AppContext{
+		Logger: logger.NewDefaultLogger(),
+		Config: cfg,
+		CWD:    tempDir,
+	}
+
+	app := &cli.Command{
+		Commands: []*cli.Command{
+			SetupComponentCommand(cliCtx),
+		},
+	}
+	args := []string{
+		"tempo", "component", "new",
+		"--name", "dryrun_component",
+		"--dry-run",
+	}
+
+	output, err := testhelpers.CaptureStdout(func() {
+		err := app.Run(context.Background(), args)
+		if err != nil {
+			t.Fatalf("Command failed: %v", err)
+		}
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to capture stdout: %v", err)
+	}
+
+	// Validate that the dry-run message appears
+	expectedOutput := "Dry Run Mode: No changes will be made."
+	if !utils.ContainsSubstring(output, expectedOutput) {
+		t.Errorf("Expected output to contain %q, but got: %q", expectedOutput, output)
+	}
+
+	// Ensure processEntityActions was NOT called (no modifications should happen)
+	expectedFailureMsg := "failed to process actions"
+	if utils.ContainsSubstring(output, expectedFailureMsg) {
+		t.Errorf("Unexpected error during dry-run: %q", output)
+	}
+}
+
 func TestComponentCommand_NewSubCmd_FailsOnMissingGoMod(t *testing.T) {
 	tempDir := t.TempDir() // Create a temporary directory without go.mod
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
 		Config: cfg,
@@ -261,8 +320,10 @@ func TestComponentCommand_NewSubCmd_FailsOnMissingGoMod(t *testing.T) {
 		},
 	}
 
+	args := []string{"tempo", "component", "new", "--name", "button"}
+
 	// Try running the command
-	err := appCmd.Run(context.Background(), []string{"tempo", "component", "new", "--name", "button"})
+	err := appCmd.Run(context.Background(), args)
 
 	// Validate error
 	if err == nil {
@@ -337,7 +398,7 @@ func TestComponentCommand_NewSubCmd_MissingNameFlag(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	// Write tempo.yaml to simulate "tempo init"
 	configPath := filepath.Join(tempDir, "tempo.yaml")
@@ -383,7 +444,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
 		Config: cfg,
@@ -403,7 +464,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component" to set up the required folder structure and files
+	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -417,7 +478,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 		testutils.ValidateGeneratedFiles(t, expectedFiles)
 	})
 
-	// Step 2: Run "new component" to test the command
+	// Step 2: Run "component new" to test the command
 	t.Run("Component with default config", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -445,7 +506,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 		testutils.ValidateGeneratedFiles(t, expectedFiles)
 	})
 
-	// Step 3: Run "new component" again
+	// Step 3: Run "component new" again
 	t.Run("Fail Component Creation When The Same already exists", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -475,7 +536,7 @@ func TestComponentCommand_NewSubCmd_CorruptedActionsFile(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 	// Write `tempo.yaml` to the current working directory
 	configPath := filepath.Join(tempDir, "tempo.yaml")
 	if err := testutils.WriteConfigToFile(configPath, cfg); err != nil {
@@ -537,7 +598,7 @@ func TestComponentCommand_NewSubCmd_UnwritableDirectory(t *testing.T) {
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	// Write `tempo.yaml` to the current working directory
 	configPath := filepath.Join(tempDir, "tempo.yaml")
@@ -603,79 +664,6 @@ func TestComponentCommand_NewSubCmd_UnwritableDirectory(t *testing.T) {
 	}
 }
 
-func TestComponentCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
-	tempDir := t.TempDir()
-
-	// Create go.mod inside tempDir (the correct working directory)
-	if err := testutils.CreateModFile(tempDir); err != nil {
-		t.Fatalf("Failed to create go.mod file: %v", err)
-	}
-
-	cfg := setupConfig(tempDir, nil)
-
-	// Write `tempo.yaml` to the current working directory
-	configPath := filepath.Join(tempDir, "tempo.yaml")
-	if err := testutils.WriteConfigToFile(configPath, cfg); err != nil {
-		t.Fatalf("Failed to create mock config file: %v", err)
-	}
-
-	// Ensure required template folders exist
-	componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
-	if err := os.MkdirAll(componentTemplateDir, 0755); err != nil {
-		t.Fatalf("Failed to create component template directory: %v", err)
-	}
-
-	// Ensure actions folder and `component.json` exist
-	actionsDir := cfg.Paths.ActionsDir
-	if err := os.MkdirAll(actionsDir, 0755); err != nil {
-		t.Fatalf("Failed to create actions directory: %v", err)
-	}
-	actionsFile := filepath.Join(actionsDir, "component.json")
-	if err := os.WriteFile(actionsFile, []byte("{}"), 0644); err != nil {
-		t.Fatalf("Failed to create actions file: %v", err)
-	}
-
-	cliCtx := &app.AppContext{
-		Logger: logger.NewDefaultLogger(),
-		Config: cfg,
-		CWD:    tempDir,
-	}
-
-	app := &cli.Command{
-		Commands: []*cli.Command{
-			SetupComponentCommand(cliCtx),
-		},
-	}
-	args := []string{
-		"tempo", "component", "new",
-		"--name", "dryrun_component",
-		"--dry-run",
-	}
-
-	output, err := testhelpers.CaptureStdout(func() {
-		err := app.Run(context.Background(), args)
-		if err != nil {
-			t.Fatalf("Command failed: %v", err)
-		}
-	})
-
-	if err != nil {
-		t.Fatalf("Failed to capture stdout: %v", err)
-	}
-
-	// Validate that the dry-run message appears
-	expectedOutput := "Dry Run Mode: No changes will be made."
-	if !utils.ContainsSubstring(output, expectedOutput) {
-		t.Errorf("Expected output to contain %q, but got: %q", expectedOutput, output)
-	}
-
-	// Ensure processEntityActions was NOT called (no modifications should happen)
-	expectedFailureMsg := "failed to process actions"
-	if utils.ContainsSubstring(output, expectedFailureMsg) {
-		t.Errorf("Unexpected error during dry-run: %q", output)
-	}
-}
-
 func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -684,7 +672,7 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites(t *te
 		t.Fatalf("Failed to create go.mod file: %v", err)
 	}
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	t.Run("Valid component prerequisites", func(t *testing.T) {
 		// Create the required templates directory
@@ -721,15 +709,11 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites(t *te
 
 func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites_ErrorOnCheckMissingFolders(t *testing.T) {
 	tempDir := t.TempDir()
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	// Mock `CheckMissingFoldersFunc` to simulate a missing folder error
 	originalFunc := utils.CheckMissingFoldersFunc
 	defer func() { utils.CheckMissingFoldersFunc = originalFunc }() // Restore after test
-
-	utils.CheckMissingFoldersFunc = func(folders map[string]string) ([]string, error) {
-		return []string{"  - Templates directory: /mock/path/component"}, fmt.Errorf("mock error in CheckMissingFolders")
-	}
 
 	validate := validateComponentNewPrerequisites(cfg)
 	_, err := validate(context.Background(), &cli.Command{})
@@ -748,7 +732,7 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites_Error
 func TestComponentCommand_NewSubCmd_Func_createBaseTemplateData_DefaultValues(t *testing.T) {
 	tempDir := t.TempDir()
 
-	cfg := setupConfig(tempDir, nil)
+	cfg := testutils.SetupConfig(tempDir, nil)
 
 	appCmd := &cli.Command{
 		Flags: getNewFlags(),
