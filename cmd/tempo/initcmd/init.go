@@ -27,6 +27,7 @@ func SetupInitCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "init",
 		Usage:                  "Initialize a Tempo project",
+		UsageText:              "tempo init [options]",
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
 		Action:                 runInitCommand(cmdCtx),

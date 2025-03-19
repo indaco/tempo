@@ -24,9 +24,9 @@ func setupComponentDefineSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "define",
 		Usage:                  "Define a new component template",
+		UsageText:              "tempo component define [options]",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--js] [--force] [--dryrun]",
 		Action:                 runComponentDefineSubCommand(cmdCtx),
 	}
 }

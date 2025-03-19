@@ -24,9 +24,9 @@ func setupComponentNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "new",
 		Usage:                  "Generate a component instance from a template",
+		UsageText:              "tempo component new [options]",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--js] [--force] [--dry-run]",
 		Before:                 validateComponentNewPrerequisites(cmdCtx.Config),
 		Action:                 runComponentNewSubCommand(cmdCtx),
 	}
