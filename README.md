@@ -43,7 +43,7 @@
 - [⚡ Using `tempo sync` as a Standalone Command](#-using-tempo-sync-as-a-standalone-command)
 - [⚙️ Configuration](#️-configuration)
 - [🏗️ Templates & Actions](#️-templates--actions)
-- [🔌 Extending Tempo with Custom Functions](#-extending-tempo-with-custom-functions)
+- [🔌 Extending Tempo](#-extending-tempo-with-custom-functions)
 - [🤝 Contributing](#-contributing)
 - [🆓 License](#-license)
 
@@ -53,11 +53,10 @@
 - **Structured asset workflow** – Ensures a clean, maintainable approach to managing CSS and JS within `templ` projects.
 - **Fast, lightweight component scaffolding** – Quickly generate components and variants with predefined templates and actions.
 - **Extensible templating system** – Supports custom function providers (local or remote) to enhance `tempo`'s capabilities.
-- **Fully Go-native** – No Node.js required—`tempo` integrates smoothly into Go-based projects.
 
 ## 💡 Motivation
 
-While building a **UI component library in Golang with `templ`**, I deliberately chose to use plain CSS and vanilla JavaScript. This decision introduced two key challenges:
+While building a UI component library in Golang with `templ`, I deliberately chose to use plain CSS and vanilla JavaScript. This decision introduced two key challenges:
 
 ### The Problem
 
@@ -66,17 +65,17 @@ While building a **UI component library in Golang with `templ`**, I deliberately
 
 ### The Solution
 
-`tempo` solves both problems **natively in Go**, eliminating the need for Node.js while providing a **structured, opinionated workflow** for component and asset management.
+`tempo` solves both problems natively in Go, eliminating the need for Node.js while providing a **structured, opinionated workflow** for component and asset management.
 
 #### ✨ Preserving the Developer Experience
 
-With `tempo`, **CSS and JS files remain untouched during development**, allowing developers to continue using their preferred tools:
+With `tempo`, CSS and JS files remain untouched during development, allowing developers to continue using their preferred tools:
 
 - **Linters & formatters** (e.g., Prettier, ESLint, Stylelint)
-- **IDE features** like **syntax highlighting**, **error detection**, and **inline code suggestions** (e.g., in **VSCode**).
+- **IDE features** like syntax highlighting, error detection, and inline code suggestions (e.g., in _VSCode_).
 - **Existing workflows** remain intact—ensuring a familiar, efficient experience.
 
-When you run `tempo`, **CSS and JS files are injected into `.templ` components automatically**, but the **original source files remain unchanged**. This approach **preserves developer productivity** while enabling seamless integration into templ-based projects.
+When you run `tempo`, **CSS and JS files are injected into `.templ` components automatically**, but the original source files remain unchanged. This approach **preserves developer productivity** while enabling seamless integration into templ-based projects.
 
 ## 💻 Installation
 
@@ -111,7 +110,7 @@ tempo component define
 tempo variant define
 ```
 
-Generates templates for _components/variants_ inside `.tempo-files/templates/` along with an action JSON file inside `.tempo-files/actions/`.
+Generates templates for _components/variants_ inside `.tempo-files/templates/` along with an action JSON file inside `.tempo-files/actions/`. See the [Templates & Actions](#️-templates--actions) section for details.
 
 **3. Create a Component**
 
@@ -152,7 +151,11 @@ VERSION:
    v0.1.0
 
 DESCRIPTION:
-   tempo simplifies asset management in templ-based projects, providing a seamless workflow for handling CSS and JS files. It automatically extracts and injects styles and scripts into .templ components while preserving the original source files, ensuring a smooth developer experience. Additionally, it offers a lightweight scaffolding system to quickly generate component and variant templates with predefined structures.
+   tempo simplifies asset management in templ-based projects, providing a seamless workflow for
+   handling CSS and JS files. It automatically extracts and injects styles and scripts into .templ
+   components while preserving the original source files, ensuring a smooth developer experience.
+   Additionally, it offers a lightweight scaffolding system to quickly generate component and variant
+   templates with predefined structures.
 
 COMMANDS:
    init       Initialize a Tempo project
@@ -304,21 +307,22 @@ Example: Running `tempo variant new --name outline --component` button will gene
 
 ### register
 
-Register is used to extend tempo.
+Extend `tempo` with the `register` command.
 
 ```bash
 tempo register -h
-tempo register -h functions
 ```
 
-- **functions** – Register a function provider from a local go module path or a remote repository
+#### Register a function provider
+
+Enhance `tempo`’s templating capabilities by adding custom function providers. You can register a provider from either a **local Go module** or a **remote Git repository**.
 
 ```bash
 tempo register functions --name sprig --url https://github.com/indaco/tempo-provider-sprig.git
 ```
 
 <details>
-<summary><strong>Functions Flags</strong> (<code>tempo register functions</code>)</summary>
+<summary><strong>Flags</strong> (<code>tempo register functions</code>)</summary>
 <dl>
   <dt><code>--name</code> (<code>-n</code>) <em>value</em></dt>
   <dd>Name for the function provider</dd>
@@ -333,17 +337,17 @@ tempo register functions --name sprig --url https://github.com/indaco/tempo-prov
 
 ### sync
 
-Process & sync asset files into templ component files
+Automatically sync CSS and JS assets with `.templ` components.
 
 ```bash
 tempo sync
 ```
 
-This command scans the `input` folder for CSS and JS files and injects their content into the corresponding .templ files in the `output` folder:
+The sync command scans the `input` folder for CSS and JS files, then injects their content into the corresponding `.templ` files in the `output` folder:
 
-- It extracts CSS and JS from files in the input folder.
-- It injects them into `.templ` files, inside a section delimited by guard markers.
-- This ensures components always have the latest CSS and JS without manual copying.
+- **Extracts** CSS and JS from source files.
+- **Injects** them into `.templ` files inside sections marked by _guard markers_.
+- **Keeps components up to date** without manual copying.
 
 Whenever you update your CSS or JS files, simply run `tempo sync` to propagate the changes.
 
@@ -641,7 +645,7 @@ Tempo automatically provides a set of **predefined variables** that can be used 
 
 Tempo supports external function providers, allowing you to integrate additional helper functions into your templates.
 
-See the full guide in [Extending Tempo](#-extending-tempo).
+See the full guide in [Extending Tempo](#-extending-tempo-with-custom-functions).
 
 ### Actions
 
