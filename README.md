@@ -2,7 +2,7 @@
   <code>tempo</code>
 </h1>
 <h2 align="center" style="font-size: 1.5em;">
-  A simple CLI for scaffolding components and managing assets in templ-based projects.
+  A lightweight CLI for managing assets and scaffolding components in templ-based projects.
 </h2>
 <p align="center">
     <a href="https://github.com/indaco/tempo/actions/workflows/ci.yml" target="_blank">
@@ -31,7 +31,7 @@
     </a>
 </p>
 
-`tempo` is a simple CLI for accelerating scaffolding and asset management in <a href="https://templ.guide" target="_blank">templ</a>-based projects. Inspired by the Italian word for **"time"**, its name naturally complements `templ`, helping developers streamline component generation and manage CSS & JS workflows with ease.
+`tempo` is a lightweight CLI for managing assets and scaffolding components in <a href="https://templ.guide" target="_blank">templ</a>-based projects. Inspired by the Italian word for **"time"**, it streamlines CSS & JS workflows while preserving a smooth developer experience.
 
 ## 📖 Table of Contents
 
@@ -43,26 +43,26 @@
 - [⚡ Using `tempo sync` as a Standalone Command](#-using-tempo-sync-as-a-standalone-command)
 - [⚙️ Configuration](#️-configuration)
 - [🏗️ Templates & Actions](#️-templates--actions)
-- [🔌 Extending Tempo](#-extending-tempo)
+- [🔌 Extending Tempo with Custom Functions](#-extending-tempo-with-custom-functions)
 - [🤝 Contributing](#-contributing)
 - [🆓 License](#-license)
 
 ## ✨ Features
 
-- **[Plop.js](https://plopjs.com/)-inspired scaffolding** – Define templates and actions to quickly generate new components or variants.
-- **Opinionated asset workflow** – A structured approach to managing CSS and JS within a `templ`-based project.
-- **Configurable asset extraction** – Extracts CSS and JS from a designated source folder and injects them into `.templ` files in the corresponding destination folder, using guard markers.
-- **Extensible template system** – Register custom template function providers (local or remote) to enhance Tempo's templating capabilities.
-- **A fully Golang-native alternative to Node.js-based tools** – Achieves the same streamlined component and asset management without requiring Node.js.
+- **Automated CSS & JS management** – Keeps styles and scripts in separate files while seamlessly injecting them into `.templ` components.
+- **Structured asset workflow** – Ensures a clean, maintainable approach to managing CSS and JS within `templ` projects.
+- **Fast, lightweight component scaffolding** – Quickly generate components and variants with predefined templates and actions.
+- **Extensible templating system** – Supports custom function providers (local or remote) to enhance `tempo`'s capabilities.
+- **Fully Go-native** – No Node.js required—`tempo` integrates smoothly into Go-based projects.
 
 ## 💡 Motivation
 
-While building a **UI component library in Golang with `templ`**, I faced two key challenges:
+While building a **UI component library in Golang with `templ`**, I deliberately chose to use plain CSS and vanilla JavaScript. This decision introduced two key challenges:
 
 ### The Problem
 
-1. **Scaffolding new components** – Every component followed the same folder structure, but manually copying files and folders was inefficient. I initially used [Plop.js](https://plopjs.com/), but it required setting up a full Node.js project.
-2. **Managing CSS & JS assets** – `templ` provides a great Go/HTML templating experience but lacks built-in tools for handling styles and scripts, making asset management cumbersome. (_See the ongoing discussion in [#740](https://github.com/a-h/templ/issues/740)._)
+1. **Managing CSS & JS assets** – While `templ` excels at Go/HTML templating, it lacks a structured approach for handling standalone styles and scripts. Although you can write CSS and JS directly within `.templ` files, this comes at the cost of losing native tooling benefits such as syntax highlighting, formatting, and autocompletion. As a result, maintaining styles and scripts efficiently while keeping them separate from `.templ` files required a better workflow.
+2. **Scaffolding new components** – Every component followed the same folder structure, but manually copying files and folders was inefficient. I initially used [Plop.js](https://plopjs.com/), but it required setting up a full Node.js project.
 
 ### The Solution
 
@@ -94,7 +94,7 @@ Download the pre-compiled binaries from the [releases page](https://github.com/i
 
 ## 🚀 Usage
 
-Start by creating a Go module using the `go mod init` [command](https://go.dev/ref/mod#go-mod-init).
+To start using `tempo`, initialize your project and define your components. Below are the key steps:
 
 **1. Initialize tempo**
 
@@ -143,13 +143,16 @@ assets/button/css/variant/outline.css → components/button/css/variant/outline.
 
 ```bash
 NAME:
-   tempo - A simple CLI for scaffolding components and managing assets in templ-based projects
+   tempo - A lightweight CLI for managing assets and scaffolding components in templ-based projects.
 
 USAGE:
-   tempo [global options] [command [command options]]
+   tempo <subcommand> [options] [arguments]
 
 VERSION:
    v0.1.0
+
+DESCRIPTION:
+   tempo simplifies asset management in templ-based projects, providing a seamless workflow for handling CSS and JS files. It automatically extracts and injects styles and scripts into .templ components while preserving the original source files, ensuring a smooth developer experience. Additionally, it offers a lightweight scaffolding system to quickly generate component and variant templates with predefined structures.
 
 COMMANDS:
    init       Initialize a Tempo project
@@ -683,7 +686,7 @@ Each object defines a templating action:
 
 **Variant actions (variant.json) follow the same structure** but target a specific component’s variant subfolder.
 
-## 🔌 Extending Tempo
+## 🔌 Extending Tempo with Custom Functions
 
 Tempo allows you to register external function providers, which means you can integrate additional helper functions into your templates.
 

@@ -10,8 +10,9 @@ import (
 // SetupComponentCommand creates the "component" command with its "define" and "new" subcommand.
 func SetupComponentCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
-		Name:  "component",
-		Usage: "Define component templates and generate instances from them",
+		Name:      "component",
+		Usage:     "Define component templates and generate instances from them",
+		UsageText: "tempo component <subcommand> [options] [arguments]",
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},

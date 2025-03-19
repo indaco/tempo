@@ -21,7 +21,8 @@ import (
 
 const (
 	appName     = "tempo"
-	description = "A simple CLI for scaffolding components and managing assets in templ-based projects"
+	usage       = "A lightweight CLI for managing assets and scaffolding components in templ-based projects."
+	description = "tempo simplifies asset management in templ-based projects, providing a seamless workflow for handling CSS and JS files. It automatically extracts and injects styles and scripts into .templ components while preserving the original source files, ensuring a smooth developer experience. Additionally, it offers a lightweight scaffolding system to quickly generate component and variant templates with predefined structures."
 	author      = "indaco"
 	email       = "github@mircoveltri.me"
 )
@@ -48,6 +49,8 @@ func runCLI(args []string) error {
 	appCmd := &cli.Command{
 		Name:        appName,
 		Version:     fmt.Sprintf("v%s", version.GetVersion()),
+		Usage:       usage,
+		UsageText:   "tempo <subcommand> [options] [arguments]",
 		Description: description,
 		Commands: []*cli.Command{
 			initcmd.SetupInitCommand(cliCtx),

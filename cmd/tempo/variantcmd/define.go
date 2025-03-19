@@ -20,9 +20,9 @@ func setupVariantDefineSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "define",
 		Usage:                  "Define a new variant template",
+		UsageText:              "tempo variant define [options]",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--force] [--dryrun]",
 		Before:                 validateVariantDefinePrerequisites(cmdCtx.Config),
 		Action:                 runVariantDefineSubCommand(*cmdCtx),
 	}

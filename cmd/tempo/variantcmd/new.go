@@ -22,9 +22,9 @@ func setupVariantNewSubCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "new",
 		Usage:                  "Generate a variant instance from a template",
+		UsageText:              "tempo variant new [options]",
 		UseShortOptionHandling: true,
 		Flags:                  flags,
-		ArgsUsage:              "[--package value | -p] [--assets value | -a] [--name value | -n] [--component value | -c] [--force] [--dry-run]",
 		Before:                 validateVariantNewPrerequisites(cmdCtx.Config),
 		Action:                 runVariantNewSubCommand(cmdCtx),
 	}

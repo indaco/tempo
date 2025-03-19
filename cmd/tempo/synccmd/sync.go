@@ -28,9 +28,9 @@ func SetupSyncCommand(cmdCtx *app.AppContext) *cli.Command {
 	return &cli.Command{
 		Name:                   "sync",
 		Usage:                  "Process & sync asset files into templ components",
+		UsageText:              "tempo sync [options]",
 		UseShortOptionHandling: true,
 		Flags:                  getFlags(),
-		ArgsUsage:              "[--input value | -i] [--output value | -o] [--exclude value | -e] [--workers value | -w] [--prod | -p] [--force | -f] [--summary format | -s] [--verbose-summary] [--track-time] [--report-file file | --rf]",
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			return ctx, app.IsTempoProject(cmdCtx.CWD)
 		},
