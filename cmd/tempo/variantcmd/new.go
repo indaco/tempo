@@ -90,7 +90,7 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 			return nil
 		}
 
-		// Step 2: Check if "define variant" command has been executed
+		// Step 2: Check if "variant define" command has been executed
 		pathToVariantActionsFile := filepath.Join(data.ActionsDir, "variant.json")
 		exists, err := utils.FileExistsFunc(pathToVariantActionsFile)
 		if err != nil {
@@ -159,7 +159,7 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateVariantNewPrerequisites checks prerequisites for the "new variant" subcommand, including:
+// validateVariantNewPrerequisites checks prerequisites for the "variant new" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
 // - Existence of the component templates folder.
 // - Existence of the variant templates folder.

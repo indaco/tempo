@@ -603,7 +603,7 @@ This ensures:
 
 ## 🏗️ Templates & Actions
 
-📌 The **`tempo define component`** and **`tempo define variant`** commands generate:
+📌 The **`tempo component define`** and **`tempo variant define`** commands generate:
 
 - **Templates** stored in `.tempo-files/templates/`, using Go’s `text/template`.
 - **Actions** defined in `.tempo-files/actions/`, specifying _file and folder creation_ in JSON format.

@@ -49,7 +49,7 @@ func TestVariantCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component" to set up the required folder structure and files
+	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -172,7 +172,7 @@ func TestVariantCommand_NewSubCmd_WithFlags(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component"
+	// Step 1: Run "component define"
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -296,7 +296,7 @@ func TestVariantCommand_NewSubComd_DryRun(t *testing.T) {
 		},
 	}
 
-	// Setup the required folders for "define component".
+	// Setup the required folders for "component define".
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(appCmd, t)
 		if err != nil {
@@ -391,7 +391,7 @@ func TestVariantCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component" to set up the required folder structure and files
+	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -604,7 +604,7 @@ func TestVariantCommand_NewSubCmd_MissingNameFlag(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component"
+	// Step 1: Run "component define"
 	t.Run("Define Component Setup", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {
@@ -735,7 +735,7 @@ func TestVariantCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 		},
 	}
 
-	// Step 1: Run "define component" to set up the required folder structure and files
+	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component", func(t *testing.T) {
 		_, err := testutils.SetupComponentDefine(app, t)
 		if err != nil {

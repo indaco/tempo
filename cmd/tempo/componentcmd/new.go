@@ -90,14 +90,14 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 			return nil
 		}
 
-		// Step 2: Check if "define component" command has been executed
+		// Step 2: Check if "component define" command has been executed
 		pathToComponentActionsFile := filepath.Join(data.ActionsDir, "component.json")
 		exists, err := utils.FileExistsFunc(pathToComponentActionsFile)
 		if err != nil {
 			return err
 		}
 		if !exists {
-			return errors.Wrap("Cannot find actions folder. Did you run 'tempo define component' before?")
+			return errors.Wrap("Cannot find actions folder. Did you run 'tempo component define' before?")
 		}
 
 		// Step 3: Check if the component already exists
@@ -139,7 +139,7 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateComponentNewPrerequisites checks prerequisites for the "new component" subcommand, including:
+// validateComponentNewPrerequisites checks prerequisites for the "component new" subcommand, including:
 // - Initialized Tempo project (inherited from the main define command).
 // - Existence of the component templates folder.
 func validateComponentNewPrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {

@@ -46,7 +46,7 @@ func getDefineFlags() []cli.Flag {
 /* Prerequisites Validation                                                  */
 /* ------------------------------------------------------------------------- */
 
-// validateVariantDefinePrerequisites checks prerequisites for the "define variant" subcommand, including:
+// validateVariantDefinePrerequisites checks prerequisites for the "variant define" subcommand, including:
 // - Initialized Tempo project (inherit from the main define command).
 // - Existence of the component templates folder.
 func validateVariantDefinePrerequisites(cfg *config.Config) func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
@@ -57,7 +57,7 @@ func validateVariantDefinePrerequisites(cfg *config.Config) func(ctx context.Con
 			return nil, errors.Wrap("Failed to check component templates folder", err)
 		}
 		if !exists {
-			return nil, errors.Wrap("Templates for component not found. Run 'tempo define component' first.")
+			return nil, errors.Wrap("Templates for component not found. Run 'tempo component define' first.")
 		}
 		return ctx, nil
 	}
