@@ -1,6 +1,6 @@
 module github.com/indaco/tempo
 
-go 1.23.5
+go 1.23.7
 
 require (
 	github.com/evanw/esbuild v0.25.1
