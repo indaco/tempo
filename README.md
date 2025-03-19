@@ -8,7 +8,7 @@
     <a href="https://github.com/indaco/tempo/actions/workflows/ci.yml" target="_blank">
       <img src="https://github.com/indaco/tempo/actions/workflows/ci.yml/badge.svg" alt="CI" />
     </a>
-    <a href="https://coveralls.io/github/indaco/tempo?branch=main">
+    <a href="https://coveralls.io/github/indaco/tempo?branch=main" target="_blank">
         <img
             src="https://coveralls.io/repos/github/indaco/tempo/badge.svg?branch=main"
             alt="Coverage Status"
@@ -23,7 +23,7 @@
      <a href="https://github.com/indaco/tempo/blob/main/LICENSE" target="_blank">
         <img src="https://img.shields.io/badge/license-mit-blue?style=flat-square&logo=none" alt="license" />
     </a>
-    <a href="https://www.jetify.com/devbox/docs/contributor-quickstart/">
+    <a href="https://www.jetify.com/devbox/docs/contributor-quickstart/" target="_blank">
       <img
           src="https://www.jetify.com/img/devbox/shield_moon.svg"
           alt="Built with Devbox"
@@ -107,8 +107,8 @@ Generates a `tempo.yaml` configuration file. Customize it to fit your project. S
 **2. Define a Component or Variant**
 
 ```bash
-tempo define component
-tempo define variant
+tempo component define
+tempo variant define
 ```
 
 Generates templates for _components/variants_ inside `.tempo-files/templates/` along with an action JSON file inside `.tempo-files/actions/`.
@@ -116,7 +116,7 @@ Generates templates for _components/variants_ inside `.tempo-files/templates/` a
 **3. Create a Component**
 
 ```bash
-tempo new component --name button
+tempo component new --name button
 ```
 
 Creates a new component:
