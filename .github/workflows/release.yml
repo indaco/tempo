@@ -5,6 +5,8 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    environment:
+      name: Release
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
