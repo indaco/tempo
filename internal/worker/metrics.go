@@ -204,6 +204,7 @@ func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles 
 		SkipMissingTemplFile: color.New(color.FgMagenta, color.Bold).SprintFunc(),
 		SkipUnchangedFile:    color.New(color.FgCyan, color.Bold).SprintFunc(),
 		SkipQueueFull:        color.New(color.FgRed, color.Bold).SprintFunc(),
+		SkipExcluded:         color.New(color.FgWhite, color.Bold).SprintFunc(),
 	}
 
 	// Output categorized skipped files
@@ -220,6 +221,8 @@ func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles 
 		"These files haven't changed since the last run. Use '--force' to process them anyway if needed.")
 
 	formatSkippedCategory(sb, "Queue Overflow (Increase Workers)", categorized[SkipQueueFull], colorMap[SkipQueueFull], "Consider increasing the number of workers (--workers) to prevent queue overflow.")
+
+	formatSkippedCategory(sb, "Excluded Files (System & User-Specified)", categorized[SkipExcluded], colorMap[SkipExcluded], "Excluded as system files (e.g., .DS_Store) or by the '--exclude' flag.")
 }
 
 // groupSkippedFiles organizes skipped files into categories.

@@ -268,8 +268,8 @@ func queueFilesForProcessing(
 			return nil
 		}
 
-		if shouldExcludeDir(opts.ExcludeDir, absPath) {
-			handleSkip(manager.SkippedChan, path, "Excluded by user", worker.SkipExcluded)
+		if shouldExcludeDir(opts.ExcludeDir, absPath) || isExcludedFile(absPath) {
+			handleSkip(manager.SkippedChan, path, "Excluded by user or system file", worker.SkipExcluded)
 			return nil
 		}
 
@@ -415,6 +415,11 @@ func shouldExcludeDir(excludeDir, absPath string) bool {
 
 // shouldProcessFile decides whether the file should be processed or skipped.
 func shouldProcessFile(path string, opts worker.WorkerPoolOptions, lastRunTimestamp int64, manager *worker.WorkerPoolManager) bool {
+	if isExcludedFile(path) {
+		handleSkip(manager.SkippedChan, path, "Excluded system or hidden file", worker.SkipExcluded)
+		return false
+	}
+
 	lastModified, err := getFileLastModifiedTime(path)
 	if err != nil {
 		handleError(manager, path, err)
@@ -436,4 +441,15 @@ func enqueueJob(manager *worker.WorkerPoolManager, inputPath, outputPath string)
 	default:
 		return false
 	}
+}
+
+// isExcludedFile checks if a file should be ignored (e.g., system files like .DS_Store).
+func isExcludedFile(path string) bool {
+	base := filepath.Base(path)
+	excludedFiles := map[string]bool{
+		".DS_Store": true,
+		"Thumbs.db": true,
+	}
+
+	return excludedFiles[base]
 }
