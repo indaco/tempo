@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -144,16 +145,22 @@ func DerivedFolderPaths(baseFolder string) (TemplatesDir, ActionsDir string) {
 // provided in the fileConfig.
 func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 	if fileConfig.TempoRoot != "" {
-		defaultConfig.TempoRoot = fileConfig.TempoRoot
-		defaultConfig.Paths.TemplatesDir = filepath.Join(fileConfig.TempoRoot, "templates")
-		defaultConfig.Paths.ActionsDir = filepath.Join(fileConfig.TempoRoot, "actions")
+		resolvedRoot, err := utils.ResolvePath(fileConfig.TempoRoot)
+		if err == nil {
+			defaultConfig.TempoRoot = resolvedRoot
+			defaultConfig.Paths.TemplatesDir = filepath.Join(resolvedRoot, "templates")
+			defaultConfig.Paths.ActionsDir = filepath.Join(resolvedRoot, "actions")
+		}
 	}
 
 	if fileConfig.App.GoModule != "" {
 		defaultConfig.App.GoModule = fileConfig.App.GoModule
 	}
 	if fileConfig.App.GoPackage != "" {
-		defaultConfig.App.GoPackage = fileConfig.App.GoPackage
+		resolvedPackage, err := utils.ResolvePath(fileConfig.App.GoPackage)
+		if err == nil {
+			defaultConfig.App.GoPackage = resolvedPackage
+		}
 	}
 	if fileConfig.App.WithJs {
 		defaultConfig.App.WithJs = fileConfig.App.WithJs
@@ -162,7 +169,10 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 		defaultConfig.App.CssLayer = fileConfig.App.CssLayer
 	}
 	if fileConfig.App.AssetsDir != "" {
-		defaultConfig.App.AssetsDir = fileConfig.App.AssetsDir
+		resolvedAssetsDir, err := utils.ResolvePath(fileConfig.App.AssetsDir)
+		if err == nil {
+			defaultConfig.App.AssetsDir = resolvedAssetsDir
+		}
 	}
 
 	if fileConfig.Processor.Workers != 0 {
