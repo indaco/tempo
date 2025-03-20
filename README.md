@@ -17,6 +17,9 @@
     <a href="https://goreportcard.com/report/github.com/indaco/tempo" target="_blank">
         <img src="https://goreportcard.com/badge/github.com/indaco/tempo" alt="go report card" />
     </a>
+    <a href="https://badge.fury.io/gh/indaco%2Ftempo" target="_blank">
+      <img src="https://badge.fury.io/gh/indaco%2Ftempo.svg" alt="version" />
+    </a>
     <a href="https://pkg.go.dev/github.com/indaco/tempo/" target="_blank">
         <img src="https://pkg.go.dev/badge/github.com/indaco/tempo/.svg" alt="go reference" />
     </a>
