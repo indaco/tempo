@@ -226,8 +226,8 @@ func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles 
 }
 
 // groupSkippedFiles organizes skipped files into categories.
-func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType][]string {
-	categorized := map[SkipType][]string{
+func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType][]ProcessingError {
+	categorized := map[SkipType][]ProcessingError{
 		SkipUnsupportedFile:  {},
 		SkipMismatchedPath:   {},
 		SkipMissingTemplFile: {},
@@ -236,8 +236,7 @@ func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType
 	}
 
 	for _, file := range skippedFiles {
-		entry := fmt.Sprintf("    - file: %s", color.New(color.Faint).Sprint(file.FilePath))
-		categorized[file.SkipType] = append(categorized[file.SkipType], entry)
+		categorized[file.SkipType] = append(categorized[file.SkipType], file)
 	}
 
 	return categorized
@@ -293,7 +292,7 @@ func filterSkippedFiles(files []ProcessingError, skipType SkipType) []Processing
 func formatSkippedCategory(
 	sb *strings.Builder,
 	title string,
-	entries []string,
+	entries []ProcessingError,
 	colorFunc func(a ...any) string,
 	hint string,
 ) {
@@ -316,6 +315,10 @@ func formatSkippedCategory(
 
 	// Print skipped file entries
 	for _, entry := range entries {
-		sb.WriteString(fmt.Sprintf("%s\n", entry))
+		if entry.Dest != "" {
+			sb.WriteString(fmt.Sprintf("    - file: %s → Expected: %s\n", faint(entry.Source), faint(entry.Dest)))
+		} else {
+			sb.WriteString(fmt.Sprintf("    - file: %s\n", faint(entry.Source)))
+		}
 	}
 }

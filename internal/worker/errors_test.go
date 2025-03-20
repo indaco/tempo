@@ -10,9 +10,9 @@ import (
 func TestCollectErrors(t *testing.T) {
 	errorsChan := make(chan ProcessingError, 3)
 	expectedErrors := []ProcessingError{
-		{FilePath: "file1.js", Message: "Syntax error"},
-		{FilePath: "file2.css", Message: "Invalid property"},
-		{FilePath: "file3.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "file1.js", Message: "Syntax error"},
+		{Source: "file2.css", Message: "Invalid property"},
+		{Source: "file3.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
 	}
 
 	for _, err := range expectedErrors {
@@ -36,8 +36,8 @@ func TestCollectErrors(t *testing.T) {
 func TestFormatError(t *testing.T) {
 	err := FormatError("broken.js", fmt.Errorf("Unexpected token"))
 
-	if err.FilePath != "broken.js" {
-		t.Errorf("Expected FilePath to be 'broken.js', got %s", err.FilePath)
+	if err.Source != "broken.js" {
+		t.Errorf("Expected FilePath to be 'broken.js', got %s", err.Source)
 	}
 	if err.Message != "Unexpected token" {
 		t.Errorf("Expected Message to be 'Unexpected token', got %s", err.Message)
@@ -45,10 +45,22 @@ func TestFormatError(t *testing.T) {
 }
 
 func TestFormatSkipReason(t *testing.T) {
-	skip := FormatSkipReason("invalid.txt", "Unsupported file type", SkipUnsupportedFile)
+	skippedFile := SkippedFile{
+		Source:    "invalid.txt",
+		Dest:      "",
+		InputDir:  "/project/assets",
+		OutputDir: "/project/components",
+		Reason:    "Unsupported file type",
+		SkipType:  SkipUnsupportedFile,
+	}
 
-	if skip.FilePath != "invalid.txt" {
-		t.Errorf("Expected FilePath to be 'invalid.txt', got %s", skip.FilePath)
+	skip := FormatSkipReason(skippedFile)
+
+	if skip.Source != "invalid.txt" {
+		t.Errorf("Expected Source to be 'invalid.txt', got %s", skip.Source)
+	}
+	if skip.Dest != "" {
+		t.Errorf("Expected Dest to be empty, got %s", skip.Dest)
 	}
 	if skip.Reason != "Unsupported file type" {
 		t.Errorf("Expected Reason to be 'Unsupported file type', got %s", skip.Reason)
@@ -59,11 +71,10 @@ func TestFormatSkipReason(t *testing.T) {
 }
 
 func TestPrintErrors(t *testing.T) {
-
 	errors := []ProcessingError{
-		{FilePath: "file1.js", Message: "Syntax error"},
-		{FilePath: "file2.css", Message: "Invalid property"},
-		{FilePath: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "file1.js", Message: "Syntax error"},
+		{Source: "file2.css", Message: "Invalid property"},
+		{Source: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
 	}
 
 	// Capture output

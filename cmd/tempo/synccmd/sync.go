@@ -256,27 +256,41 @@ func queueFilesForProcessing(
 	manager *worker.WorkerPoolManager,
 	lastRunTimestamp int64,
 ) error {
-	return filepath.WalkDir(opts.InputDir, func(path string, d os.DirEntry, err error) error {
+	return filepath.WalkDir(opts.InputDir, func(source string, d os.DirEntry, err error) error {
 		if err != nil {
-			handleError(manager, path, err)
+			handleError(manager, source, err)
 			return nil
 		}
 
-		absPath, err := filepath.Abs(path)
+		absPath, err := filepath.Abs(source)
 		if err != nil {
-			handleError(manager, path, err)
+			handleError(manager, source, err)
 			return nil
 		}
 
 		if shouldExcludeDir(opts.ExcludeDir, absPath) || isExcludedFile(absPath) {
-			handleSkip(manager.SkippedChan, path, "Excluded by user or system file", worker.SkipExcluded)
+			handleSkip(manager.SkippedChan, worker.SkippedFile{
+				Source:    source,
+				Dest:      "", // No expected output file
+				InputDir:  opts.InputDir,
+				OutputDir: opts.OutputDir,
+				Reason:    "Excluded by user or system file",
+				SkipType:  worker.SkipExcluded,
+			})
 			return nil
 		}
 
-		if !d.IsDir() && shouldProcessFile(path, opts, lastRunTimestamp, manager) {
-			outputFilePath := utils.RebasePathToOutput(path, opts.InputDir, opts.OutputDir)
-			if !enqueueJob(manager, path, outputFilePath) {
-				handleSkip(manager.SkippedChan, path, "Job queue is full. Increase workers.", worker.SkipQueueFull)
+		outputFilePath := utils.RebasePathToOutput(source, opts.InputDir, opts.OutputDir)
+		if !d.IsDir() && shouldProcessFile(source, outputFilePath, opts, lastRunTimestamp, manager) {
+			if !enqueueJob(manager, source, outputFilePath) {
+				handleSkip(manager.SkippedChan, worker.SkippedFile{
+					Source:    source,
+					Dest:      outputFilePath,
+					InputDir:  opts.InputDir,
+					OutputDir: opts.OutputDir,
+					Reason:    "Job queue is full. Increase workers.",
+					SkipType:  worker.SkipQueueFull,
+				})
 			}
 		}
 		return nil
@@ -401,9 +415,9 @@ func handleError(manager *worker.WorkerPoolManager, path string, err error) {
 }
 
 // handleSkip sends skip reasons to the skipped channel.
-func handleSkip(ch chan<- worker.ProcessingError, path, reason string, code worker.SkipType) {
+func handleSkip(ch chan<- worker.ProcessingError, skipped worker.SkippedFile) {
 	select {
-	case ch <- worker.FormatSkipReason(path, reason, code):
+	case ch <- worker.FormatSkipReason(skipped):
 	default: // Prevent blocking
 	}
 }
@@ -414,20 +428,34 @@ func shouldExcludeDir(excludeDir, absPath string) bool {
 }
 
 // shouldProcessFile decides whether the file should be processed or skipped.
-func shouldProcessFile(path string, opts worker.WorkerPoolOptions, lastRunTimestamp int64, manager *worker.WorkerPoolManager) bool {
-	if isExcludedFile(path) {
-		handleSkip(manager.SkippedChan, path, "Excluded system or hidden file", worker.SkipExcluded)
+func shouldProcessFile(source, dest string, opts worker.WorkerPoolOptions, lastRunTimestamp int64, manager *worker.WorkerPoolManager) bool {
+	if isExcludedFile(source) {
+		handleSkip(manager.SkippedChan, worker.SkippedFile{
+			Source:    source,
+			Dest:      dest,
+			InputDir:  opts.InputDir,
+			OutputDir: opts.OutputDir,
+			Reason:    "Excluded system or hidden file",
+			SkipType:  worker.SkipExcluded,
+		})
 		return false
 	}
 
-	lastModified, err := getFileLastModifiedTime(path)
+	lastModified, err := getFileLastModifiedTime(source)
 	if err != nil {
-		handleError(manager, path, err)
+		handleError(manager, source, err)
 		return false
 	}
 
 	if !opts.IsProduction && !opts.IsForce && lastModified < lastRunTimestamp {
-		handleSkip(manager.SkippedChan, path, "File unchanged since last run", worker.SkipUnchangedFile)
+		handleSkip(manager.SkippedChan, worker.SkippedFile{
+			Source:    source,
+			Dest:      dest,
+			InputDir:  opts.InputDir,
+			OutputDir: opts.OutputDir,
+			Reason:    "File unchanged since last run",
+			SkipType:  worker.SkipUnchangedFile,
+		})
 		return false
 	}
 	return true

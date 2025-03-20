@@ -318,9 +318,9 @@ func TestSyncWorkerPool_SummaryToJSONFile(t *testing.T) {
 func TestWorkerErrorHandling(t *testing.T) {
 	// Step 1: Create a channel to simulate errors
 	errorsChan := make(chan worker.ProcessingError, 3)
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file1", Message: "Error 1"}
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file2", Message: "Error 2"}
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file3", Message: "Error 3"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file1", Message: "Error 1"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file2", Message: "Error 2"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file3", Message: "Error 3"}
 	close(errorsChan)
 
 	// Capture output using testutils
@@ -623,7 +623,7 @@ func TestQueueFilesForProcessing_ExcludedFiles(t *testing.T) {
 	// Collect skipped files
 	skippedFiles := make(map[string]bool)
 	for skip := range manager.SkippedChan {
-		skippedFiles[filepath.Base(skip.FilePath)] = true
+		skippedFiles[filepath.Base(skip.Source)] = true
 	}
 
 	// Verify all excluded files were skipped
@@ -673,7 +673,8 @@ func TestShouldProcessFile(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name           string
-		filePath       string
+		source         string
+		dest           string
 		opts           worker.WorkerPoolOptions
 		lastRun        int64
 		expectedResult bool
@@ -681,7 +682,7 @@ func TestShouldProcessFile(t *testing.T) {
 	}{
 		{
 			name:           "Excluded file",
-			filePath:       excludedFile,
+			source:         excludedFile,
 			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
 			lastRun:        newTimestamp,
 			expectedResult: false,
@@ -689,7 +690,7 @@ func TestShouldProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Old file not in force mode",
-			filePath:       oldFile,
+			source:         oldFile,
 			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
 			lastRun:        newTimestamp,
 			expectedResult: false,
@@ -697,7 +698,7 @@ func TestShouldProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Old file in force mode",
-			filePath:       oldFile,
+			source:         oldFile,
 			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: true, NumWorkers: 1},
 			lastRun:        newTimestamp,
 			expectedResult: true,
@@ -705,7 +706,7 @@ func TestShouldProcessFile(t *testing.T) {
 		},
 		{
 			name:           "New file should be processed",
-			filePath:       newFile,
+			source:         newFile,
 			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
 			lastRun:        oldTimestamp,
 			expectedResult: true,
@@ -713,7 +714,7 @@ func TestShouldProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Production mode ignores timestamp",
-			filePath:       oldFile,
+			source:         oldFile,
 			opts:           worker.WorkerPoolOptions{IsProduction: true, IsForce: false, NumWorkers: 1},
 			lastRun:        newTimestamp,
 			expectedResult: true,
@@ -726,27 +727,27 @@ func TestShouldProcessFile(t *testing.T) {
 			manager := worker.NewWorkerPoolManager(tt.opts)
 
 			// Run the function
-			result := shouldProcessFile(tt.filePath, tt.opts, tt.lastRun, manager)
+			result := shouldProcessFile(tt.source, tt.dest, tt.opts, tt.lastRun, manager)
 
 			// Validate the result
 			if result != tt.expectedResult {
-				t.Errorf("shouldProcessFile(%q) = %v; want %v", tt.filePath, result, tt.expectedResult)
+				t.Errorf("shouldProcessFile(%q) = %v; want %v", tt.source, result, tt.expectedResult)
 			}
 
 			// Close SkippedChan and drain it to validate skipped files
 			close(manager.SkippedChan)
 			skippedFiles := make(map[string]bool)
 			for skip := range manager.SkippedChan {
-				skippedFiles[filepath.Base(skip.FilePath)] = true
+				skippedFiles[filepath.Base(skip.Source)] = true
 			}
 
 			if tt.expectedSkip {
-				if !skippedFiles[filepath.Base(tt.filePath)] {
-					t.Errorf("expected %q to be skipped, but it was not", tt.filePath)
+				if !skippedFiles[filepath.Base(tt.source)] {
+					t.Errorf("expected %q to be skipped, but it was not", tt.source)
 				}
 			} else {
-				if skippedFiles[filepath.Base(tt.filePath)] {
-					t.Errorf("did not expect %q to be skipped, but it was", tt.filePath)
+				if skippedFiles[filepath.Base(tt.source)] {
+					t.Errorf("did not expect %q to be skipped, but it was", tt.source)
 				}
 			}
 		})
