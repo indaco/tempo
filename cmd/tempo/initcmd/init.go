@@ -158,7 +158,9 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	var sb strings.Builder
 
 	// Write header comment and base folder
-	sb.WriteString("# The root folder for Tempo files\n")
+	sb.WriteString("# Tempo CLI configuration file\n")
+	sb.WriteString("# Documentation & source code: https://github.com/indaco/tempo\n\n")
+	sb.WriteString("# The root folder for tempo files\n")
 	sb.WriteString(fmt.Sprintf("tempo_root: %s\n\n", cfg.TempoRoot))
 
 	// Write app-specific configuration
