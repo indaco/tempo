@@ -26,7 +26,14 @@ func WorkerPool(ctx context.Context, m *WorkerPoolManager, trackExecution bool) 
 			if skipReason, skipType := shouldSkipFile(job, m.InputDir, m.OutputDir); skipReason != "" {
 				m.Metrics.IncrementSkippedFile()
 				select {
-				case m.SkippedChan <- FormatSkipReason(job.InputPath, skipReason, skipType):
+				case m.SkippedChan <- FormatSkipReason(SkippedFile{
+					Source:    job.InputPath,
+					Dest:      job.OutputPath,
+					InputDir:  m.InputDir,
+					OutputDir: m.OutputDir,
+					Reason:    skipReason,
+					SkipType:  skipType,
+				}):
 				default:
 				}
 				continue

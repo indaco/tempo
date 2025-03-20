@@ -143,10 +143,6 @@ func TestSyncCommand(t *testing.T) {
 	}
 }
 
-/* ------------------------------------------------------------------------- */
-/* Test Worker Pool Execution                                                */
-/* ------------------------------------------------------------------------- */
-
 func TestSyncWorkerPool_BasicExecution(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_BasicExecution")
 
@@ -197,10 +193,6 @@ func TestSyncWorkerPool_BasicExecution(t *testing.T) {
 
 	t.Log("[DEBUG] Worker pool executed successfully")
 }
-
-/* ------------------------------------------------------------------------- */
-/* Test Summary Output as JSON String                                        */
-/* ------------------------------------------------------------------------- */
 
 func TestSyncWorkerPool_SummaryAsJSON(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_SummaryAsJSON")
@@ -257,10 +249,6 @@ func TestSyncWorkerPool_SummaryAsJSON(t *testing.T) {
 
 	t.Log("[DEBUG] JSON summary output validated successfully")
 }
-
-/* ------------------------------------------------------------------------- */
-/* Test Summary Export to JSON File                                          */
-/* ------------------------------------------------------------------------- */
 
 func TestSyncWorkerPool_SummaryToJSONFile(t *testing.T) {
 	t.Log("[DEBUG] Starting TestRunWorkerPool_SummaryToJSONFile")
@@ -327,16 +315,12 @@ func TestSyncWorkerPool_SummaryToJSONFile(t *testing.T) {
 	t.Log("[DEBUG] JSON summary file validated successfully")
 }
 
-/* ------------------------------------------------------------------------- */
-/* Test Error Handling in Worker Pool                                        */
-/* ------------------------------------------------------------------------- */
-
 func TestWorkerErrorHandling(t *testing.T) {
 	// Step 1: Create a channel to simulate errors
 	errorsChan := make(chan worker.ProcessingError, 3)
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file1", Message: "Error 1"}
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file2", Message: "Error 2"}
-	errorsChan <- worker.ProcessingError{FilePath: "/path/to/file3", Message: "Error 3"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file1", Message: "Error 1"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file2", Message: "Error 2"}
+	errorsChan <- worker.ProcessingError{Source: "/path/to/file3", Message: "Error 3"}
 	close(errorsChan)
 
 	// Capture output using testutils
@@ -359,10 +343,6 @@ func TestWorkerErrorHandling(t *testing.T) {
 	// Validate output
 	testhelpers.ValidateCLIOutput(t, output, expectedMessages)
 }
-
-/* ------------------------------------------------------------------------- */
-/* Test queueFilesForProcessing                                              */
-/* ------------------------------------------------------------------------- */
 
 func TestQueueFilesForProcessing(t *testing.T) {
 	tempDir := t.TempDir()
@@ -607,6 +587,173 @@ func TestQueueFilesForProcessing_NonDirectory(t *testing.T) {
 	}
 }
 
+func TestQueueFilesForProcessing_ExcludedFiles(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create excluded files in the input directory
+	excludedFiles := []string{".DS_Store", "Thumbs.db"}
+	for _, fileName := range excludedFiles {
+		filePath := filepath.Join(tempDir, fileName)
+		if err := os.WriteFile(filePath, []byte("content"), 0644); err != nil {
+			t.Fatalf("failed to create excluded file %q: %v", fileName, err)
+		}
+	}
+
+	opts := worker.WorkerPoolOptions{
+		InputDir:     tempDir,
+		OutputDir:    t.TempDir(),
+		IsProduction: false,
+		NumWorkers:   2, // Ensure a reasonable buffer size
+	}
+	manager := worker.NewWorkerPoolManager(opts)
+
+	// Ensure SkippedChan is initialized before testing
+	if manager.SkippedChan == nil {
+		t.Fatal("SkippedChan is nil, check worker initialization")
+	}
+
+	err := queueFilesForProcessing(opts, manager, 0)
+	if err != nil {
+		t.Errorf("expected nil error when processing inputDir, got: %v", err)
+	}
+
+	// Close SkippedChan and drain it to ensure all values are read
+	close(manager.SkippedChan)
+
+	// Collect skipped files
+	skippedFiles := make(map[string]bool)
+	for skip := range manager.SkippedChan {
+		skippedFiles[filepath.Base(skip.Source)] = true
+	}
+
+	// Verify all excluded files were skipped
+	for _, fileName := range excludedFiles {
+		if !skippedFiles[fileName] {
+			t.Errorf("expected %q to be skipped, but it was not", fileName)
+		}
+	}
+
+	// Verify that the total skipped count matches expected
+	if len(skippedFiles) != len(excludedFiles) {
+		t.Errorf("expected %d skipped files, got %d", len(excludedFiles), len(skippedFiles))
+	}
+}
+
+func TestShouldProcessFile(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create test files
+	excludedFile := filepath.Join(tempDir, ".DS_Store")
+	oldFile := filepath.Join(tempDir, "old.js")
+	newFile := filepath.Join(tempDir, "new.js")
+
+	// Write dummy content to files
+	if err := os.WriteFile(excludedFile, []byte("content"), 0644); err != nil {
+		t.Fatalf("failed to create excluded file: %v", err)
+	}
+	if err := os.WriteFile(oldFile, []byte("old"), 0644); err != nil {
+		t.Fatalf("failed to create old file: %v", err)
+	}
+	if err := os.WriteFile(newFile, []byte("new"), 0644); err != nil {
+		t.Fatalf("failed to create new file: %v", err)
+	}
+
+	// Set old file's mod time to an old timestamp
+	oldTimestamp := time.Now().Add(-24 * time.Hour).Unix()
+	if err := os.Chtimes(oldFile, time.Unix(oldTimestamp, 0), time.Unix(oldTimestamp, 0)); err != nil {
+		t.Fatalf("failed to modify old file timestamp: %v", err)
+	}
+
+	// Set new file's mod time to a recent timestamp
+	newTimestamp := time.Now().Unix()
+	if err := os.Chtimes(newFile, time.Unix(newTimestamp, 0), time.Unix(newTimestamp, 0)); err != nil {
+		t.Fatalf("failed to modify new file timestamp: %v", err)
+	}
+
+	// Define test cases
+	tests := []struct {
+		name           string
+		source         string
+		dest           string
+		opts           worker.WorkerPoolOptions
+		lastRun        int64
+		expectedResult bool
+		expectedSkip   bool
+	}{
+		{
+			name:           "Excluded file",
+			source:         excludedFile,
+			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
+			lastRun:        newTimestamp,
+			expectedResult: false,
+			expectedSkip:   true,
+		},
+		{
+			name:           "Old file not in force mode",
+			source:         oldFile,
+			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
+			lastRun:        newTimestamp,
+			expectedResult: false,
+			expectedSkip:   true,
+		},
+		{
+			name:           "Old file in force mode",
+			source:         oldFile,
+			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: true, NumWorkers: 1},
+			lastRun:        newTimestamp,
+			expectedResult: true,
+			expectedSkip:   false,
+		},
+		{
+			name:           "New file should be processed",
+			source:         newFile,
+			opts:           worker.WorkerPoolOptions{IsProduction: false, IsForce: false, NumWorkers: 1},
+			lastRun:        oldTimestamp,
+			expectedResult: true,
+			expectedSkip:   false,
+		},
+		{
+			name:           "Production mode ignores timestamp",
+			source:         oldFile,
+			opts:           worker.WorkerPoolOptions{IsProduction: true, IsForce: false, NumWorkers: 1},
+			lastRun:        newTimestamp,
+			expectedResult: true,
+			expectedSkip:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			manager := worker.NewWorkerPoolManager(tt.opts)
+
+			// Run the function
+			result := shouldProcessFile(tt.source, tt.dest, tt.opts, tt.lastRun, manager)
+
+			// Validate the result
+			if result != tt.expectedResult {
+				t.Errorf("shouldProcessFile(%q) = %v; want %v", tt.source, result, tt.expectedResult)
+			}
+
+			// Close SkippedChan and drain it to validate skipped files
+			close(manager.SkippedChan)
+			skippedFiles := make(map[string]bool)
+			for skip := range manager.SkippedChan {
+				skippedFiles[filepath.Base(skip.Source)] = true
+			}
+
+			if tt.expectedSkip {
+				if !skippedFiles[filepath.Base(tt.source)] {
+					t.Errorf("expected %q to be skipped, but it was not", tt.source)
+				}
+			} else {
+				if skippedFiles[filepath.Base(tt.source)] {
+					t.Errorf("did not expect %q to be skipped, but it was", tt.source)
+				}
+			}
+		})
+	}
+}
+
 func TestEnqueueJob(t *testing.T) {
 	manager := &worker.WorkerPoolManager{
 		JobChan: make(chan worker.Job, 1),
@@ -632,6 +779,30 @@ func TestShouldExcludeDir(t *testing.T) {
 	absPath = "/tmp/include/subdir"
 	if shouldExcludeDir(excludeDir, absPath) {
 		t.Errorf("expected path %q not to be excluded", absPath)
+	}
+}
+
+func TestIsExcludedFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		filePath string
+		expected bool
+	}{
+		{"Exclude .DS_Store", "/some/path/.DS_Store", true},
+		{"Exclude Thumbs.db", "/some/path/Thumbs.db", true},
+		{"Normal file", "/some/path/style.css", false},
+		{"Hidden file", "/some/path/.hiddenfile", false},
+		{"Nested .DS_Store", "/some/path/assets/.DS_Store", true},
+		{"Nested Thumbs.db", "/some/path/assets/Thumbs.db", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isExcludedFile(tt.filePath)
+			if result != tt.expected {
+				t.Errorf("isExcludedFile(%q) = %v; want %v", tt.filePath, result, tt.expected)
+			}
+		})
 	}
 }
 

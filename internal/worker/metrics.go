@@ -158,13 +158,13 @@ func (m *Metrics) summaryAsText(skippedFiles []ProcessingError, verbose bool, co
 
 	if compact {
 		sb.WriteString(m.generateCompactSummary())
-		return sb.String()
+	} else {
+		sb.WriteString(m.generateDetailedSummary())
 	}
 
-	sb.WriteString(m.generateDetailedSummary())
-
+	// Show hint only when verbose is false
 	if !verbose {
-		sb.WriteString("\n" + color.New(color.Faint).Sprint("For more details, use the `--verbose-summary` flag.") + "\n")
+		sb.WriteString("\n" + color.New(color.Faint).Sprint("For more details, use the '--verbose' flag.") + "\n")
 	}
 
 	if verbose && len(skippedFiles) > 0 {
@@ -204,6 +204,7 @@ func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles 
 		SkipMissingTemplFile: color.New(color.FgMagenta, color.Bold).SprintFunc(),
 		SkipUnchangedFile:    color.New(color.FgCyan, color.Bold).SprintFunc(),
 		SkipQueueFull:        color.New(color.FgRed, color.Bold).SprintFunc(),
+		SkipExcluded:         color.New(color.FgWhite, color.Bold).SprintFunc(),
 	}
 
 	// Output categorized skipped files
@@ -220,11 +221,13 @@ func (m *Metrics) appendSkippedFilesBreakdown(sb *strings.Builder, skippedFiles 
 		"These files haven't changed since the last run. Use '--force' to process them anyway if needed.")
 
 	formatSkippedCategory(sb, "Queue Overflow (Increase Workers)", categorized[SkipQueueFull], colorMap[SkipQueueFull], "Consider increasing the number of workers (--workers) to prevent queue overflow.")
+
+	formatSkippedCategory(sb, "Excluded Files (System & User-Specified)", categorized[SkipExcluded], colorMap[SkipExcluded], "Excluded as system files (e.g., .DS_Store) or by the '--exclude' flag.")
 }
 
 // groupSkippedFiles organizes skipped files into categories.
-func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType][]string {
-	categorized := map[SkipType][]string{
+func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType][]ProcessingError {
+	categorized := map[SkipType][]ProcessingError{
 		SkipUnsupportedFile:  {},
 		SkipMismatchedPath:   {},
 		SkipMissingTemplFile: {},
@@ -233,8 +236,7 @@ func (m *Metrics) groupSkippedFiles(skippedFiles []ProcessingError) map[SkipType
 	}
 
 	for _, file := range skippedFiles {
-		entry := fmt.Sprintf("    - file: %s", color.New(color.Faint).Sprint(file.FilePath))
-		categorized[file.SkipType] = append(categorized[file.SkipType], entry)
+		categorized[file.SkipType] = append(categorized[file.SkipType], file)
 	}
 
 	return categorized
@@ -290,7 +292,7 @@ func filterSkippedFiles(files []ProcessingError, skipType SkipType) []Processing
 func formatSkippedCategory(
 	sb *strings.Builder,
 	title string,
-	entries []string,
+	entries []ProcessingError,
 	colorFunc func(a ...any) string,
 	hint string,
 ) {
@@ -313,6 +315,10 @@ func formatSkippedCategory(
 
 	// Print skipped file entries
 	for _, entry := range entries {
-		sb.WriteString(fmt.Sprintf("%s\n", entry))
+		if entry.Dest != "" {
+			sb.WriteString(fmt.Sprintf("    - file: %s → Expected: %s\n", faint(entry.Source), faint(entry.Dest)))
+		} else {
+			sb.WriteString(fmt.Sprintf("    - file: %s\n", faint(entry.Source)))
+		}
 	}
 }

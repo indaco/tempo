@@ -48,13 +48,13 @@ func TestMetrics_ExportToJSON(t *testing.T) {
 	m.IncrementSkippedFile()
 
 	errors := []ProcessingError{
-		{FilePath: "error1.js", Message: "Syntax error"},
-		{FilePath: "error2.css", Message: "Invalid property"},
+		{Source: "error1.js", Message: "Syntax error"},
+		{Source: "error2.css", Message: "Invalid property"},
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "ignored.json", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "ignored.json", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
 	}
 
 	// Create temp file
@@ -120,14 +120,14 @@ func TestMetrics_PrintSummary(t *testing.T) {
 	m.IncrementSkippedFile()
 
 	errors := []ProcessingError{
-		{FilePath: "error1.js", Message: "Syntax error"},
-		{FilePath: "error2.css", Message: "Invalid property"},
+		{Source: "error1.js", Message: "Syntax error"},
+		{Source: "error2.css", Message: "Invalid property"},
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "ignored.json", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/styles.css", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "ignored.txt", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "ignored.json", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/styles.css", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
 	}
 
 	// Capture the output
@@ -207,9 +207,9 @@ func TestSummaryAsText_Long(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	expectedOutput := "📋 Processing Summary:\n" +
@@ -218,7 +218,7 @@ func TestSummaryAsText_Long(t *testing.T) {
 		"  - Total skipped files: 3\n" +
 		"  - Total errors encountered: 1\n" +
 		"  - Elapsed time: 2.345s\n\n" +
-		"For more details, use the `--verbose-summary` flag.\n\n" +
+		"For more details, use the '--verbose' flag.\n\n" +
 		"✘ Some errors occurred. Check logs for details."
 
 	result := metrics.summaryAsText(skippedFiles, false, false)
@@ -238,9 +238,9 @@ func TestSummaryAsText_Long_Verbose(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	expectedOutput := `
@@ -284,16 +284,19 @@ func TestSummaryAsText_Compact(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	expectedOutput := `
 📋 Processing Summary:
 Files: 10 | Dirs: 2 | Skipped: 3 | Errors: 1 | Time: 2.345s
-`
-	result := metrics.summaryAsText(skippedFiles, true, true)
+
+For more details, use the '--verbose' flag.
+
+✘ Some errors occurred. Check logs for details.`
+	result := metrics.summaryAsText(skippedFiles, false, true)
 
 	if strings.TrimSpace(result) != strings.TrimSpace(expectedOutput) {
 		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)
@@ -310,9 +313,9 @@ func TestSummaryAsJSON(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	expectedJSON := `{
@@ -328,7 +331,7 @@ func TestSummaryAsJSON(t *testing.T) {
           "skipped_files": {
             "mismatched_output": [
               {
-                "file_path": "output/script.js",
+                "source": "output/script.js",
                 "reason": "Mismatched output structure",
                 "skip_type": "mismatched_output"
               }
@@ -337,14 +340,14 @@ func TestSummaryAsJSON(t *testing.T) {
             "queue_full": null,
             "unchanged_file": [
               {
-                "file_path": "input/template.templ",
+                "source": "input/template.templ",
                 "reason": "Unchanged file",
                 "skip_type": "unchanged_file"
               }
             ],
             "unsupported_file": [
               {
-                "file_path": "assets/styles.css",
+                "source": "assets/styles.css",
                 "reason": "Unsupported file type",
                 "skip_type": "unsupported_file"
               }
@@ -383,9 +386,9 @@ func TestSummaryAsString_FormatJSON(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	expectedJSON := `{
@@ -400,7 +403,7 @@ func TestSummaryAsString_FormatJSON(t *testing.T) {
           "skipped_files": {
             "mismatched_output": [
               {
-                "file_path": "output/script.js",
+                "source": "output/script.js",
                 "reason": "Mismatched output structure",
                 "skip_type": "mismatched_output"
               }
@@ -409,14 +412,14 @@ func TestSummaryAsString_FormatJSON(t *testing.T) {
             "queue_full": null,
             "unchanged_file": [
               {
-                "file_path": "input/template.templ",
+                "source": "input/template.templ",
                 "reason": "Unchanged file",
                 "skip_type": "unchanged_file"
               }
             ],
             "unsupported_file": [
               {
-                "file_path": "assets/styles.css",
+                "source": "assets/styles.css",
                 "reason": "Unsupported file type",
                 "skip_type": "unsupported_file"
               }
@@ -459,9 +462,9 @@ func TestSummaryAsString_FormatCompact(t *testing.T) {
 	}
 
 	skippedFiles := []ProcessingError{
-		{FilePath: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
-		{FilePath: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
-		{FilePath: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
+		{Source: "assets/styles.css", Reason: "Unsupported file type", SkipType: SkipUnsupportedFile},
+		{Source: "output/script.js", Reason: "Mismatched output structure", SkipType: SkipMismatchedPath},
+		{Source: "input/template.templ", Reason: "Unchanged file", SkipType: SkipUnchangedFile},
 	}
 
 	// Generate actual JSON output

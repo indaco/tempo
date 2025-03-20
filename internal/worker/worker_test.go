@@ -94,8 +94,14 @@ func TestWorkerPool_SkippedAndProcessedFiles(t *testing.T) {
 			select {
 			case <-ctx.Done():
 				return
-
-			case manager.SkippedChan <- FormatSkipReason(inputPath, "Unsupported file type (not CSS or JS)", SkipUnsupportedFile):
+			case manager.SkippedChan <- FormatSkipReason(SkippedFile{
+				Source:    inputPath,
+				Dest:      "", // No expected output for skipped files
+				InputDir:  inputDir,
+				OutputDir: outputDir,
+				Reason:    "Unsupported file type (not CSS or JS)",
+				SkipType:  SkipUnsupportedFile,
+			}):
 			}
 			manager.Metrics.IncrementSkippedFile()
 		}
@@ -222,7 +228,7 @@ func TestProcessFile(t *testing.T) {
 /* ------------------------------------------------------------------------- */
 
 // validateSkippedFiles ensures skipped files were not written to output and validates metrics.
-func validateSkippedFiles(t *testing.T, outputDir string, collectedSkipped []ProcessingError, metrics *Metrics) {
+func validateSkippedFiles(t *testing.T, outputDir string, skippedFiles []ProcessingError, metrics *Metrics) {
 	expectedSkippedFiles := []string{"ignored.txt", "ignored.json", "ignored.html", "ignored.random"}
 
 	for _, file := range expectedSkippedFiles {
@@ -239,14 +245,14 @@ func validateSkippedFiles(t *testing.T, outputDir string, collectedSkipped []Pro
 	}
 
 	// Validate skipped file processing reasons
-	if len(collectedSkipped) != expectedSkippedCount {
-		t.Errorf("Expected %d skipped files, but skipped list contains %d", expectedSkippedCount, len(collectedSkipped))
+	if len(skippedFiles) != expectedSkippedCount {
+		t.Errorf("Expected %d skipped files, but skipped list contains %d", expectedSkippedCount, len(skippedFiles))
 	}
 
 	// Ensure skip reasons match expectations
-	for _, skipEntry := range collectedSkipped {
-		if skipEntry.Reason != "Unsupported file type (not CSS or JS)" {
-			t.Errorf("Unexpected skip reason: %s", skipEntry.Reason)
+	for _, skipped := range skippedFiles {
+		if skipped.Reason != "Unsupported file type (not CSS or JS)" {
+			t.Errorf("Unexpected skip reason: %s", skipped.Reason)
 		}
 	}
 }

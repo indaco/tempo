@@ -83,8 +83,8 @@ func TestWorkerPoolManager_ProcessesJobs(t *testing.T) {
 
 	// Validate expected skipped files
 	expectedSkipped := map[string]string{
-		"/mock/input/button.css": "Missing corresponding .templ file in output directory",
-		"/mock/input/script.js":  "Missing corresponding .templ file in output directory",
+		"button.css": "Missing corresponding .templ file in output directory",
+		"script.js":  "Missing corresponding .templ file in output directory",
 	}
 
 	if len(skippedFiles) != len(expectedSkipped) {
@@ -92,12 +92,12 @@ func TestWorkerPoolManager_ProcessesJobs(t *testing.T) {
 	}
 
 	for _, skipped := range skippedFiles {
-		expectedReason, exists := expectedSkipped[skipped.FilePath]
+		expectedReason, exists := expectedSkipped[skipped.Source]
 		if !exists {
-			t.Errorf("Unexpected skipped file: %s", skipped.FilePath)
+			t.Errorf("Unexpected skipped file: %s", skipped.Source)
 		} else if skipped.Reason != expectedReason {
 			t.Errorf("Unexpected skip reason for %s. Expected: %s, Got: %s",
-				skipped.FilePath, expectedReason, skipped.Reason)
+				skipped.Source, expectedReason, skipped.Reason)
 		}
 	}
 

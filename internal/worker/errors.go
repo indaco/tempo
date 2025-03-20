@@ -2,6 +2,7 @@ package worker
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -17,12 +18,23 @@ const (
 	SkipExcluded         SkipType = "user_skipped"      // Excluded by user
 )
 
+// SkippedFile holds metadata about a skipped file.
+type SkippedFile struct {
+	Source    string   // Path to the source file
+	Dest      string   // Expected output file path (if applicable)
+	InputDir  string   // Root input directory
+	OutputDir string   // Root output directory
+	Reason    string   // Why the file was skipped
+	SkipType  SkipType // Type of skip reason
+}
+
 // ProcessingError stores detailed error info.
 type ProcessingError struct {
-	FilePath string   `json:"file_path"`
+	Source   string   `json:"source"`         // Source file path
+	Dest     string   `json:"dest,omitempty"` // Expected output file path (if applicable)
 	Message  string   `json:"message,omitempty"`
-	Reason   string   `json:"reason,omitempty"`
-	SkipType SkipType `json:"skip_type,omitempty"`
+	Reason   string   `json:"reason,omitempty"`    // Why it was skipped
+	SkipType SkipType `json:"skip_type,omitempty"` // Type of skip reason
 }
 
 // CollectErrors collects and aggregates errors or skipped files.
@@ -36,7 +48,10 @@ func CollectErrors(errorsChan <-chan ProcessingError) []ProcessingError {
 
 	// If the channel is closed, range will exit cleanly
 	for err := range errorsChan {
-		errors = append(errors, err)
+		// Ensure the Source field is not empty before appending
+		if err.Source != "" {
+			errors = append(errors, err)
+		}
 	}
 
 	return errors
@@ -45,17 +60,29 @@ func CollectErrors(errorsChan <-chan ProcessingError) []ProcessingError {
 // FormatError formats errors for logging.
 func FormatError(filePath string, err error) ProcessingError {
 	return ProcessingError{
-		FilePath: filePath,
-		Message:  err.Error(),
+		Source:  filePath,
+		Message: err.Error(),
 	}
 }
 
 // FormatSkipReason creates a structured skip log entry.
-func FormatSkipReason(filePath, reason string, skipType SkipType) ProcessingError {
+func FormatSkipReason(skipped SkippedFile) ProcessingError {
+	relSource := skipped.Source
+	relDest := skipped.Dest
+
+	// Make paths relative to InputDir and OutputDir
+	if rel, err := filepath.Rel(skipped.InputDir, skipped.Source); err == nil {
+		relSource = rel
+	}
+	if rel, err := filepath.Rel(skipped.OutputDir, skipped.Dest); err == nil {
+		relDest = rel
+	}
+
 	return ProcessingError{
-		FilePath: filePath,
-		Reason:   reason,
-		SkipType: skipType,
+		Reason:   skipped.Reason,
+		SkipType: skipped.SkipType,
+		Source:   relSource,
+		Dest:     relDest,
 	}
 }
 
@@ -70,9 +97,9 @@ func PrintErrors(errors []ProcessingError) {
 
 	for _, err := range errors {
 		if err.Reason != "" {
-			sb.WriteString(fmt.Sprintf("- Skipped File: %s\n  Reason: %s (Type: %s)\n", err.FilePath, err.Reason, err.SkipType))
+			sb.WriteString(fmt.Sprintf("- Skipped File: %s\n  Reason: %s (Type: %s)\n", err.Source, err.Reason, err.SkipType))
 		} else {
-			sb.WriteString(fmt.Sprintf("- File: %s\n  Error: %s\n", err.FilePath, err.Message))
+			sb.WriteString(fmt.Sprintf("- File: %s\n  Error: %s\n", err.Source, err.Message))
 		}
 	}
 
