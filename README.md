@@ -437,10 +437,10 @@ Start by creating a Go module using the `go mod init` [command](https://go.dev/r
 
    templ Button() {
      @buttonCSSHandle.Once() {
-     <style type="text/css">
-     /* [tempo] BEGIN - Do not edit! This section is auto-generated. */
-     /* [tempo] END */
-     </style>
+       <style type="text/css">
+       /* [tempo] BEGIN - Do not edit! This section is auto-generated. */
+       /* [tempo] END */
+       </style>
    }
    ```
 
@@ -458,14 +458,14 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
 
 `tempo sync` uses guard markers in `.templ` files to locate where CSS and JS should be injected.
 
-- Default markers:
+By default, it looks for the following markers:
 
 ```templ
 /* [tempo] BEGIN - Do not edit! This section is auto-generated. */
 /* [tempo] END */
 ```
 
-- These can be customized in your `tempo.yaml` file under the `templates.guard_marker` setting.
+Only the text inside square brackets (`[tempo]`) can be customized in your `tempo.yaml` file under the `templates.guard_marker` setting.
 
 > [!IMPORTANT]
 > If no guard markers are present, `tempo sync` will **skip** the file, ensuring only intended sections are updated.
@@ -510,18 +510,6 @@ CSS and JS are injected into the corresponding `.templ` files, replacing the con
         - .gotxt
         - .gotmpl
         - .tpl
-
-      # List of function providers for template processing.
-      function_providers:
-        # Example provider using a local path.
-        # - name: default
-        #   type: path
-        #   value: ./providers/default
-        #
-        # Example provider from a Git repository.
-        # - name: custom
-        #   type: url
-        #   value: https://github.com/user/custom-provider.git
 
 </details>
 
