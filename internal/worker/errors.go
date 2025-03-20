@@ -77,10 +77,9 @@ func FormatSkipReason(skipped SkippedFile) ProcessingError {
 		relSource = filepath.Join(skipped.InputDir, rel) // Ensure base dir is included
 	}
 
-	// Detect if OutputDir is the current working directory
-	cwd := utils.GetCWD()
-	if skipped.OutputDir == cwd {
-		// Make relDest relative to OutputDir, but remove OutputDir prefix
+	// Handle the case when OutputDir is the current working directory (cwd)
+	if skipped.OutputDir == utils.GetCWD() {
+		// Make relDest relative to OutputDir (which is cwd in this case)
 		if rel, err := filepath.Rel(skipped.OutputDir, skipped.Dest); err == nil {
 			relDest = rel
 		}
