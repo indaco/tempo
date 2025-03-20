@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -83,8 +84,8 @@ func TestWorkerPoolManager_ProcessesJobs(t *testing.T) {
 
 	// Validate expected skipped files
 	expectedSkipped := map[string]string{
-		"button.css": "Missing corresponding .templ file in output directory",
-		"script.js":  "Missing corresponding .templ file in output directory",
+		filepath.Join(opts.InputDir, "button.css"): "Missing corresponding .templ file in output directory",
+		filepath.Join(opts.InputDir, "script.js"):  "Missing corresponding .templ file in output directory",
 	}
 
 	if len(skippedFiles) != len(expectedSkipped) {
