@@ -218,7 +218,7 @@ func TestSummaryAsText_Long(t *testing.T) {
 		"  - Total skipped files: 3\n" +
 		"  - Total errors encountered: 1\n" +
 		"  - Elapsed time: 2.345s\n\n" +
-		"For more details, use the `--verbose-summary` flag.\n\n" +
+		"For more details, use the '--verbose' flag.\n\n" +
 		"✘ Some errors occurred. Check logs for details."
 
 	result := metrics.summaryAsText(skippedFiles, false, false)
@@ -292,8 +292,11 @@ func TestSummaryAsText_Compact(t *testing.T) {
 	expectedOutput := `
 📋 Processing Summary:
 Files: 10 | Dirs: 2 | Skipped: 3 | Errors: 1 | Time: 2.345s
-`
-	result := metrics.summaryAsText(skippedFiles, true, true)
+
+For more details, use the '--verbose' flag.
+
+✘ Some errors occurred. Check logs for details.`
+	result := metrics.summaryAsText(skippedFiles, false, true)
 
 	if strings.TrimSpace(result) != strings.TrimSpace(expectedOutput) {
 		t.Errorf("Expected summary output:\n%s\nGot:\n%s", expectedOutput, result)

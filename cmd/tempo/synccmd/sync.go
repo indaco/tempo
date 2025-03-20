@@ -81,7 +81,7 @@ func getFlags() []cli.Flag {
 			Usage:   "Summary format: compact, long, json, none (default: compact)",
 		},
 		&cli.BoolFlag{
-			Name:  "verbose-summary",
+			Name:  "verbose",
 			Usage: "Show detailed information in the summary report",
 		},
 		&cli.BoolFlag{
@@ -350,7 +350,7 @@ func resolveSyncFlags(
 	}
 
 	reportFile := cmd.String("report-file")
-	isVerboseSummary := cmd.Bool("verbose-summary")
+	isVerboseSummary := cmd.Bool("verbose")
 
 	summaryOpts := &worker.SummaryOptions{
 		Format:     worker.SummaryFormat(summaryFormat),

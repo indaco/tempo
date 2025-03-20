@@ -158,13 +158,13 @@ func (m *Metrics) summaryAsText(skippedFiles []ProcessingError, verbose bool, co
 
 	if compact {
 		sb.WriteString(m.generateCompactSummary())
-		return sb.String()
+	} else {
+		sb.WriteString(m.generateDetailedSummary())
 	}
 
-	sb.WriteString(m.generateDetailedSummary())
-
+	// Show hint only when verbose is false
 	if !verbose {
-		sb.WriteString("\n" + color.New(color.Faint).Sprint("For more details, use the `--verbose-summary` flag.") + "\n")
+		sb.WriteString("\n" + color.New(color.Faint).Sprint("For more details, use the '--verbose' flag.") + "\n")
 	}
 
 	if verbose && len(skippedFiles) > 0 {

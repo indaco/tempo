@@ -377,7 +377,7 @@ Whenever you update your CSS or JS files, simply run `tempo sync` to propagate t
   <dt><code>--summary</code> (<code>-s</code>) <em>value</em></dt>
   <dd>Specify the summary format: <code>text</code>, <code>json</code>, or <code>none</code> (<em>default: "text"</em>)</dd>
 
-  <dt><code>--verbose-summary</code></dt>
+  <dt><code>--verbose</code></dt>
   <dd>Show detailed information in the summary report (<em>default: false</em>)</dd>
 
   <dt><code>--report-file</code> (<code>--rf</code>) <em>value</em></dt>
