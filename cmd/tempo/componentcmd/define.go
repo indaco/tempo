@@ -98,7 +98,7 @@ func runComponentDefineSubCommand(cmdCtx *app.AppContext) func(ctx context.Conte
 
 		if !data.DryRun {
 			// Step 5: Log success and asset information
-			utils.LogSuccessMessages("component", cmdCtx.Config, cmdCtx.Logger)
+			helpers.LogSuccessMessages("component", cmdCtx.Config, cmdCtx.Logger)
 
 			// Step 6: Generate JSON action file
 			if err := generator.GenerateActionFile("component", data, builtInActions, cmdCtx.Logger); err != nil {

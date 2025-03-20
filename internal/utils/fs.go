@@ -19,15 +19,55 @@ import (
 /* FILE AND DIRECTORY UTILITIES                                              */
 /* ------------------------------------------------------------------------- */
 
-// GetCWD returns the current working directory.
+// getwdWrapper wraps os.Getwd to allow error injection in tests.
+func getwdWrapper() (string, error) {
+	if os.Getenv("MOCK_GETWD_ERROR") == "1" {
+		return "", fmt.Errorf("mocked Getwd error")
+	}
+	return os.Getwd()
+}
+
+// GetCWD retrieves the current working directory.
 // It logs an error and exits the program if the directory cannot be retrieved.
 func GetCWD() string {
-	cwd, err := os.Getwd()
+	cwd, err := getwdWrapper()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting current working directory: %v\n", err)
 		os.Exit(1) // Exit the program in case of an error
 	}
 	return cwd
+}
+
+// ResolvePath normalizes local paths, prevents traversal, and ensures safe resolution.
+func ResolvePath(path string) (string, error) {
+	// Convert "." to the current working directory
+	if path == "." {
+		return GetCWD(), nil
+	}
+
+	// Ensure absolute paths are allowed but reject "/.."
+	if filepath.IsAbs(path) {
+		cleaned := filepath.Clean(path)
+		if cleaned == "/" || cleaned == "/.." { // Reject "/.." explicitly
+			return "", fmt.Errorf("path traversal detected: %s", path)
+		}
+		return cleaned, nil
+	}
+
+	// Ensure the path is local to prevent directory traversal attacks
+	if !filepath.IsLocal(path) {
+		return "", fmt.Errorf("path traversal detected: %s", path)
+	}
+
+	// Normalize path safely
+	safePath := filepath.Clean(path)
+
+	// Ensure the cleaned path is not empty or invalid
+	if safePath == "" || safePath == "." {
+		return GetCWD(), nil
+	}
+
+	return safePath, nil
 }
 
 // FileOrDirExistsFunc is a function variable to allow testing overrides.

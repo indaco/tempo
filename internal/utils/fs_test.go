@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -20,6 +21,70 @@ func TestGetCWD(t *testing.T) {
 	// Compare the output
 	if actualCWD != expectedCWD {
 		t.Errorf("Unexpected working directory:\nGot: %s\nWant: %s", actualCWD, expectedCWD)
+	}
+}
+
+func TestGetCWD_ExitOnError(t *testing.T) {
+	if os.Getenv("MOCK_GETWD_ERROR") == "1" {
+		GetCWD() // This should fail and call os.Exit(1)
+		t.Fatalf("GetCWD() did not exit as expected")
+	}
+
+	// Run the test in a subprocess
+	cmd := exec.Command(os.Args[0], "-test.run=TestGetCWD_ExitOnError")
+	cmd.Env = append(os.Environ(), "MOCK_GETWD_ERROR=1")
+
+	err := cmd.Run()
+
+	// Ensure the process exited with status 1
+	if exitError, ok := err.(*exec.ExitError); ok {
+		if exitError.ExitCode() != 1 {
+			t.Errorf("Expected exit code 1, got %d", exitError.ExitCode())
+		}
+	} else {
+		t.Fatalf("Expected process to exit with an error, but got: %v", err)
+	}
+}
+
+func TestResolvePath(t *testing.T) {
+	// Get the current working directory for comparison
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get current working directory: %v", err)
+	}
+
+	// Define test cases
+	tests := []struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		{".", cwd, false},                           // Current directory resolves to absolute path
+		{"./subdir", "subdir", false},               // Relative path remains relative
+		{"../outside", "", true},                    // Directory traversal should be rejected
+		{"/absolute/path", "/absolute/path", false}, // Absolute paths remain unchanged
+		{"subdir/..", cwd, false},                   // Resolves to current directory (cwd), not "."
+		{"subdir/../subdir2", "subdir2", false},     // Normalized but remains relative
+		{"/..", "", true},                           // Should reject root traversal
+		{"subdir/../../outside", "", true},          // Should be rejected as traversal
+	}
+
+	// Iterate over test cases
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			resolved, err := ResolvePath(tt.input)
+
+			// Check for errors
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ResolvePath(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+				return
+			}
+
+			// Check expected results if no error was expected
+			if !tt.wantErr && resolved != tt.expected {
+				t.Errorf("ResolvePath(%q) = %q, want %q", tt.input, resolved, tt.expected)
+			}
+		})
 	}
 }
 
