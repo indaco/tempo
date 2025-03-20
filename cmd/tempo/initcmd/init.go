@@ -175,18 +175,18 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	sb.WriteString(fmt.Sprintf("  # css_layer: %s\n\n", cfg.App.CssLayer))
 
 	// Write processor configuration
-	sb.WriteString("processor:\n")
+	sb.WriteString("# processor:\n")
 	sb.WriteString("  # Number of concurrent workers (numCPUs * 2).\n")
-	sb.WriteString(fmt.Sprintf("  workers: %d\n\n", cfg.Processor.Workers))
+	sb.WriteString(fmt.Sprintf("  # workers: %d\n\n", cfg.Processor.Workers))
 	sb.WriteString("  # Summary format: compact, long, json, none.\n")
-	sb.WriteString(fmt.Sprintf("  summary_format: %s\n\n", cfg.Processor.SummaryFormat))
+	sb.WriteString(fmt.Sprintf("  # summary_format: %s\n\n", cfg.Processor.SummaryFormat))
 
 	// Write templates configuration
-	sb.WriteString("templates:\n")
+	sb.WriteString("# templates:\n")
 	sb.WriteString("  # A placeholder in template files indicating auto-generated sections.\n")
-	sb.WriteString(fmt.Sprintf("  guard_marker: %s\n\n", cfg.Templates.GuardMarker))
+	sb.WriteString(fmt.Sprintf("  # guard_marker: %s\n\n", cfg.Templates.GuardMarker))
 	sb.WriteString("  # File extensions used for template files.\n")
-	sb.WriteString("  extensions:\n")
+	sb.WriteString("  # extensions:\n")
 
 	extensions := cfg.Templates.Extensions
 	if len(extensions) == 0 {
@@ -194,7 +194,7 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	}
 
 	for _, ext := range extensions {
-		sb.WriteString(fmt.Sprintf("    - %s\n", ext))
+		sb.WriteString(fmt.Sprintf("    # - %s\n", ext))
 	}
 
 	// Add function providers section
@@ -211,7 +211,7 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 // formatFunctionProviders appends the function provider settings to the YAML config.
 func formatFunctionProviders(sb *strings.Builder, providers []config.TemplateFuncProvider) {
 	sb.WriteString("\n  # List of function providers for template processing.\n")
-	sb.WriteString("  function_providers:\n")
+	sb.WriteString("  # function_providers:\n")
 	sb.WriteString("    # Example provider using a local path.\n")
 	sb.WriteString("    # - name: default\n")
 	sb.WriteString("    #   type: path\n")

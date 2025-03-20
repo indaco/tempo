@@ -243,7 +243,7 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 
 	// Ensure that DefaultTemplateExtensions were written
 	for _, ext := range config.DefaultTemplateExtensions {
-		expectedLine := fmt.Sprintf("    - %s\n", ext)
+		expectedLine := fmt.Sprintf("    # - %s\n", ext)
 		if !strings.Contains(string(content), expectedLine) {
 			t.Errorf("Expected default template extension %s not found in config file", ext)
 		}
