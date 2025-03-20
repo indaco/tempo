@@ -108,7 +108,7 @@ func runVariantDefineSubCommand(cmdCtx app.AppContext) func(ctx context.Context,
 
 		if !data.DryRun {
 			// Step 5: Log success and asset information
-			utils.LogSuccessMessages("variant", cmdCtx.Config, cmdCtx.Logger)
+			helpers.LogSuccessMessages("variant", cmdCtx.Config, cmdCtx.Logger)
 
 			// Step 6: Generate JSON action file
 			if err := generator.GenerateActionFile("variant", data, builtInActions, cmdCtx.Logger); err != nil {
