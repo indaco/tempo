@@ -1,4 +1,4 @@
-name: Automate Release Notes Creation
+name: Create GitHub Release from Commit Message
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 jobs:
   create-release-notes:
-    if: startsWith(github.event.head_commit.message, 'chore: release v')
+    if: ${{ startsWith(github.event.head_commit.message, 'chore: release v') }}
     runs-on: ubuntu-latest
     environment:
       name: Release
