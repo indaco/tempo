@@ -6,7 +6,7 @@ import (
 	"github.com/indaco/tempo-api/templatefuncs"
 )
 
-// DefaultProvider implements TemplateFuncProvider
+// GoNameProvider implements TemplateFuncProvider
 type GoNameProvider struct{}
 
 // GetFunctions returns the built-in template functions.
@@ -22,5 +22,5 @@ func (p *GoNameProvider) GetFunctions() template.FuncMap {
 	}
 }
 
-// Expose DefaultProvider as a global instance
+// Expose GoNameProvider as a global instance
 var Provider templatefuncs.TemplateFuncProvider = &GoNameProvider{}

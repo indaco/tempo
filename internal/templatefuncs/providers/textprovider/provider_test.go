@@ -2,7 +2,7 @@ package textprovider
 
 import "testing"
 
-func TestDefaultProvider(t *testing.T) {
+func TestTextProvider(t *testing.T) {
 	provider := Provider
 	funcs := provider.GetFunctions()
 

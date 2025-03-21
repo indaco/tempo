@@ -27,6 +27,20 @@ func TestRenderTemplate(t *testing.T) {
 			expectError:     false,
 		},
 		{
+			name:            "Custom function - Title Case",
+			templateContent: "Hello, {{ titleCase .Name }}!",
+			data:            map[string]string{"Name": "wonderful world"},
+			expected:        "Hello, Wonderful world!",
+			expectError:     false,
+		},
+		{
+			name:            "Custom function - snakeToTitle",
+			templateContent: "Hello, {{ snakeToTitle .Name }}!",
+			data:            map[string]string{"Name": "wonderful_world"},
+			expected:        "Hello, Wonderful World!",
+			expectError:     false,
+		},
+		{
 			name:            "Custom function - normalizePath",
 			templateContent: "Normalized: {{ normalizePath .Path }}",
 			data:            map[string]string{"Path": " /folder/./subfolder/../file "},
