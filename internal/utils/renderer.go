@@ -10,6 +10,7 @@ import (
 
 	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
+	"github.com/indaco/tempo/internal/templatefuncs/providers/lookupprovider"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
 	"github.com/indaco/tempo/internal/templatefuncs/registry"
 )
@@ -25,6 +26,7 @@ func RenderTemplate(templateContent string, data any) (string, error) {
 	registerOnce.Do(func() {
 		registry.RegisterFuncProvider(textprovider.Provider)
 		registry.RegisterFuncProvider(gonameprovider.Provider)
+		registry.RegisterFuncProvider(lookupprovider.Provider)
 	})
 
 	// Retrieve all registered functions, including user-defined ones

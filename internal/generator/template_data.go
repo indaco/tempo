@@ -28,4 +28,5 @@ type TemplateData struct {
 	GuardMarker   string
 	Force         bool
 	DryRun        bool
+	UserData      map[string]any
 }

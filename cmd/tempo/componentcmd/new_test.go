@@ -760,4 +760,53 @@ func TestComponentCommand_NewSubCmd_Func_createBaseTemplateData_DefaultValues(t 
 	if data.DryRun != false {
 		t.Errorf("Expected default DryRun to be false, got: %v", data.DryRun)
 	}
+	if data.UserData != nil {
+		t.Errorf("Expected default UserData to be nil, got: %v", data.UserData)
+	}
+}
+
+func TestComponentCommand_NewSubCmd_Func_createBaseTemplateData_UserData(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := testutils.SetupConfig(tempDir, nil)
+	cfg.Templates.UserData = map[string]any{
+		"author": "Jane Doe",
+		"year":   2025,
+		"config": map[string]any{
+			"option1": "value1",
+		},
+	}
+
+	appCmd := &cli.Command{
+		Flags: getNewFlags(),
+	}
+
+	// Call function without setting any flags
+	data, err := createBaseTemplateData(appCmd, cfg)
+	if err != nil {
+		t.Fatalf("Expected no error, but got: %v", err)
+	}
+
+	if data.UserData == nil {
+		t.Errorf("Expected default UserData to be not nil, got: %v", data.UserData)
+	}
+
+	author, ok := data.UserData["author"]
+	if !ok || author != "Jane Doe" {
+		t.Errorf("Expected UserData.author = 'Jane Doe', got: %v", author)
+	}
+
+	year, ok := data.UserData["year"]
+	if !ok || year != 2025 {
+		t.Errorf("Expected UserData.year = 2025, got: %v", year)
+	}
+
+	configMap, ok := data.UserData["config"].(map[string]any)
+	if !ok {
+		t.Fatalf("Expected UserData.config to be a map[string]any, got: %T", data.UserData["config"])
+	}
+
+	if val, ok := configMap["option1"]; !ok || val != "value1" {
+		t.Errorf("Expected UserData.config.option1 = 'value1', got: %v", val)
+	}
 }

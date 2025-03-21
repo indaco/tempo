@@ -7,3 +7,4 @@
 | `NormalizePath` | `normalizePath`        | Normalizes a path by removing dots, leading/trailing slashes, and unnecessary white spaces. |
 | `IsEmptyString` | `isEmpty`              | Checks if a given string is empty.                                                          |
 | `TitleCase`     | `titleCase`            | Capitalizes the first letter of a word while preserving the rest of the characters as-is.   |
+| `SnakeToTile`   | `snakeToTitle`         | Converts a snake_case string to Title Case |

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -29,6 +30,7 @@ func TestDefaultConfig(t *testing.T) {
 		Templates: Templates{
 			Extensions:        DefaultTemplateExtensions,
 			GuardMarker:       "tempo",
+			UserData:          nil,
 			FunctionProviders: []TemplateFuncProvider{},
 		},
 	}
@@ -54,6 +56,49 @@ func TestLoadConfig_NoFile(t *testing.T) {
 	expected := DefaultConfig()
 	if !reflect.DeepEqual(cfg, expected) {
 		t.Errorf("LoadConfig() = %+v, want %+v", cfg, expected)
+	}
+}
+
+func TestLoadConfig_ReadError(t *testing.T) {
+	tempDir := t.TempDir()
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("Failed to change working directory: %v", err)
+	}
+
+	fileName := "tempo.yaml"
+	filePath := filepath.Join(tempDir, fileName)
+
+	if err := os.WriteFile(filePath, []byte("app:\n  go_module: something"), 0000); err != nil {
+		t.Fatalf("Failed to write unreadable config file: %v", err)
+	}
+	defer os.Remove(filePath)
+
+	_, err := LoadConfig()
+	if err == nil || !strings.Contains(err.Error(), "failed to read config file:") {
+		t.Errorf("Expected read error, got: %v", err)
+	}
+}
+
+func TestLoadConfig_ParseError(t *testing.T) {
+	tempDir := t.TempDir()
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("Failed to change working directory: %v", err)
+	}
+
+	fileName := "tempo.yaml"
+	filePath := filepath.Join(tempDir, fileName)
+
+	// Write broken YAML
+	badYaml := []byte("app:\n  go_module: [unterminated")
+
+	if err := os.WriteFile(filePath, badYaml, 0644); err != nil {
+		t.Fatalf("Failed to write broken config file: %v", err)
+	}
+	defer os.Remove(filePath)
+
+	_, err := LoadConfig()
+	if err == nil || !strings.Contains(err.Error(), "failed to parse config file:") {
+		t.Errorf("Expected parse error, got: %v", err)
 	}
 }
 
@@ -83,8 +128,12 @@ func TestLoadConfig_WithFile(t *testing.T) {
 			SummaryFormat: "json",
 		},
 		Templates: Templates{
-			Extensions:        DefaultTemplateExtensions,
-			GuardMarker:       "custom-marker",
+			Extensions:  DefaultTemplateExtensions,
+			GuardMarker: "custom-marker",
+			UserData: map[string]any{
+				"author": "Jane Doe",
+				"year":   2025,
+			},
 			FunctionProviders: []TemplateFuncProvider{},
 		},
 	}
@@ -114,6 +163,9 @@ func TestEnsureDefaults(t *testing.T) {
 		TempoRoot: "custom-tempo",
 		Templates: Templates{
 			GuardMarker: "custom-marker",
+			UserData: map[string]any{
+				"framework": "tempo",
+			},
 		},
 	}
 
@@ -135,8 +187,11 @@ func TestEnsureDefaults(t *testing.T) {
 			SummaryFormat: DefaultSummaryFormat,
 		},
 		Templates: Templates{
-			Extensions:        DefaultTemplateExtensions,
-			GuardMarker:       "custom-marker",
+			Extensions:  DefaultTemplateExtensions,
+			GuardMarker: "custom-marker",
+			UserData: map[string]any{
+				"framework": "tempo",
+			},
 			FunctionProviders: []TemplateFuncProvider{},
 		},
 	}
