@@ -223,5 +223,6 @@ func createBaseTemplateData(cmd *cli.Command, cfg *config.Config) (*generator.Te
 		GuardMarker:  cfg.Templates.GuardMarker,
 		Force:        isForce,
 		DryRun:       isDryRun,
+		UserData:     cfg.Templates.UserData,
 	}, nil
 }

@@ -2,7 +2,7 @@ package gonameprovider
 
 import "testing"
 
-func TestDefaultProvider(t *testing.T) {
+func TestGoNameProvider(t *testing.T) {
 	provider := Provider
 	funcs := provider.GetFunctions()
 

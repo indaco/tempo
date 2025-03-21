@@ -69,6 +69,67 @@ func TestRenderTemplate(t *testing.T) {
 			expectError:     false,
 		},
 		{
+			name:            "Access flat user_data variable",
+			templateContent: "Author: {{ .UserData.author }}, Year: {{ .UserData.year }}",
+			data: map[string]any{
+				"UserData": map[string]any{
+					"author": "Jane Doe",
+					"year":   2025,
+				},
+			},
+			expected:    "Author: Jane Doe, Year: 2025",
+			expectError: false,
+		},
+		{
+			name:            "Custom function - lookup",
+			templateContent: "Option1: {{ lookup .UserData \"config.option1\" }}",
+			data: map[string]any{
+				"UserData": map[string]any{
+					"config": map[string]any{
+						"option1": "value1",
+					},
+				},
+			},
+			expected:    "Option1: value1",
+			expectError: false,
+		},
+		{
+			name:            "Built-in function - index for nested map",
+			templateContent: "Option1: {{ index (index .UserData \"config\") \"option1\" }}",
+			data: map[string]any{
+				"UserData": map[string]any{
+					"config": map[string]any{
+						"option1": "value1",
+					},
+				},
+			},
+			expected:    "Option1: value1",
+			expectError: false,
+		},
+		{
+			name:            "Custom function - lookup with missing key",
+			templateContent: "Missing: {{ lookup .UserData \"config.unknown\" }}",
+			data: map[string]any{
+				"UserData": map[string]any{
+					"config": map[string]any{
+						"option1": "value1",
+					},
+				},
+			},
+			expected:    "Missing: <no value>", // update here
+			expectError: false,
+		},
+		{
+			name:            "Built-in function - index with missing key",
+			templateContent: "Missing: {{ index (index .UserData \"not_a_map\") \"unknown\" }}",
+			data: map[string]any{
+				"UserData": map[string]any{
+					"not_a_map": "string", // not a map, causes error
+				},
+			},
+			expectError: true,
+		},
+		{
 			name:            "Error in template parsing",
 			templateContent: "Hello, {{ .Name ",
 			data:            map[string]string{"Name": "World"},

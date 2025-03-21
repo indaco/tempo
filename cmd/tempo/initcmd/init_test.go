@@ -250,6 +250,79 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 	}
 }
 
+func TestFormatUserData_WithValues(t *testing.T) {
+	userData := map[string]any{
+		"author": "Jane Doe",
+		"year":   2025,
+		"nested": map[string]any{
+			"key1": "value1",
+			"key2": "value2",
+		},
+	}
+
+	var sb strings.Builder
+	formatUserData(&sb, userData)
+	result := sb.String()
+
+	expectedSnippets := []string{
+		"# User-defined variables for template processing.",
+		"# user_data:",
+		"# Example flat values",
+		"# author: John Doe",
+		"user_data:",
+		"author: Jane Doe",
+		"year: 2025",
+		"nested:",
+		"key1: value1",
+		"key2: value2",
+	}
+
+	for _, snippet := range expectedSnippets {
+		if !strings.Contains(result, snippet) {
+			t.Errorf("Expected snippet %q not found in result:\n%s", snippet, result)
+		}
+	}
+}
+
+func TestWriteConfigFile_WithUserData(t *testing.T) {
+	tempDir := t.TempDir()
+	filePath := filepath.Join(tempDir, "tempo.yaml")
+
+	cfg := config.DefaultConfig()
+	cfg.Templates.UserData = map[string]any{
+		"author": "Jane",
+		"project": map[string]any{
+			"name": "tempo",
+		},
+	}
+
+	err := writeConfigFile(filePath, cfg)
+	if err != nil {
+		t.Fatalf("writeConfigFile returned an error: %v", err)
+	}
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("Failed to read config file: %v", err)
+	}
+
+	configText := string(content)
+
+	expectedLines := []string{
+		"# user_data:",
+		"user_data:",
+		"author: Jane",
+		"project:",
+		"name: tempo",
+	}
+
+	for _, line := range expectedLines {
+		if !strings.Contains(configText, line) {
+			t.Errorf("Expected line %q not found in config:\n%s", line, configText)
+		}
+	}
+}
+
 func TestWriteConfigFile_WithFunctionProviders(t *testing.T) {
 	tempDir := t.TempDir()
 

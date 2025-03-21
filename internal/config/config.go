@@ -46,6 +46,7 @@ type TemplateFuncProvider struct {
 type Templates struct {
 	Extensions        []string               `yaml:"extensions,omitempty"`
 	GuardMarker       string                 `yaml:"guard_marker,omitempty"`
+	UserData          map[string]any         `yaml:"user_data,omitempty"`
 	FunctionProviders []TemplateFuncProvider `yaml:"function_providers,omitempty"`
 }
 
@@ -144,6 +145,9 @@ func DerivedFolderPaths(baseFolder string) (TemplatesDir, ActionsDir string) {
 // This function updates the default configuration with any non-empty values
 // provided in the fileConfig.
 func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
+	/* --------------------------------------------------------------------- */
+	/* ROOT CONFIG                                                           */
+	/* --------------------------------------------------------------------- */
 	if fileConfig.TempoRoot != "" {
 		resolvedRoot, err := utils.ResolvePath(fileConfig.TempoRoot)
 		if err == nil {
@@ -153,6 +157,9 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 		}
 	}
 
+	/* --------------------------------------------------------------------- */
+	/* APP CONFIG                                                            */
+	/* --------------------------------------------------------------------- */
 	if fileConfig.App.GoModule != "" {
 		defaultConfig.App.GoModule = fileConfig.App.GoModule
 	}
@@ -175,6 +182,9 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 		}
 	}
 
+	/* --------------------------------------------------------------------- */
+	/* PROCESSOR CONFIG                                                      */
+	/* --------------------------------------------------------------------- */
 	if fileConfig.Processor.Workers != 0 {
 		defaultConfig.Processor.Workers = fileConfig.Processor.Workers
 	}
@@ -182,11 +192,17 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 		defaultConfig.Processor.SummaryFormat = fileConfig.Processor.SummaryFormat
 	}
 
+	/* --------------------------------------------------------------------- */
+	/* TEMPLATES CONFIG                                                      */
+	/* --------------------------------------------------------------------- */
 	if len(fileConfig.Templates.Extensions) > 0 {
 		defaultConfig.Templates.Extensions = fileConfig.Templates.Extensions
 	}
 	if fileConfig.Templates.GuardMarker != "" {
 		defaultConfig.Templates.GuardMarker = fileConfig.Templates.GuardMarker
+	}
+	if fileConfig.Templates.UserData != nil {
+		defaultConfig.Templates.UserData = fileConfig.Templates.UserData
 	}
 	if fileConfig.Templates.FunctionProviders != nil {
 		defaultConfig.Templates.FunctionProviders = fileConfig.Templates.FunctionProviders

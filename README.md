@@ -48,7 +48,7 @@
 - [⚡ Using `tempo sync` as a Standalone Command](#-using-tempo-sync-as-a-standalone-command)
 - [⚙️ Configuration](#️-configuration)
 - [🏗️ Templates & Actions](#️-templates--actions)
-- [🔌 Extending Tempo](#-extending-tempo-with-custom-functions)
+- [🔌 Extending Tempo](#-extending-tempo)
 - [🤝 Contributing](#-contributing)
 - [🆓 License](#-license)
 
@@ -638,7 +638,7 @@ Tempo automatically provides a set of **predefined variables** that can be used 
 
 Tempo supports external function providers, allowing you to integrate additional helper functions into your templates.
 
-See the full guide in [Extending Tempo](#-extending-tempo-with-custom-functions).
+See the full guide in [Extending Tempo](#-extending-tempo).
 
 ### Actions
 
@@ -683,9 +683,48 @@ Each object defines a templating action:
 
 **Variant actions (variant.json) follow the same structure** but target a specific component’s variant subfolder.
 
-## 🔌 Extending Tempo with Custom Functions
+## 🔌 Extending tempo
 
-Tempo allows you to register external function providers, which means you can integrate additional helper functions into your templates.
+`tempo` provides two ways to extend how templates work:
+
+1. **Custom template variables** — enrich templates with additional context using `user_data`.
+2. **Custom template functions** — bring in new helpers via external function providers.
+
+### 🔧 Adding Custom Template Variables
+
+You can pass additional variables to your templates using the `user_data` section in the `tempo.yaml` config file. These variables are accessible inside templates using `.UserData`.
+
+**Example: tempo.yaml**
+
+```yaml
+# ....
+templates:
+  user_data:
+    author: Jane Doe
+    year: 2025
+    config:
+      option1: true
+      option2: false
+```
+
+**Basic Access (dot notation)**
+
+```go
+Author: {{ .UserData.author }}
+Year: {{ .UserData.year }}
+```
+
+**Nested Access**
+
+You can use either:
+
+- `index`(built-in from [text/template](https://pkg.go.dev/text/template))
+- `lookup`(provided by _tempo_, supports dot notation)
+
+```go
+{{ index (index .UserData "config") "option1" }}
+{{ lookup .UserData "config.option1" }}
+```
 
 ### 📦 Using External Function Providers
 

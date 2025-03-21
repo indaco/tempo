@@ -199,6 +199,9 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 		sb.WriteString(fmt.Sprintf("    # - %s\n", ext))
 	}
 
+	// Add user data section
+	formatUserData(&sb, cfg.Templates.UserData)
+
 	// Add function providers section
 	formatFunctionProviders(&sb, cfg.Templates.FunctionProviders)
 
@@ -209,6 +212,36 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 /* ------------------------------------------------------------------------- */
 /* Utility Helpers                                                           */
 /* ------------------------------------------------------------------------- */
+
+// formatUserData appends the user_data section to the YAML config.
+func formatUserData(sb *strings.Builder, userData map[string]any) {
+	sb.WriteString("\n  # User-defined variables for template processing.\n")
+	sb.WriteString("  # user_data:\n")
+	sb.WriteString("    # Example flat values\n")
+	sb.WriteString("    # author: John Doe\n")
+	sb.WriteString("    # year: 2025\n")
+	sb.WriteString("    #\n")
+	sb.WriteString("    # Example nested values\n")
+	sb.WriteString("    # config:\n")
+	sb.WriteString("    #   option1: value1\n")
+	sb.WriteString("    #   option2: value2\n")
+
+	// Append actual user data (if any)
+	if len(userData) > 0 {
+		sb.WriteString("  user_data:\n")
+		for key, value := range userData {
+			switch v := value.(type) {
+			case map[string]any:
+				sb.WriteString(fmt.Sprintf("    %s:\n", key))
+				for subKey, subValue := range v {
+					sb.WriteString(fmt.Sprintf("      %s: %v\n", subKey, subValue))
+				}
+			default:
+				sb.WriteString(fmt.Sprintf("    %s: %v\n", key, value))
+			}
+		}
+	}
+}
 
 // formatFunctionProviders appends the function provider settings to the YAML config.
 func formatFunctionProviders(sb *strings.Builder, providers []config.TemplateFuncProvider) {
