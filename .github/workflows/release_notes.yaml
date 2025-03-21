@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - main
+
 jobs:
   create-release-notes:
-    if: ${{ startsWith(github.event.head_commit.message, 'chore: release v') }}
     runs-on: ubuntu-latest
     environment:
       name: Release
+    if: ${{ startsWith(github.event.head_commit.message, 'chore: release v') }}
 
     steps:
       - name: Checkout code
@@ -36,7 +37,6 @@ jobs:
             echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "Release notes file not found: $NOTES_FILE"
             exit 1
           fi
 
@@ -51,4 +51,3 @@ jobs:
           token: ${{ secrets.TEMPO_TOKEN }}
           body: ${{ steps.read_notes.outputs.release_notes }}
           generate_release_notes: true
-
