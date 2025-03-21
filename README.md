@@ -83,7 +83,7 @@ When you run `tempo`, **CSS and JS files are injected into `.templ` components a
 Requires Go v1.23+
 
 ```bash
-go install github.com/indaco/tempo@latest
+go install github.com/indaco/tempo/cmd/tempo@latest
 ```
 
 ### Manually
