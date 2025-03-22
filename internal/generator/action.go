@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/errors"
@@ -34,6 +35,7 @@ type Action struct {
 	TemplateFile string `json:"templateFile,omitempty"` // Template file path (for "file")
 	Source       string `json:"source,omitempty"`       // Base directory (for "folder")
 	Destination  string `json:"destination,omitempty"`  // Destination directory (for "folder")
+	OnlyIfJs     bool   `json:"onlyIfJs,omitempty"`     // Include only if --js is true
 	SkipIfExists bool   `json:"skipIfExists,omitempty"` // Skips a file if it already exists
 	Force        bool   `json:"force,omitempty"`        // Overwrites files if they exist
 }
@@ -48,6 +50,7 @@ type JSONAction struct {
 	Path         string `json:"path,omitempty"`
 	Source       string `json:"source,omitempty"`
 	Destination  string `json:"destination,omitempty"`
+	OnlyIfJs     bool   `json:"onlyIfJs,omitempty"`     // Include only if --js is true
 	SkipIfExists bool   `json:"skipIfExists,omitempty"` // Skips a file if it already exists
 	Force        bool   `json:"force,omitempty"`        // Overwrites files if they exist
 }
@@ -72,6 +75,7 @@ func (a *Action) ToJSONAction() JSONAction {
 		Path:         a.Path,
 		Source:       a.Source,
 		Destination:  a.Destination,
+		OnlyIfJs:     a.OnlyIfJs,
 	}
 }
 
@@ -93,6 +97,7 @@ func (jsa *JSONAction) ToAction(actionType string) Action {
 		Path:         jsa.Path,
 		Source:       jsa.Source,
 		Destination:  jsa.Destination,
+		OnlyIfJs:     jsa.OnlyIfJs,
 	}
 }
 
@@ -144,6 +149,11 @@ func (a *RenderAction) Execute(action Action, data *TemplateData) error {
 /* ------------------------------------------------------------------------- */
 
 func renderActionFile(action Action, data *TemplateData) error {
+	fmt.Printf("%+v\n", action)
+	// Skip if this action is JS-specific but the --js flag is not set
+	if action.OnlyIfJs && !data.WithJs {
+		return nil
+	}
 	// Step 1: Read and render the template file content
 	filePath := filepath.Join(data.TemplatesDir, action.TemplateFile)
 	renderedContent, err := readAndRenderTemplate(filePath, data)
@@ -421,4 +431,21 @@ func handleOutputFile(
 	}
 
 	return nil
+}
+
+func isJsAction(action Action) bool {
+	containsJs := func(s string) bool {
+		s = filepath.ToSlash(strings.ToLower(s))
+		return strings.Contains(s, "/js") || strings.HasSuffix(s, "js")
+	}
+
+	if containsJs(action.TemplateFile) || containsJs(action.Path) {
+		return true
+	}
+
+	if action.Item == "folder" {
+		return containsJs(action.Source) || containsJs(action.Destination)
+	}
+
+	return false
 }

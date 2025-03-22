@@ -894,6 +894,76 @@ func TestProcessEntityActions(t *testing.T) {
 	}
 }
 
+func TestIsJsAction(t *testing.T) {
+	tests := []struct {
+		name   string
+		action Action
+		expect bool
+	}{
+		{
+			name: "JS in TemplateFile",
+			action: Action{
+				TemplateFile: "component/assets/js/script.js.gotxt",
+			},
+			expect: true,
+		},
+		{
+			name: "JS in Path",
+			action: Action{
+				Path: "components/button/js/script.templ",
+			},
+			expect: true,
+		},
+		{
+			name: "JS in Source",
+			action: Action{
+				Item:   "folder",
+				Source: "component/assets/js",
+			},
+			expect: true,
+		},
+		{
+			name: "JS in Destination",
+			action: Action{
+				Item:        "folder",
+				Destination: "component/button/js",
+			},
+			expect: true,
+		},
+		{
+			name: "JS in uppercase path (should match)",
+			action: Action{
+				Path: "components/Button/JS/script.templ",
+			},
+			expect: true,
+		},
+		{
+			name: "No JS in any field",
+			action: Action{
+				TemplateFile: "component/assets/css/base.css.gotxt",
+				Path:         "components/button/css/base.templ",
+				Source:       "component/assets/css",
+				Destination:  "components/button/css",
+			},
+			expect: false,
+		},
+		{
+			name:   "Empty action",
+			action: Action{},
+			expect: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isJsAction(tt.action)
+			if result != tt.expect {
+				t.Errorf("isJsAction() = %v, want %v", result, tt.expect)
+			}
+		})
+	}
+}
+
 // UTILITY FUNCTIONS
 
 func fileExists(path string) bool {

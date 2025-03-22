@@ -78,6 +78,7 @@ func TestBuildComponentActions(t *testing.T) {
 			Item:         "file",
 			TemplateFile: "component/templ/js/script.templ.gotxt",
 			Path:         "{{ .GoPackage }}/{{ .ComponentName | goPackageName }}/js/script.templ",
+			OnlyIfJs:     true,
 		}
 
 		if !reflect.DeepEqual(lastAction, expectedLastAction) {
