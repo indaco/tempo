@@ -21,7 +21,7 @@ func LogSuccessMessages(entityType string, cfg *config.Config, logger logger.Log
 	var message string
 
 	basePath := filepath.Join(cfg.Paths.TemplatesDir, entityType, "templ")
-	assetsPath := filepath.Join(cfg.Paths.TemplatesDir, entityType, "assets", "css")
+	assetsPath := filepath.Join(cfg.Paths.TemplatesDir, entityType, "assets")
 
 	switch entityType {
 	case "component":

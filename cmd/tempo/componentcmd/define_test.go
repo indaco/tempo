@@ -305,3 +305,43 @@ func TestComponentCommand_DefineSubCmd_PermissionError(t *testing.T) {
 		}
 	})
 }
+
+func TestComponentCommand_DefineSubCmd_Func_createBaseTemplateData_WithJs(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := testutils.SetupConfig(tempDir, nil)
+	cfg.App.WithJs = true
+
+	appCmd := &cli.Command{
+		Flags: getNewFlags(),
+	}
+
+	// Call function without setting any flags
+	data, err := createBaseTemplateData(appCmd, cfg)
+	if err != nil {
+		t.Fatalf("Expected no error, but got: %v", err)
+	}
+
+	// Verify defaults
+	if data.GoPackage != cfg.App.GoPackage {
+		t.Errorf("Expected default GoPackage, got: %s", data.GoPackage)
+	}
+	if data.AssetsDir != cfg.App.AssetsDir {
+		t.Errorf("Expected default AssetsDir, got: %s", data.AssetsDir)
+	}
+	if data.WithJs != cfg.App.WithJs {
+		t.Errorf("Expected default WithJs value, got: %v", data.WithJs)
+	}
+	if !data.WithJs {
+		t.Errorf("Expected default WithJs value, got: %v", data.WithJs)
+	}
+	if data.Force != false {
+		t.Errorf("Expected default Force to be false, got: %v", data.Force)
+	}
+	if data.DryRun != false {
+		t.Errorf("Expected default DryRun to be false, got: %v", data.DryRun)
+	}
+	if data.UserData != nil {
+		t.Errorf("Expected default UserData to be nil, got: %v", data.UserData)
+	}
+}
