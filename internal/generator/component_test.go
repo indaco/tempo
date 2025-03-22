@@ -65,7 +65,7 @@ func TestBuildComponentActions(t *testing.T) {
 		}
 
 		// Expected actions count (including JS file)
-		expectedCount := 6
+		expectedCount := 7
 
 		if len(actions) != expectedCount {
 			t.Errorf("BuildComponentActions() = %d actions; want %d actions", len(actions), expectedCount)
@@ -76,8 +76,8 @@ func TestBuildComponentActions(t *testing.T) {
 		expectedLastAction := Action{
 			Type:         actionType,
 			Item:         "file",
-			TemplateFile: "component/assets/js/script.js.gotxt",
-			Path:         "{{ .AssetsDir }}/{{ .ComponentName | goPackageName }}/js/script.js",
+			TemplateFile: "component/templ/js/script.templ.gotxt",
+			Path:         "{{ .GoPackage }}/{{ .ComponentName | goPackageName }}/js/script.templ",
 		}
 
 		if !reflect.DeepEqual(lastAction, expectedLastAction) {
