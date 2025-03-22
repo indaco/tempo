@@ -86,7 +86,7 @@ func runComponentDefineSubCommand(cmdCtx *app.AppContext) func(ctx context.Conte
 		}
 
 		// Step 3: Retrieve component actions
-		builtInActions, err := generator.BuildComponentActions(generator.CopyActionId, data.Force, false)
+		builtInActions, err := generator.BuildComponentActions(generator.CopyActionId, data.Force, data.WithJs)
 		if err != nil {
 			return errors.Wrap("Failed to build component actions", err)
 		}
