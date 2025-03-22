@@ -25,6 +25,11 @@ func ProcessActions(logger logger.LoggerInterface, actions []Action, data *Templ
 			continue
 		}
 
+		// Skip JS-related actions unless OnlyIfJs/WithJs is true
+		if isJsAction(action) && !data.WithJs {
+			continue
+		}
+
 		handler, exists := actionHandlers[action.Type]
 		if !exists {
 			return errors.Wrap("unknown action type", action.Type)

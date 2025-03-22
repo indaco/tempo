@@ -60,6 +60,7 @@ func BuildComponentActions(actionType string, force, withJs bool) ([]Action, err
 				Item:         "file",
 				TemplateFile: "component/assets/js/script.js.gotxt",
 				Path:         "{{ .AssetsDir }}/{{ .ComponentName | goPackageName }}/js/script.js",
+				OnlyIfJs:     withJs,
 			},
 			// [JS] - Templ
 			Action{
@@ -67,6 +68,7 @@ func BuildComponentActions(actionType string, force, withJs bool) ([]Action, err
 				Item:         "file",
 				TemplateFile: "component/templ/js/script.templ.gotxt",
 				Path:         "{{ .GoPackage }}/{{ .ComponentName | goPackageName }}/js/script.templ",
+				OnlyIfJs:     withJs,
 			},
 		)
 	}
