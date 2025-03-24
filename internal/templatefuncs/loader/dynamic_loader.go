@@ -17,6 +17,7 @@ import (
 
 	tempo_api "github.com/indaco/tempo-api/templatefuncs"
 	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/utils"
 )
 
 // DynamicTemplateFuncProvider implements tempo_api.TemplateFuncProvider
@@ -113,7 +114,7 @@ func buildProviderExecutable(packagePath, providerPackage string) (string, error
 
 	// Construct the correct reference for `Provider`
 	providerRef := providerPackage
-	if strings.Contains(providerPackage, "/") {
+	if utils.ContainsSubstring(providerPackage, "/") {
 		parts := strings.Split(providerPackage, "/")
 		providerRef = parts[len(parts)-1] // Use only the last part
 	}

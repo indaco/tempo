@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -296,7 +295,7 @@ func TestRecordExecutionTime(t *testing.T) {
 
 	// Validate printed output
 	expectedOutput := fmt.Sprintf("Processed %s (took %v)\n", filePath, duration)
-	if !strings.Contains(output, expectedOutput[:len(expectedOutput)-3]) { // Allow minor time variations
+	if !utils.ContainsSubstring(output, expectedOutput[:len(expectedOutput)-3]) { // Allow minor time variations
 		t.Errorf("Expected console output containing: %q, got: %q", expectedOutput, output)
 	}
 }

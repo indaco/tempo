@@ -436,7 +436,7 @@ func handleOutputFile(
 func isJsAction(action Action) bool {
 	containsJs := func(s string) bool {
 		s = filepath.ToSlash(strings.ToLower(s))
-		return strings.Contains(s, "/js") || strings.HasSuffix(s, "js")
+		return utils.ContainsSubstring(s, "/js") || strings.HasSuffix(s, "js")
 	}
 
 	if containsJs(action.TemplateFile) || containsJs(action.Path) {

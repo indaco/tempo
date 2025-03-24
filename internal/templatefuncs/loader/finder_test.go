@@ -3,8 +3,9 @@ package loader
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/indaco/tempo/internal/utils"
 )
 
 // TestFindProviderFile verifies that findProviderFile correctly finds provider.go and extracts the package name.
@@ -70,7 +71,7 @@ func TestFindProviderFile(t *testing.T) {
 				if err == nil {
 					t.Fatal("Expected error, but got nil")
 				}
-				if tt.expectedErrorMsg != "" && !strings.Contains(err.Error(), tt.expectedErrorMsg) {
+				if tt.expectedErrorMsg != "" && !utils.ContainsSubstring(err.Error(), tt.expectedErrorMsg) {
 					t.Fatalf("Expected error containing '%s', got '%s'", tt.expectedErrorMsg, err.Error())
 				}
 				return

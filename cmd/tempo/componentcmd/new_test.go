@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -218,7 +217,7 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 		}
 
 		// Check that the output contains the dry run message.
-		if !strings.Contains(output, "Dry Run Mode: No changes will be made.") {
+		if !utils.ContainsSubstring(output, "Dry Run Mode: No changes will be made.") {
 			t.Errorf("Expected dry run message in output, got: %s", output)
 		}
 	})
@@ -331,7 +330,7 @@ func TestComponentCommand_NewSubCmd_FailsOnMissingGoMod(t *testing.T) {
 	}
 
 	expectedErrorMsg := "missing go.mod file. Run 'go mod init' to create one"
-	if !strings.Contains(err.Error(), expectedErrorMsg) {
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
 		t.Errorf("Unexpected error message. Expected: %q, got: %q", expectedErrorMsg, err.Error())
 	}
 }
@@ -522,7 +521,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		if !strings.Contains(output, "Component 'button' already exists") {
+		if !utils.ContainsSubstring(output, "Component 'button' already exists") {
 			t.Errorf("Expected missing component error message, got: %s", output)
 		}
 	})
@@ -701,7 +700,7 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites(t *te
 			t.Fatal("Expected an error due to missing component templates directory, but got none")
 		}
 
-		if !strings.Contains(err.Error(), "Missing folders") {
+		if !utils.ContainsSubstring(err.Error(), "Missing folders") {
 			t.Errorf("Expected missing folders error message, got: %v", err)
 		}
 	})
@@ -724,7 +723,7 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites_Error
 
 	// Instead of checking for the mock error, check that the error message contains "Missing folders"
 	expectedSubstring := "Missing folders:"
-	if !strings.Contains(err.Error(), expectedSubstring) {
+	if !utils.ContainsSubstring(err.Error(), expectedSubstring) {
 		t.Errorf("Expected error message to contain %q, but got %q", expectedSubstring, err.Error())
 	}
 }

@@ -119,7 +119,7 @@ func TestInitCommand_FailsOnExistingConfigFile(t *testing.T) {
 	}
 
 	expectedErr := "already exists"
-	if !strings.Contains(err.Error(), expectedErr) {
+	if !utils.ContainsSubstring(err.Error(), expectedErr) {
 		t.Errorf("Unexpected error message. Got: %s, Want substring: %s", err.Error(), expectedErr)
 	}
 }
@@ -177,7 +177,7 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 	}
 
 	expectedErr := "Failed to write the configuration file"
-	if !strings.Contains(err.Error(), expectedErr) {
+	if !utils.ContainsSubstring(err.Error(), expectedErr) {
 		t.Errorf("Unexpected error message. Got: %s, Want substring: %s", err.Error(), expectedErr)
 	}
 }
@@ -244,7 +244,7 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 	// Ensure that DefaultTemplateExtensions were written
 	for _, ext := range config.DefaultTemplateExtensions {
 		expectedLine := fmt.Sprintf("    # - %s\n", ext)
-		if !strings.Contains(string(content), expectedLine) {
+		if !utils.ContainsSubstring(string(content), expectedLine) {
 			t.Errorf("Expected default template extension %s not found in config file", ext)
 		}
 	}
@@ -278,7 +278,7 @@ func TestFormatUserData_WithValues(t *testing.T) {
 	}
 
 	for _, snippet := range expectedSnippets {
-		if !strings.Contains(result, snippet) {
+		if !utils.ContainsSubstring(result, snippet) {
 			t.Errorf("Expected snippet %q not found in result:\n%s", snippet, result)
 		}
 	}
@@ -317,7 +317,7 @@ func TestWriteConfigFile_WithUserData(t *testing.T) {
 	}
 
 	for _, line := range expectedLines {
-		if !strings.Contains(configText, line) {
+		if !utils.ContainsSubstring(configText, line) {
 			t.Errorf("Expected line %q not found in config:\n%s", line, configText)
 		}
 	}
@@ -356,10 +356,10 @@ func TestWriteConfigFile_WithFunctionProviders(t *testing.T) {
 	configContent := string(content)
 
 	// Ensure function providers were correctly written
-	if !strings.Contains(configContent, "name: default") ||
-		!strings.Contains(configContent, "value: ./providers/default") ||
-		!strings.Contains(configContent, "name: custom") ||
-		!strings.Contains(configContent, "value: https://github.com/user/custom-provider.git") {
+	if !utils.ContainsSubstring(configContent, "name: default") ||
+		!utils.ContainsSubstring(configContent, "value: ./providers/default") ||
+		!utils.ContainsSubstring(configContent, "name: custom") ||
+		!utils.ContainsSubstring(configContent, "value: https://github.com/user/custom-provider.git") {
 		t.Errorf("Function providers were not written correctly in the config file:\n%s", configContent)
 	}
 }
@@ -397,7 +397,7 @@ func TestInitCommand_FailsOnConfigFileCheckError(t *testing.T) {
 	}
 
 	expectedErr := "Error checking configuration file"
-	if !strings.Contains(err.Error(), expectedErr) {
+	if !utils.ContainsSubstring(err.Error(), expectedErr) {
 		t.Errorf("Unexpected error message. Got: %s, Want substring: %s", err.Error(), expectedErr)
 	}
 }
@@ -433,7 +433,7 @@ func TestInitCommand_FailsOnMissingGoMod(t *testing.T) {
 	}
 
 	expectedErr := "missing go.mod file"
-	if !strings.Contains(err.Error(), expectedErr) {
+	if !utils.ContainsSubstring(err.Error(), expectedErr) {
 		t.Errorf("Unexpected error message. Got: %s, Want substring: %s", err.Error(), expectedErr)
 	}
 }
@@ -472,7 +472,7 @@ func TestValidateInitPrerequisites_FailsOnGoModStatError(t *testing.T) {
 	}
 
 	expectedErr := "error checking go.mod file"
-	if !strings.Contains(err.Error(), expectedErr) {
+	if !utils.ContainsSubstring(err.Error(), expectedErr) {
 		t.Errorf("Unexpected error message. Got: %s, Want substring: %s", err.Error(), expectedErr)
 	}
 }
