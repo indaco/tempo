@@ -30,6 +30,10 @@
 
 `tempo` is a lightweight CLI for managing assets and scaffolding components in <a href="https://templ.guide" target="_blank">templ</a>-based projects. Inspired by the Italian word for **"time"**, it streamlines CSS & JS workflows while preserving a smooth developer experience.
 
+> [!TIP]
+> 🧪 **Want to see `tempo` in action?**
+> Check out the demo project: [**tempo-demo**](https://github.com/indaco/tempo-demo) – a real-world example with live reload, asset sync, and scaffolding.
+
 ![tempo](demo.gif)
 
 ## 📖 Table of Contents
