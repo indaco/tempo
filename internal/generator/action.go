@@ -149,7 +149,6 @@ func (a *RenderAction) Execute(action Action, data *TemplateData) error {
 /* ------------------------------------------------------------------------- */
 
 func renderActionFile(action Action, data *TemplateData) error {
-	fmt.Printf("%+v\n", action)
 	// Skip if this action is JS-specific but the --js flag is not set
 	if action.OnlyIfJs && !data.WithJs {
 		return nil
