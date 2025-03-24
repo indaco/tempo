@@ -147,7 +147,7 @@ USAGE:
    tempo <subcommand> [options] [arguments]
 
 VERSION:
-   v0.1.0
+   v0.2.1
 
 DESCRIPTION:
    tempo simplifies asset management in templ-based projects, providing a seamless workflow for
