@@ -2,18 +2,70 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/config"
+	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/utils"
+	"github.com/indaco/tempo/internal/version"
 )
+
+func TestNewCLIFields(t *testing.T) {
+	// Setup a dummy AppContext.
+	// Note: If config.Config has required fields, you might want to initialize them.
+	dummyCfg := &config.Config{}
+	dummyLogger := logger.NewDefaultLogger()
+	cliCtx := &app.AppContext{
+		Logger: dummyLogger,
+		Config: dummyCfg,
+		CWD:    utils.GetCWD(),
+	}
+
+	// Build the CLI command.
+	cmd := newCLI(cliCtx)
+
+	// Verify basic fields.
+	if cmd.Name != appName {
+		t.Errorf("expected command name %q, got %q", appName, cmd.Name)
+	}
+	expectedVersion := fmt.Sprintf("v%s", version.GetVersion())
+	if cmd.Version != expectedVersion {
+		t.Errorf("expected version %q, got %q", expectedVersion, cmd.Version)
+	}
+	if cmd.Usage != usage {
+		t.Errorf("expected usage %q, got %q", usage, cmd.Usage)
+	}
+	if cmd.Description != description {
+		t.Errorf("expected description %q, got %q", description, cmd.Description)
+	}
+
+	// Verify that the expected subcommands are present.
+	expectedSubcommands := []string{"init", "component", "variant", "register", "sync"}
+	if len(cmd.Commands) != len(expectedSubcommands) {
+		t.Errorf("expected %d subcommands, got %d", len(expectedSubcommands), len(cmd.Commands))
+	}
+	for _, expected := range expectedSubcommands {
+		found := false
+		for _, sub := range cmd.Commands {
+			if sub.Name == expected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("expected subcommand %q not found", expected)
+		}
+	}
+}
 
 // TestRunApp_Version simply verifies that running with "--version" returns the version.
 func TestRunApp_Version(t *testing.T) {
-	// Create a temporary directory.
 	tempDir := t.TempDir()
 	origDir, err := os.Getwd()
 	if err != nil {
@@ -123,8 +175,52 @@ func TestRunApp_InitAutoGen(t *testing.T) {
 	testhelpers.ValidateCLIOutput(t, output, []string{"Generating", "Done!"})
 }
 
+/* ------------------------------------------------------------------------- */
+/* ERROR CASES                                                               */
+/* ------------------------------------------------------------------------- */
+func TestRunCLI_LoadConfigError(t *testing.T) {
+	tmp := t.TempDir()
+
+	// Create an unreadable tempo.yaml file
+	configPath := filepath.Join(tmp, "tempo.yaml")
+	if err := os.WriteFile(configPath, []byte("path: ./broken"), 0000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chmod(configPath, 0644) // Restore permissions so temp dir can be deleted
+	})
+
+	// Switch to temp dir
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Fatalf("failed to restore working directory: %v", err)
+		}
+	})
+
+	// Run CLI to trigger config loading
+	err = runCLI([]string{"tempo", "init"})
+	if err == nil {
+		t.Fatal("expected error from LoadConfig, got nil")
+	}
+	if !utils.ContainsSubstring(err.Error(), "failed to read config file:") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+/* HELPERS                                                                   */
+/* ------------------------------------------------------------------------- */
+
 // setupTempDir initializes a temporary directory and returns it along with the original working directory.
 func setupTempDir(t *testing.T) (string, string) {
+	t.Helper()
 	tempDir := t.TempDir()
 
 	goModPath := filepath.Join(tempDir, "go.mod")
@@ -146,6 +242,7 @@ func setupTempDir(t *testing.T) (string, string) {
 
 // restoreWorkingDir restores the original working directory after the test.
 func restoreWorkingDir(t *testing.T, origDir string) {
+	t.Helper()
 	if err := os.Chdir(origDir); err != nil {
 		t.Fatalf("Failed to restore working directory: %v", err)
 	}
