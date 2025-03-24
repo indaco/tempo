@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/app"
@@ -13,6 +12,7 @@ import (
 	"github.com/indaco/tempo/internal/templatefuncs/registry"
 	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
+	"github.com/indaco/tempo/internal/utils"
 )
 
 // setupConfig creates a test config similar to your "create" command tests.
@@ -82,7 +82,7 @@ func TestRegisterCommand_Functions_Repo(t *testing.T) {
 	}
 
 	// Verify output indicates success.
-	if !strings.Contains(output, "Functions successfully registered!") {
+	if !utils.ContainsSubstring(output, "Functions successfully registered!") {
 		t.Errorf("Expected success message, got: %s", output)
 	}
 
@@ -165,7 +165,7 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 	if err != nil {
 		t.Fatalf("Failed to capture stdout: %v", err)
 	}
-	if !strings.Contains(output, "Functions successfully registered!") {
+	if !utils.ContainsSubstring(output, "Functions successfully registered!") {
 		t.Errorf("Expected success message, got: %s", output)
 	}
 
@@ -246,7 +246,7 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 	if err != nil {
 		t.Fatalf("Failed to capture stdout: %v", err)
 	}
-	if !strings.Contains(output, "Functions successfully registered!") {
+	if !utils.ContainsSubstring(output, "Functions successfully registered!") {
 		t.Errorf("Expected success message, got: %s", output)
 	}
 

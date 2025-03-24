@@ -5,7 +5,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/app"
@@ -13,6 +12,7 @@ import (
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
+	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -300,7 +300,7 @@ func TestComponentCommand_DefineSubCmd_PermissionError(t *testing.T) {
 		}
 
 		expectedError := "permission denied"
-		if !strings.Contains(err.Error(), expectedError) {
+		if !utils.ContainsSubstring(err.Error(), expectedError) {
 			t.Errorf("Expected permission denied error, got: %v", err)
 		}
 	})

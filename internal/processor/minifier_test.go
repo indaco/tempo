@@ -3,12 +3,12 @@ package processor
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/indaco/tempo/internal/processor/transformers"
 	"github.com/indaco/tempo/internal/testutils"
+	"github.com/indaco/tempo/internal/utils"
 )
 
 func TestMinifierProcessor_Process(t *testing.T) {
@@ -163,7 +163,7 @@ func TestMinifierProcessor_FailsOnMissingInputFile(t *testing.T) {
 
 	// Validate error message
 	expectedError := "failed to read input file"
-	if !strings.Contains(err.Error(), expectedError) {
+	if !utils.ContainsSubstring(err.Error(), expectedError) {
 		t.Errorf("Expected error to contain %q, but got: %q", expectedError, err.Error())
 	}
 }

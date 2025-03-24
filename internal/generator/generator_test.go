@@ -2,11 +2,11 @@ package generator
 
 import (
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/testutils"
+	"github.com/indaco/tempo/internal/utils"
 )
 
 // MockActionHandler is a mock implementation of ActionHandler for testing.
@@ -128,6 +128,65 @@ func TestProcessActions(t *testing.T) {
 	}
 }
 
+func TestProcessActions_SkipJsActions(t *testing.T) {
+	logger := logger.NewDefaultLogger()
+
+	tests := []struct {
+		name        string
+		withJs      bool
+		actions     []Action
+		expectCount int
+	}{
+		{
+			name:   "JS action skipped when WithJs is false",
+			withJs: false,
+			actions: []Action{
+				{Type: "file", Path: "assets/button/js/button.js", TemplateFile: "button.js"},
+			},
+			expectCount: 0,
+		},
+		{
+			name:   "JS action executed when WithJs is true",
+			withJs: true,
+			actions: []Action{
+				{Type: "file", Path: "assets/button/js/button.js", TemplateFile: "button.js"},
+			},
+			expectCount: 1,
+		},
+		{
+			name:   "Non-JS action always executed",
+			withJs: false,
+			actions: []Action{
+				{Type: "file", Path: "assets/button/css/button.css", TemplateFile: "button.css"},
+			},
+			expectCount: 1,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockHandler := &MockActionHandler{}
+			actionHandlers = map[string]ActionHandler{
+				"file": mockHandler,
+			}
+
+			data := &TemplateData{
+				DryRun: false,
+				WithJs: test.withJs,
+			}
+
+			err := ProcessActions(logger, test.actions, data)
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+
+			if len(mockHandler.ExecutedActions) != test.expectCount {
+				t.Errorf("Expected %d executed actions, got %d", test.expectCount, len(mockHandler.ExecutedActions))
+			}
+		})
+	}
+}
+
 // TestHandleDryRun_File tests the "file" branch of handleDryRun using testutils.MockLogger.
 func TestHandleDryRun_File(t *testing.T) {
 	action := Action{
@@ -146,13 +205,13 @@ func TestHandleDryRun_File(t *testing.T) {
 		t.Fatalf("Expected an info message, got none")
 	}
 	msg := mockLog.Logs[0]
-	if !strings.Contains(msg, "output-World.txt") {
+	if !utils.ContainsSubstring(msg, "output-World.txt") {
 		t.Errorf("Expected resolved output path 'output-World.txt' in message, got: %s", msg)
 	}
-	if !strings.Contains(msg, "template-World.txt") {
+	if !utils.ContainsSubstring(msg, "template-World.txt") {
 		t.Errorf("Expected resolved template 'template-World.txt' in message, got: %s", msg)
 	}
-	if !strings.Contains(msg, "Dry Run: Would execute action:") {
+	if !utils.ContainsSubstring(msg, "Dry Run: Would execute action:") {
 		t.Errorf("Expected message to mention dry-run action, got: %s", msg)
 	}
 }
@@ -176,13 +235,13 @@ func TestHandleDryRun_Folder(t *testing.T) {
 	}
 	msg := mockLog.Logs[0]
 	// Rather than checking an exact formatted string, we verify that the resolved values appear.
-	if !strings.Contains(msg, "base-World") {
+	if !utils.ContainsSubstring(msg, "base-World") {
 		t.Errorf("Expected output to contain 'base-World', got: %s", msg)
 	}
-	if !strings.Contains(msg, "dest-World") {
+	if !utils.ContainsSubstring(msg, "dest-World") {
 		t.Errorf("Expected output to contain 'dest-World', got: %s", msg)
 	}
-	if !strings.Contains(msg, "Dry Run: Would execute action") {
+	if !utils.ContainsSubstring(msg, "Dry Run: Would execute action") {
 		t.Errorf("Expected message to mention dry-run action, got: %s", msg)
 	}
 }
@@ -201,7 +260,7 @@ func TestHandleDryRun_Unknown(t *testing.T) {
 		t.Fatalf("Expected a warning message, got none")
 	}
 	msg := mockLog.Logs[0]
-	if !strings.Contains(msg, "Dry Run: Unknown action type") {
+	if !utils.ContainsSubstring(msg, "Dry Run: Unknown action type") {
 		t.Errorf("Expected warning message to mention unknown action type, got: %s", msg)
 	}
 }

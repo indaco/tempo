@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"testing"
 
+	"github.com/indaco/tempo/internal/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -74,7 +74,7 @@ func TestLoadConfig_ReadError(t *testing.T) {
 	defer os.Remove(filePath)
 
 	_, err := LoadConfig()
-	if err == nil || !strings.Contains(err.Error(), "failed to read config file:") {
+	if err == nil || !utils.ContainsSubstring(err.Error(), "failed to read config file:") {
 		t.Errorf("Expected read error, got: %v", err)
 	}
 }
@@ -97,7 +97,7 @@ func TestLoadConfig_ParseError(t *testing.T) {
 	defer os.Remove(filePath)
 
 	_, err := LoadConfig()
-	if err == nil || !strings.Contains(err.Error(), "failed to parse config file:") {
+	if err == nil || !utils.ContainsSubstring(err.Error(), "failed to parse config file:") {
 		t.Errorf("Expected parse error, got: %v", err)
 	}
 }

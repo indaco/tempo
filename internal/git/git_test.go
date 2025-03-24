@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/logger"
@@ -158,7 +157,7 @@ func TestFailRemoveExistingRepo(t *testing.T) {
 	}
 
 	expectedError := "Failed to remove existing repository"
-	if !strings.Contains(err.Error(), expectedError) && !strings.Contains(err.Error(), "permission denied") {
+	if !utils.ContainsSubstring(err.Error(), expectedError) && !utils.ContainsSubstring(err.Error(), "permission denied") {
 		t.Fatalf("Expected error containing: %q or 'permission denied', got: %q", expectedError, err.Error())
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/config"
@@ -428,7 +427,7 @@ func TestHandleOutputFile(t *testing.T) {
 
 			// Validate error messages if expected
 			if tt.expectedErrMsg != "" {
-				if err == nil || !strings.Contains(err.Error(), tt.expectedErrMsg) {
+				if err == nil || !utils.ContainsSubstring(err.Error(), tt.expectedErrMsg) {
 					t.Errorf("Expected error containing %q, got %v", tt.expectedErrMsg, err)
 				}
 			} else {
@@ -508,7 +507,7 @@ func TestCopyAction_Execute_Default(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error for unknown item type, got nil")
 	}
-	if !strings.Contains(err.Error(), "unknown item type") {
+	if !utils.ContainsSubstring(err.Error(), "unknown item type") {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
@@ -527,7 +526,7 @@ func TestRenderAction_Execute_Default(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error for unknown item type in RenderAction, got nil")
 	}
-	if !strings.Contains(err.Error(), "unknown item type") {
+	if !utils.ContainsSubstring(err.Error(), "unknown item type") {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
@@ -736,7 +735,7 @@ func TestRetrieveActionsFile(t *testing.T) {
 			_, err := RetrieveActionsFile(mockLogger, tc.actionFilePath, mockConfig)
 
 			if tc.expectedErr != "" {
-				if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
+				if err == nil || !utils.ContainsSubstring(err.Error(), tc.expectedErr) {
 					t.Fatalf("Expected error %q, but got: %v", tc.expectedErr, err)
 				}
 			} else if err != nil {
@@ -787,7 +786,7 @@ func TestResolveActionFilePath(t *testing.T) {
 			actionsDir:     actionsDir,
 			actionFileFlag: "error.json",
 			mockFileExists: func(path string) (bool, error) {
-				if strings.Contains(path, actionsDir) {
+				if utils.ContainsSubstring(path, actionsDir) {
 					return false, mockError
 				}
 				return false, nil
@@ -817,7 +816,7 @@ func TestResolveActionFilePath(t *testing.T) {
 			result, err := resolveActionFilePath(tc.actionsDir, tc.actionFileFlag)
 
 			if tc.expectedErr != "" {
-				if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
+				if err == nil || !utils.ContainsSubstring(err.Error(), tc.expectedErr) {
 					t.Fatalf("Expected error %q, but got: %v", tc.expectedErr, err)
 				}
 			} else {

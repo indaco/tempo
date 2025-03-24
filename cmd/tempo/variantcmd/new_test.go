@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -356,7 +355,7 @@ func TestVariantCommand_NewSubComd_DryRun(t *testing.T) {
 		}
 
 		// Check that the output contains the dry run message.
-		if !strings.Contains(output, "Dry Run Mode: No changes will be made.") {
+		if !utils.ContainsSubstring(output, "Dry Run Mode: No changes will be made.") {
 			t.Errorf("Expected dry run message in output, got: %s", output)
 		}
 	})
@@ -469,7 +468,7 @@ func TestVariantCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 		}
 
 		// Check that the output contains the dry run message.
-		if !strings.Contains(output, "Dry Run Mode: No changes will be made.") {
+		if !utils.ContainsSubstring(output, "Dry Run Mode: No changes will be made.") {
 			t.Errorf("Expected dry run message in output, got: %s", output)
 		}
 	})
@@ -510,7 +509,7 @@ func TestVariantCommand_NewSubCmd_FailsOnMissingGoMod(t *testing.T) {
 	}
 
 	expectedErrorMsg := "missing go.mod file. Run 'go mod init' to create one"
-	if !strings.Contains(err.Error(), expectedErrorMsg) {
+	if !utils.ContainsSubstring(err.Error(), expectedErrorMsg) {
 		t.Errorf("Unexpected error message. Expected: %q, got: %q", expectedErrorMsg, err.Error())
 	}
 }
@@ -701,7 +700,7 @@ func TestVariantCommand_NewSubCmd_MissingFolders(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected an error due to missing folders, but got nil")
 	}
-	if !strings.Contains(err.Error(), "Missing folders") {
+	if !utils.ContainsSubstring(err.Error(), "Missing folders") {
 		t.Errorf("Expected error message to mention missing folders, got: %v", err)
 	}
 }
@@ -780,7 +779,7 @@ func TestVariantCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		if !strings.Contains(output, "Cannot create variant: Component does not exist") {
+		if !utils.ContainsSubstring(output, "Cannot create variant: Component does not exist") {
 			t.Errorf("Expected missing component error message, got: %s", output)
 		}
 	})

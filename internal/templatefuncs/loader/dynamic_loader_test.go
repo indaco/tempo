@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/indaco/tempo/internal/utils"
@@ -173,7 +172,7 @@ var Provider = `,
 			if tt.expectedErrMsg != "" {
 				if err == nil {
 					t.Errorf("Expected error containing '%s', but got nil", tt.expectedErrMsg)
-				} else if !strings.Contains(err.Error(), tt.expectedErrMsg) {
+				} else if !utils.ContainsSubstring(err.Error(), tt.expectedErrMsg) {
 					t.Errorf("Expected error containing '%s', got: %v", tt.expectedErrMsg, err)
 				}
 			} else {
