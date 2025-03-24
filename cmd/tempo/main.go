@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/indaco/tempo/cmd/tempo/componentcmd"
@@ -27,7 +28,15 @@ const (
 	email       = "github@mircoveltri.me"
 )
 
-// runCLI encapsulates the main cli logic and returns an error.
+// main is the CLI application's entry point.
+func main() {
+	if err := runCLI(os.Args); err != nil {
+		errors.LogErrorChain(err)
+		log.Fatal(err)
+	}
+}
+
+// runCLI sets up and runs the CLI application, returning any errors encountered during execution.
 func runCLI(args []string) error {
 	// Get current working directory.
 	cwd := utils.GetCWD()
@@ -45,8 +54,15 @@ func runCLI(args []string) error {
 		CWD:    cwd,
 	}
 
-	// Define CLI application.
-	appCmd := &cli.Command{
+	appCmd := newCLI(cliCtx)
+
+	// Run application.
+	return appCmd.Run(context.Background(), args)
+}
+
+// newCLI creates and returns the root CLI command and its subcommands.
+func newCLI(cliCtx *app.AppContext) *cli.Command {
+	return &cli.Command{
 		Name:        appName,
 		Version:     fmt.Sprintf("v%s", version.GetVersion()),
 		Usage:       usage,
@@ -59,15 +75,5 @@ func runCLI(args []string) error {
 			registercmd.SetupRegisterCommand(cliCtx),
 			synccmd.SetupSyncCommand(cliCtx),
 		},
-	}
-
-	// Run application.
-	return appCmd.Run(context.Background(), args)
-}
-
-func main() {
-	if err := runCLI(os.Args); err != nil {
-		errors.LogErrorChain(err)
-		os.Exit(1)
 	}
 }
