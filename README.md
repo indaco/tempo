@@ -51,6 +51,12 @@ Check out [**tempo-demo**](https://github.com/indaco/tempo-demo) — a sample pr
 
 Great if you want to learn by example or kickstart your own `templ`-based project.
 
+## 🚀 Projects Using Tempo
+
+Looking for real-world usage beyond the demo?
+
+Check out [goaster](https://github.com/indaco/goaster) — a toast notification component built with templ and powered by tempo.
+
 ## 🤝 Contributing
 
 Contributions are welcome!
