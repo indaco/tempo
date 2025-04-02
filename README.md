@@ -31,7 +31,7 @@
 `tempo` is a lightweight CLI for managing assets and scaffolding components in [templ](https://templ.guide)-based projects.
 Inspired by the Italian word for **"time"**, it streamlines CSS & JS workflows while preserving a smooth developer experience.
 
-![tempo](https://raw.githubusercontent.com/indaco/tempo/gh-assets/demo.gif)
+![tempo](https://raw.githubusercontent.com/indaco/gh-assets/main/tempo/demo.gif)
 
 ## 📚 Documentation
 
