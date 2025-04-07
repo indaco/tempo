@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 vars:
   APP_NAME: tempo
@@ -8,13 +8,13 @@ vars:
 
 tasks:
   default:
-    desc: "Run clean and build tasks"
+    desc: 'Run clean and build tasks'
     cmds:
       - task: clean
       - task: build
 
   clean:
-    desc: "Clean the build directory and Go cache"
+    desc: 'Clean the build directory and Go cache'
     cmds:
       - rm -rf {{.BUILD_DIR}}
       - go clean -cache
@@ -23,23 +23,23 @@ tasks:
     desc: Run all tests and generate coverage report.
     silent: false
     cmds:
-      - go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=profile.cov
+      - go test -count=1 -timeout 30s $(go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=coverage.txt
       - task: test/view-total-coverage
 
   test/view-total-coverage:
-    desc: Display total test coverage from profile.cov
+    desc: Display total test coverage from coverage.txt
     silent: true
     internal: true
     cmds:
       - echo ""
       - echo "Total Coverage:"
-      - go tool cover -func=profile.cov | grep total | awk -F '[[:space:]]+' '{print $NF}'
+      - go tool cover -func=coverage.txt | grep total | awk -F '[[:space:]]+' '{print $NF}'
 
   test/view-coverage:
     desc: View the HTML coverage report.
     internal: true
     cmds:
-      - go tool cover -html=profile.cov
+      - go tool cover -html=coverage.txt
       - echo "Coverage report displayed in your default browser."
 
   test/coverage:
@@ -70,14 +70,18 @@ tasks:
       - golangci-lint run ./...
 
   build:
-    desc: "Building the binary..."
+    desc: 'Building the binary...'
+    deps:
+      - modernize
+      - lint
+      - test/force
     cmds:
       - |
         mkdir -p {{.BUILD_DIR}}
         go build -o {{.BUILD_DIR}}/{{.APP_NAME}} {{.CMD_DIR}}/main.go
 
   install:
-    desc: "Install the binary using Go install"
+    desc: 'Install the binary using Go install'
     silent: false
     deps:
       - modernize

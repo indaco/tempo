@@ -8,8 +8,8 @@
     <a href="https://github.com/indaco/tempo/actions/workflows/ci.yml" target="_blank">
       <img src="https://github.com/indaco/tempo/actions/workflows/ci.yml/badge.svg" alt="CI" />
     </a>
-    <a href="https://coveralls.io/github/indaco/tempo?branch=main" target="_blank">
-      <img src="https://coveralls.io/repos/github/indaco/tempo/badge.svg?branch=main" alt="Coverage Status" />
+    <a href="https://codecov.io/gh/indaco/tempo">
+      <img src="https://codecov.io/gh/indaco/tempo/branch/main/graph/badge.svg" alt="Code coverage" />
     </a>
     <a href="https://goreportcard.com/report/github.com/indaco/tempo" target="_blank">
       <img src="https://goreportcard.com/badge/github.com/indaco/tempo" alt="go report card" />

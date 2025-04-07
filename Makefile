@@ -59,15 +59,15 @@ clean: ## Clean the build directory and Go cache
 .PHONY: test
 test: ## Run all tests and generate coverage report.
 	@echo "$(color_bold_cyan)* Run all tests and generate coverage report.$(color_reset)"
-	@$(GO) test -count=1 -timeout 30s $(shell go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=profile.cov
+	@$(GO) test -count=1 -timeout 30s $(shell go list ./... | grep -Ev 'internal/testhelpers|internal/testutils|internal/templates') -covermode=atomic -coverprofile=coverage.txt
 	@echo "$(color_bold_cyan)* Total Coverage$(color_reset)"
-	@$(GO) tool cover -func=profile.cov | grep total | awk '{print $$3}'
+	@$(GO) tool cover -func=coverage.txt | grep total | awk '{print $$3}'
 
 .PHONY: test/coverage
 test/coverage: ## Run go tests and use go tool cover.
 	@echo "$(color_bold_cyan)* Run go tests and use go tool cover$(color_reset)"
 	@$(MAKE) test/force
-	@$(GO) tool cover -html=profile.cov
+	@$(GO) tool cover -html=coverage.txt
 
 .PHONY: test/force
 test/force: ## Clean go tests cache.
@@ -88,6 +88,9 @@ lint: ## Run golangci-lint
 .PHONY: build
 build: ## Build the binary with development metadata
 	@echo "$(color_bold_cyan)* Building the binary...$(color_reset)"
+	@$(MAKE) modernize
+	@$(MAKE) lint
+	@$(MAKE) test/force
 	@mkdir -p $(BUILD_DIR)
 	$(GOBUILD) -o $(BUILD_DIR)/$(APP_NAME) $(CMD_DIR)/main.go
 

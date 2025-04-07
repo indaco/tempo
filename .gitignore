@@ -33,6 +33,7 @@ a11y-results
 
 # tests
 profile.cov
+coverage.txt
 
 #devbox
 .devbox
