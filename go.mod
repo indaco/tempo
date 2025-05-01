@@ -3,7 +3,7 @@ module github.com/indaco/tempo
 go 1.23.7
 
 require (
-	github.com/evanw/esbuild v0.25.2
+	github.com/evanw/esbuild v0.25.3
 	github.com/fatih/color v1.18.0
 	github.com/indaco/tempo-api v0.0.0-20250217085709-fd62d35b4d54
 	github.com/urfave/cli/v3 v3.1.0
