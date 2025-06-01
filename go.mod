@@ -8,7 +8,7 @@ require (
 	github.com/indaco/tempo-api v0.0.0-20250217085709-fd62d35b4d54
 	github.com/urfave/cli/v3 v3.1.0
 	golang.org/x/mod v0.24.0
-	golang.org/x/sync v0.12.0
+	golang.org/x/sync v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
