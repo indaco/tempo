@@ -922,7 +922,7 @@ func flagSetFromMap(flags map[string]any) []cli.Flag {
 		case bool:
 			flagSet = append(flagSet, &cli.BoolFlag{Name: k, Value: v})
 		case int:
-			flagSet = append(flagSet, &cli.IntFlag{Name: k, Value: int64(v)})
+			flagSet = append(flagSet, &cli.IntFlag{Name: k, Value: v})
 		case string:
 			flagSet = append(flagSet, &cli.StringFlag{Name: k, Value: v})
 		}
