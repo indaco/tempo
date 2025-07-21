@@ -538,7 +538,10 @@ func TestVariantCommand_NewSubCmd_MissingActionsFile(t *testing.T) {
 	}
 
 	// Ensure variant.json is missing.
-	os.Remove(filepath.Join(actionsDir, "variant.json"))
+	err := os.Remove(filepath.Join(actionsDir, "variant.json"))
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatalf("Failed to remove variant.json: %v", err)
+	}
 
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
@@ -559,7 +562,7 @@ func TestVariantCommand_NewSubCmd_MissingActionsFile(t *testing.T) {
 		"--name", "missingVariantActions",
 		"--component", "someComponent",
 	}
-	err := app.Run(context.Background(), args)
+	err = app.Run(context.Background(), args)
 	if err == nil {
 		t.Fatalf("Expected error due to missing variant actions file, but got nil")
 	}
@@ -693,7 +696,9 @@ func TestVariantCommand_NewSubCmd_MissingFolders(t *testing.T) {
 	cfg := testutils.SetupConfig(tempDir, nil)
 	// Ensure one of the required folders (e.g. component-variant) is missing.
 	variantDir := filepath.Join(cfg.Paths.TemplatesDir, "component-variant")
-	os.RemoveAll(variantDir)
+	if err := os.RemoveAll(variantDir); err != nil {
+		t.Fatalf("Failed to remove variant directory %q: %v", variantDir, err)
+	}
 
 	validate := validateVariantNewPrerequisites(cfg)
 	_, err := validate(context.Background(), &cli.Command{})

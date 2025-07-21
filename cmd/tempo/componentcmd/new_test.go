@@ -360,7 +360,10 @@ func TestComponentCommand_NewSubCmd_MissingActionsFile(t *testing.T) {
 	}
 
 	// Ensure component.json is missing.
-	os.Remove(filepath.Join(actionsDir, "component.json"))
+	err := os.Remove(filepath.Join(actionsDir, "component.json"))
+	if err != nil && !os.IsNotExist(err) {
+		t.Errorf("Unexpected error from os.Remove: %v", err)
+	}
 
 	cliCtx := &app.AppContext{
 		Logger: logger.NewDefaultLogger(),
@@ -378,7 +381,7 @@ func TestComponentCommand_NewSubCmd_MissingActionsFile(t *testing.T) {
 		"tempo", "component", "new",
 		"--name", "missingActions",
 	}
-	err := cmd.Run(context.Background(), args)
+	err = cmd.Run(context.Background(), args)
 	if err == nil {
 		t.Fatalf("Expected error due to missing actions file, but got nil")
 	}
@@ -691,10 +694,13 @@ func TestComponentCommand_NewSubCmd_Func_validateComponentNewPrerequisites(t *te
 	t.Run("Missing component templates directory", func(t *testing.T) {
 		// Ensure the templates directory does not exist
 		componentTemplateDir := filepath.Join(cfg.Paths.TemplatesDir, "component")
-		os.RemoveAll(componentTemplateDir)
+		err := os.RemoveAll(componentTemplateDir)
+		if err != nil {
+			t.Errorf("Unexpected error message from os.RemoveAll: %v", err)
+		}
 
 		validate := validateComponentNewPrerequisites(cfg)
-		_, err := validate(context.Background(), &cli.Command{})
+		_, err = validate(context.Background(), &cli.Command{})
 
 		if err == nil {
 			t.Fatal("Expected an error due to missing component templates directory, but got none")

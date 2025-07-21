@@ -145,7 +145,14 @@ func (m *Metrics) ToJSONFile(errors []ProcessingError, skippedFiles []Processing
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			// Log the close error, but don't override the main return value
+			// since this is a read-only operation and close errors are rare
+			_ = err
+		}
+	}()
 
 	_, err = file.WriteString(jsonData)
 	return err
@@ -308,17 +315,17 @@ func formatSkippedCategory(
 	formattedHint := faint(fmt.Sprintf("(%s %s)", bold("Hint:"), hint))
 
 	// Print category title with icon
-	sb.WriteString(fmt.Sprintf("\n  %s %s\n", colorFunc("•"), bold("Reason: "+title)))
+	fmt.Fprintf(sb, "\n  %s %s\n", colorFunc("•"), bold("Reason: "+title))
 
 	// Print hint below title
-	sb.WriteString(fmt.Sprintf("    %s\n", formattedHint))
+	fmt.Fprintf(sb, "    %s\n", formattedHint)
 
 	// Print skipped file entries
 	for _, entry := range entries {
 		if entry.Dest != "" {
-			sb.WriteString(fmt.Sprintf("    - file: %s → Expected: %s\n", faint(entry.Source), faint(entry.Dest)))
+			fmt.Fprintf(sb, "    - file: %s → Expected: %s\n", faint(entry.Source), faint(entry.Dest))
 		} else {
-			sb.WriteString(fmt.Sprintf("    - file: %s\n", faint(entry.Source)))
+			fmt.Fprintf(sb, "    - file: %s\n", faint(entry.Source))
 		}
 	}
 }

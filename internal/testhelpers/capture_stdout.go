@@ -23,8 +23,20 @@ func CaptureStdout(f func()) (string, error) {
 	}
 	rErr, wErr, err := os.Pipe()
 	if err != nil {
+		_ = rOut.Close() // Clean up the first pipe if second pipe creation fails
 		return "", err
 	}
+
+	// Ensure cleanup happens even if function panics
+	defer func() {
+		// Restore output streams
+		os.Stdout, os.Stderr = origStdout, origStderr
+		color.Output = origColorOutput
+
+		// Close reader pipes
+		_ = rOut.Close()
+		_ = rErr.Close()
+	}()
 
 	// Redirect output
 	os.Stdout, os.Stderr = wOut, wErr
@@ -33,6 +45,7 @@ func CaptureStdout(f func()) (string, error) {
 	// Capture output concurrently
 	outputChan := make(chan string)
 	go func() {
+		defer close(outputChan)
 		var bufOut, bufErr bytes.Buffer
 		_, _ = bufOut.ReadFrom(rOut)
 		_, _ = bufErr.ReadFrom(rErr)
@@ -42,11 +55,13 @@ func CaptureStdout(f func()) (string, error) {
 	// Execute the function
 	f()
 
-	// Close pipes and restore output
-	wOut.Close()
-	wErr.Close()
-	os.Stdout, os.Stderr = origStdout, origStderr
-	color.Output = origColorOutput
+	// Close writer pipes to signal EOF to readers
+	if err := wOut.Close(); err != nil {
+		return "", err
+	}
+	if err := wErr.Close(); err != nil {
+		return "", err
+	}
 
 	// Retrieve captured output
 	output := <-outputChan

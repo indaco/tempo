@@ -115,7 +115,9 @@ func validateInitPrerequisites(workingDir, configFilePath string) error {
 		if err != nil {
 			return errors.Wrap("Failed to write the configuration file", err)
 		}
-		file.Close()
+		if err := file.Close(); err != nil {
+			return errors.Wrap("Failed to close the configuration file", err)
+		}
 		return errors.Wrap("Configuration file already exists", configFilePath)
 	}
 	return nil
@@ -232,12 +234,12 @@ func formatUserData(sb *strings.Builder, userData map[string]any) {
 		for key, value := range userData {
 			switch v := value.(type) {
 			case map[string]any:
-				sb.WriteString(fmt.Sprintf("    %s:\n", key))
+				fmt.Fprintf(sb, "    %s:\n", key)
 				for subKey, subValue := range v {
-					sb.WriteString(fmt.Sprintf("      %s: %v\n", subKey, subValue))
+					fmt.Fprintf(sb, "      %s: %v\n", subKey, subValue)
 				}
 			default:
-				sb.WriteString(fmt.Sprintf("    %s: %v\n", key, value))
+				fmt.Fprintf(sb, "    %s: %v\n", key, value)
 			}
 		}
 	}
@@ -260,9 +262,9 @@ func formatFunctionProviders(sb *strings.Builder, providers []config.TemplateFun
 	// Append configured function providers
 	if len(providers) > 0 {
 		for _, provider := range providers {
-			sb.WriteString(fmt.Sprintf("    - name: %s\n", provider.Name))
-			sb.WriteString(fmt.Sprintf("      type: %s\n", provider.Type))
-			sb.WriteString(fmt.Sprintf("      value: %s\n", provider.Value))
+			fmt.Fprintf(sb, "    - name: %s\n", provider.Name)
+			fmt.Fprintf(sb, "      type: %s\n", provider.Type)
+			fmt.Fprintf(sb, "      value: %s\n", provider.Value)
 		}
 	}
 }

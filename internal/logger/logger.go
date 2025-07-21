@@ -3,6 +3,7 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -81,6 +82,15 @@ var colorFuncs = map[string]func(string) string{
 }
 
 /* ------------------------------------------------------------------------- */
+/* HELPER FUNCTIONS                                                          */
+/* ------------------------------------------------------------------------- */
+
+// mustWriteln is a helper function that ignores write errors for logging functions.
+func mustWriteln(w io.Writer, args ...any) {
+	_, _ = fmt.Fprintln(w, args...)
+}
+
+/* ------------------------------------------------------------------------- */
 /* PUBLIC METHODS                                                            */
 /* ------------------------------------------------------------------------- */
 
@@ -129,7 +139,7 @@ func (l *DefaultLogger) Hint(message string, args ...any) *LogEntry {
 
 // Blank prints a blank line
 func (l *DefaultLogger) Blank() {
-	fmt.Fprintln(color.Output)
+	mustWriteln(color.Output)
 }
 
 // WithIndent enables or disables message indentation.
@@ -237,7 +247,7 @@ func (e *LogEntry) log() {
 	}
 
 	// Print the message
-	fmt.Fprintln(output, message)
+	mustWriteln(output, message)
 }
 
 // WithAttrs adds attributes to the log entry and prints the entry.
@@ -279,7 +289,7 @@ func (e *LogEntry) logAttrs() {
 		if e.indentEnabled() {
 			line = "  " + line
 		}
-		fmt.Fprintln(output, line)
+		mustWriteln(output, line)
 	}
 }
 

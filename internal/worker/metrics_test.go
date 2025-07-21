@@ -2,6 +2,7 @@ package worker
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -62,7 +63,12 @@ func TestMetrics_ExportToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tempFile.Name())
+
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil {
+			log.Printf("Failed to remove test directory %s: %v", tempFile.Name(), err)
+		}
+	}()
 
 	// Export metrics to JSON
 	if err := m.ToJSONFile(errors, skippedFiles, tempFile.Name()); err != nil {

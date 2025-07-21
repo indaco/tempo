@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -165,7 +166,9 @@ func TestCopyFileFromEmbed(t *testing.T) {
 				}
 
 				// Cleanup
-				os.Remove(tt.destination)
+				if err := os.Remove(tt.destination); err != nil {
+					t.Errorf("Unexpected error from os.Remove: %v", err)
+				}
 			}
 		})
 	}
@@ -206,7 +209,10 @@ func TestCopyDirFromEmbed(t *testing.T) {
 				}
 
 				// Cleanup
-				os.RemoveAll(tt.destination)
+				if err := os.RemoveAll(tt.destination); err != nil {
+					log.Printf("Failed to remove test directory %s: %v", tt.destination, err)
+				}
+
 			}
 		})
 	}

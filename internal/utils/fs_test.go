@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -96,8 +97,12 @@ func TestFileOrDirExists(t *testing.T) {
 
 	// Cleanup function to ensure temporary files and directories are removed
 	cleanup := func() {
-		os.Remove(tempFile)
-		os.Remove(tempDir)
+		if err := os.Remove(tempFile); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to remove temp file %s: %v", tempFile, err)
+		}
+		if err := os.Remove(tempDir); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to remove temp directory %s: %v", tempDir, err)
+		}
 	}
 	defer cleanup()
 
@@ -108,7 +113,9 @@ func TestFileOrDirExists(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp file: %v", err)
 		}
-		file.Close()
+		if err := file.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
 
 		// Check if the file exists and is not a directory
 		exists, isDir, err := FileOrDirExists(tempFile)
@@ -308,7 +315,11 @@ func TestEnsureDirExists(t *testing.T) {
 	invalidPath := ""
 
 	// Cleanup function
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			log.Printf("Failed to remove tempDir directory %s: %v", tempDir, err)
+		}
+	}()
 
 	t.Run("CreateNewDirectory", func(t *testing.T) {
 		err := EnsureDirExists(tempDir)
@@ -399,7 +410,10 @@ func TestRemoveIfExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
-	file.Close()
+
+	if err := file.Close(); err != nil {
+		t.Errorf("Failed to close the configuration file: %v", err)
+	}
 
 	err = os.Mkdir(tempDir, 0755)
 	if err != nil {
@@ -872,13 +886,20 @@ require (
 				if err != nil {
 					t.Fatalf("failed to create go.mod file: %v", err)
 				}
-				defer os.Remove(goModPath)
+
+				defer func() {
+					if err := os.Remove(goModPath); err != nil {
+						log.Printf("Failed to remove %s: %v", goModPath, err)
+					}
+				}()
 
 				if _, err := file.WriteString(tt.goModContent); err != nil {
 					t.Fatalf("failed to write to go.mod file: %v", err)
 				}
 
-				file.Close()
+				if err := file.Close(); err != nil {
+					t.Errorf("Failed to close the configuration file: %v", err)
+				}
 			} else {
 				tempDir = "nonexistent-dir" // Simulate missing directory
 			}

@@ -66,7 +66,7 @@ func (m *MockLogger) Hint(message string, args ...any) *logger.LogEntry {
 // Blank prints a blank line.
 func (m *MockLogger) Blank() {
 	m.Logs = append(m.Logs, "")
-	fmt.Fprintln(color.Output)
+	_, _ = fmt.Fprintln(color.Output)
 }
 
 // WithTimestamp enables or disables the inclusion of timestamps in log messages.

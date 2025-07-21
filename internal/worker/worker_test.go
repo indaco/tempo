@@ -273,7 +273,9 @@ func TestRecordExecutionTime(t *testing.T) {
 	recordExecutionTime(mockManager, filePath, duration)
 
 	// Restore standard output
-	w.Close()
+	if err := w.Close(); err != nil {
+		t.Fatalf("Failed to close pipe writer: %v", err)
+	}
 	os.Stdout = oldStdout
 
 	// Read captured output

@@ -2,6 +2,7 @@ package cmdrunner
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -76,7 +77,11 @@ func TestRunCommand_InsideDir(t *testing.T) {
 	tempDir := os.TempDir()
 	testDir := filepath.Join(tempDir, "test-cmd-runner")
 	_ = os.MkdirAll(testDir, os.ModePerm)
-	defer os.RemoveAll(testDir)
+	defer func() {
+		if err := os.RemoveAll(testDir); err != nil {
+			log.Printf("Failed to remove test directory %s: %v", testDir, err)
+		}
+	}()
 
 	err := RunCommand(testDir, "touch", "testfile.txt")
 	if err != nil {

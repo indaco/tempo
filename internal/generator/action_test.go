@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,7 +26,12 @@ func TestGenerateActionJSONFile(t *testing.T) {
 		}
 
 		tempFile := "test_output.json"
-		defer os.Remove(tempFile)
+
+		defer func() {
+			if err := os.Remove(tempFile); err != nil {
+				log.Printf("Failed to remove test directory %s: %v", tempFile, err)
+			}
+		}()
 
 		err := GenerateActionJSONFile(tempFile, actions)
 		if err != nil {

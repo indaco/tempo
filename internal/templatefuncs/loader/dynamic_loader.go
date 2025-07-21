@@ -201,13 +201,19 @@ func extractModuleName(modulePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open go.mod: %s", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			// Log the close error, but don't override the main return value
+			// since this is a read-only operation and close errors are rare
+			_ = err
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "module ") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "module ")), nil
+		if after, ok := strings.CutPrefix(line, "module "); ok {
+			return strings.TrimSpace(after), nil
 		}
 	}
 

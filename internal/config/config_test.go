@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -71,7 +72,12 @@ func TestLoadConfig_ReadError(t *testing.T) {
 	if err := os.WriteFile(filePath, []byte("app:\n  go_module: something"), 0000); err != nil {
 		t.Fatalf("Failed to write unreadable config file: %v", err)
 	}
-	defer os.Remove(filePath)
+
+	defer func() {
+		if err := os.Remove(filePath); err != nil {
+			log.Printf("Failed to remove %s: %v", filePath, err)
+		}
+	}()
 
 	_, err := LoadConfig()
 	if err == nil || !utils.ContainsSubstring(err.Error(), "failed to read config file:") {
@@ -94,7 +100,11 @@ func TestLoadConfig_ParseError(t *testing.T) {
 	if err := os.WriteFile(filePath, badYaml, 0644); err != nil {
 		t.Fatalf("Failed to write broken config file: %v", err)
 	}
-	defer os.Remove(filePath)
+	defer func() {
+		if err := os.Remove(filePath); err != nil {
+			log.Printf("Failed to remove %s: %v", filePath, err)
+		}
+	}()
 
 	_, err := LoadConfig()
 	if err == nil || !utils.ContainsSubstring(err.Error(), "failed to parse config file:") {

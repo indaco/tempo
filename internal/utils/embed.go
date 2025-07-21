@@ -27,7 +27,13 @@ func ReadEmbeddedFile(path string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap("failed to open embedded file '%s'", err, path)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			// Log the close error, but don't override the main return value
+			// since this is a read-only operation and close errors are rare
+			_ = err
+		}
+	}()
 
 	return io.ReadAll(file)
 }

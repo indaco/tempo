@@ -155,7 +155,10 @@ func TestRunApp_InitAutoGen(t *testing.T) {
 	defer restoreWorkingDir(t, origDir)
 
 	configPath := filepath.Join(tempDir, "tempo.yaml")
-	os.Remove(configPath) // Ensure it's missing.
+	err := os.Remove(configPath) // Ensure it's missing.
+	if err != nil && !os.IsNotExist(err) {
+		t.Errorf("Unexpected error from os.Remove: %v", err)
+	}
 
 	// Run the command and capture output
 	output, err := testhelpers.CaptureStdout(func() {

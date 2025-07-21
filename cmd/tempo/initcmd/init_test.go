@@ -156,7 +156,9 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create config file: %v", err)
 	}
-	file.Close()
+	if err := file.Close(); err != nil {
+		t.Fatalf("Failed to close the configuration file: %v", err)
+	}
 
 	// Make the file unwritable
 	if err := os.Chmod(configFile, 0444); err != nil {

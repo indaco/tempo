@@ -2,6 +2,7 @@ package git
 
 import (
 	"errors"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,7 +61,11 @@ func TestDefaultCloneOrUpdate(t *testing.T) {
 
 func TestIsValidGitRepo_ValidRepo(t *testing.T) {
 	tempDir := setupTestRepo(t)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			log.Printf("Failed to remove test directory %s: %v", tempDir, err)
+		}
+	}()
 
 	if !IsValidGitRepo(tempDir) {
 		t.Errorf("Expected IsValidGitRepo to return true for a valid repo, but got false")
@@ -74,7 +79,11 @@ func TestIsValidGitRepo_InvalidRepo(t *testing.T) {
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			log.Printf("Failed to remove test directory %s: %v", tempDir, err)
+		}
+	}()
 
 	if IsValidGitRepo(tempDir) {
 		t.Errorf("Expected IsValidGitRepo to return false for a non-Git directory, but got true")

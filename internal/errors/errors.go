@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
@@ -138,6 +139,10 @@ func Wrap(msg string, args ...any) error {
 /* LOGGING FUNCTIONS                                                         */
 /* ------------------------------------------------------------------------- */
 
+func mustWrite(w io.Writer, format string, args ...any) {
+	_, _ = fmt.Fprintf(w, format, args...)
+}
+
 // LogErrorChain logs an error chain to the console.
 func LogErrorChain(err error) {
 	if err == nil {
@@ -147,9 +152,9 @@ func LogErrorChain(err error) {
 	output := color.Output
 	errorColor := color.New(color.FgRed, color.Bold).SprintFunc()
 
-	fmt.Fprintf(output, "%s\n", errorColor("✘ Something went wrong:"))
+	mustWrite(output, "%s\n", errorColor("✘ Something went wrong:"))
 	for err != nil {
-		fmt.Fprintf(output, "  %s %v\n", errorColor("→"), err)
+		mustWrite(output, "  %s %v\n", errorColor("→"), err)
 		err = errors.Unwrap(err)
 	}
 }
@@ -160,21 +165,21 @@ func LogErrorChainWithAttrs(err error) {
 	errorColor := color.New(color.FgRed, color.Bold).SprintFunc()
 	argColor := color.New(color.Faint).SprintFunc()
 
-	fmt.Fprintf(output, "%s\n", errorColor("✘ Something went wrong:"))
+	mustWrite(output, "%s\n", errorColor("✘ Something went wrong:"))
 	for err != nil {
 		if tempoErr, ok := err.(*TempoError); ok {
-			fmt.Fprintf(output, "  - Code: %d, Message: %s\n", tempoErr.Code, tempoErr.Message)
+			mustWrite(output, "  - Code: %d, Message: %s\n", tempoErr.Code, tempoErr.Message)
 			if len(tempoErr.Attrs) > 0 {
-				fmt.Fprintf(output, "    Attrs:\n")
+				mustWrite(output, "    Attrs:\n")
 
 				// Sort the metadata keys for consistent output
 				keys := sortedKeys(tempoErr.Attrs)
 				for _, key := range keys {
-					fmt.Fprintf(output, "      %s: %v\n", argColor(key), tempoErr.Attrs[key])
+					mustWrite(output, "      %s: %v\n", argColor(key), tempoErr.Attrs[key])
 				}
 			}
 		} else {
-			fmt.Fprintf(output, "  - %v\n", err)
+			mustWrite(output, "  - %v\n", err)
 		}
 		err = errors.Unwrap(err)
 	}
