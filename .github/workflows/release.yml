@@ -3,7 +3,7 @@ on:
   release:
     types: [created]
 jobs:
-  create-release-notes:
+  release-notes:
     name: release-notes
     runs-on: ubuntu-latest
     environment:
