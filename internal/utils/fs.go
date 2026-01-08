@@ -15,6 +15,29 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// FileSystemOperations defines the interface for filesystem operations.
+// This allows for dependency injection and easier testing.
+type FileSystemOperations interface {
+	FileOrDirExists(path string) (exists bool, isDir bool, err error)
+	FileExists(path string) (bool, error)
+	DirExists(path string) (bool, error)
+	CheckMissingFolders(folders map[string]string) (map[string]string, error)
+	EnsureDirExists(dir string) error
+	ReadFileAsString(filePath string) (string, error)
+	WriteToFile(path string, content []byte) error
+}
+
+// DefaultFileSystem is the default implementation of FileSystemOperations.
+type DefaultFileSystem struct{}
+
+// NewFileSystemOperations creates a new FileSystemOperations instance.
+func NewFileSystemOperations() FileSystemOperations {
+	return &DefaultFileSystem{}
+}
+
+// Ensure DefaultFileSystem implements FileSystemOperations
+var _ FileSystemOperations = (*DefaultFileSystem)(nil)
+
 /* ------------------------------------------------------------------------- */
 /* FILE AND DIRECTORY UTILITIES                                              */
 /* ------------------------------------------------------------------------- */
@@ -323,4 +346,41 @@ func GetModuleName(goModPath string) (string, error) {
 	}
 
 	return parsedModFile.Module.Mod.Path, nil
+}
+
+// Interface implementations for DefaultFileSystem
+
+// FileOrDirExists implements FileSystemOperations.FileOrDirExists.
+func (fs *DefaultFileSystem) FileOrDirExists(path string) (exists bool, isDir bool, err error) {
+	return FileOrDirExists(path)
+}
+
+// FileExists implements FileSystemOperations.FileExists.
+func (fs *DefaultFileSystem) FileExists(path string) (bool, error) {
+	return FileExists(path)
+}
+
+// DirExists implements FileSystemOperations.DirExists.
+func (fs *DefaultFileSystem) DirExists(path string) (bool, error) {
+	return DirExists(path)
+}
+
+// CheckMissingFolders implements FileSystemOperations.CheckMissingFolders.
+func (fs *DefaultFileSystem) CheckMissingFolders(folders map[string]string) (map[string]string, error) {
+	return CheckMissingFolders(folders)
+}
+
+// EnsureDirExists implements FileSystemOperations.EnsureDirExists.
+func (fs *DefaultFileSystem) EnsureDirExists(dir string) error {
+	return EnsureDirExists(dir)
+}
+
+// ReadFileAsString implements FileSystemOperations.ReadFileAsString.
+func (fs *DefaultFileSystem) ReadFileAsString(filePath string) (string, error) {
+	return ReadFileAsString(filePath)
+}
+
+// WriteToFile implements FileSystemOperations.WriteToFile.
+func (fs *DefaultFileSystem) WriteToFile(path string, content []byte) error {
+	return WriteToFile(path, content)
 }
