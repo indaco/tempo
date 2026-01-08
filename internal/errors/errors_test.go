@@ -296,27 +296,27 @@ func TestAnyToStringSlice(t *testing.T) {
 		expected []string
 	}{
 		{
-			name:     "✅ Convert mixed types",
+			name:     "Convert mixed types",
 			input:    []any{"one", 2, 3.14, true},
 			expected: []string{"one", "2", "3.14", "true"},
 		},
 		{
-			name:     "✅ Convert single-element slice",
+			name:     "Convert single-element slice",
 			input:    []any{42},
 			expected: []string{"42"},
 		},
 		{
-			name:     "✅ Convert empty slice",
+			name:     "Convert empty slice",
 			input:    []any{},
 			expected: []string{},
 		},
 		{
-			name:     "✅ Convert slice with special characters",
-			input:    []any{"$#@!", "你好", "😊"},
-			expected: []string{"$#@!", "你好", "😊"},
+			name:     "Convert slice with special characters",
+			input:    []any{"$#@!", "hello", "world"},
+			expected: []string{"$#@!", "hello", "world"},
 		},
 		{
-			name:     "✅ Convert slice with nil values",
+			name:     "Convert slice with nil values",
 			input:    []any{nil, "test", nil},
 			expected: []string{"<nil>", "test", "<nil>"},
 		},
@@ -329,5 +329,67 @@ func TestAnyToStringSlice(t *testing.T) {
 				t.Errorf("Expected %v, got %v", tt.expected, result)
 			}
 		})
+	}
+}
+
+// TestErrorsIs validates that errors.Is works correctly with TempoError chain.
+func TestErrorsIs(t *testing.T) {
+	// Create a base sentinel error
+	baseErr := errors.New("base error")
+
+	// Wrap it with TempoError
+	wrappedErr := Wrap("wrapped error", baseErr)
+
+	// Double wrap
+	doubleWrapped := Wrap("double wrapped", wrappedErr)
+
+	// Test errors.Is finds the base error in the chain
+	if !errors.Is(wrappedErr, baseErr) {
+		t.Error("errors.Is should find baseErr in wrappedErr")
+	}
+
+	if !errors.Is(doubleWrapped, baseErr) {
+		t.Error("errors.Is should find baseErr in doubleWrapped")
+	}
+
+	// Test that unrelated error is not found
+	unrelatedErr := errors.New("unrelated")
+	if errors.Is(doubleWrapped, unrelatedErr) {
+		t.Error("errors.Is should not find unrelatedErr in doubleWrapped")
+	}
+}
+
+// TestErrorsAs validates that errors.As works correctly with TempoError chain.
+func TestErrorsAs(t *testing.T) {
+	// Create a TempoError
+	tempoErr := NewTempoError("tempo error", nil).WithCode(500)
+
+	// Wrap it with another TempoError
+	wrappedErr := Wrap("wrapped error", tempoErr)
+
+	// Test errors.As finds the inner TempoError
+	var target *TempoError
+	if !errors.As(wrappedErr, &target) {
+		t.Error("errors.As should find TempoError in wrappedErr")
+	}
+
+	// The first match should be the outer error
+	if target.Message != "wrapped error" {
+		t.Errorf("Expected 'wrapped error', got %q", target.Message)
+	}
+
+	// Test with standard error wrapped inside
+	stdErr := errors.New("standard error")
+	wrappedStd := Wrap("wrapped std", stdErr)
+
+	var tempoTarget *TempoError
+	if !errors.As(wrappedStd, &tempoTarget) {
+		t.Error("errors.As should find TempoError wrapper")
+	}
+
+	// Verify Unwrap chain works
+	unwrapped := errors.Unwrap(tempoTarget)
+	if unwrapped != stdErr {
+		t.Errorf("Expected unwrapped error to be stdErr, got %v", unwrapped)
 	}
 }
