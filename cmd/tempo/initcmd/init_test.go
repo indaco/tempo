@@ -54,14 +54,14 @@ func TestInitCommand(t *testing.T) {
 			}
 
 			// Run the init command
-			app := &cli.Command{}
-			app.Commands = []*cli.Command{
+			cliApp := &cli.Command{}
+			cliApp.Commands = []*cli.Command{
 				SetupInitCommand(cliCtx),
 			}
 
 			output, err := testhelpers.CaptureStdout(func() {
 				args := []string{"tempo", "init", "--base-folder", baseFolder}
-				err := app.Run(context.Background(), args)
+				err := cliApp.Run(context.Background(), args)
 				if err != nil {
 					t.Fatalf("Unexpected error: %v", err)
 				}
@@ -106,13 +106,13 @@ func TestInitCommand_FailsOnExistingConfigFile(t *testing.T) {
 		t.Fatalf("Failed to create config file: %v", err)
 	}
 
-	app := &cli.Command{}
-	app.Commands = []*cli.Command{
+	cliApp := &cli.Command{}
+	cliApp.Commands = []*cli.Command{
 		SetupInitCommand(cliCtx),
 	}
 
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err = app.Run(context.Background(), args)
+	err = cliApp.Run(context.Background(), args)
 
 	if err == nil {
 		t.Fatal("Expected error, but got none")
@@ -138,8 +138,8 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{}
-	app.Commands = []*cli.Command{
+	cliApp := &cli.Command{}
+	cliApp.Commands = []*cli.Command{
 		SetupInitCommand(cliCtx),
 	}
 
@@ -172,7 +172,7 @@ func TestInitCommand_FailsOnUnwritableConfigFile(t *testing.T) {
 
 	// Step 3: Run `init` again, expecting a write error
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err = app.Run(context.Background(), args)
+	err = cliApp.Run(context.Background(), args)
 
 	if err == nil {
 		t.Fatal("Expected error due to unwritable file, but got none")
@@ -224,13 +224,13 @@ func TestInitCommand_UsesDefaultTemplateExtensions(t *testing.T) {
 	// Override config to simulate missing extensions
 	cliCtx.Config.Templates.Extensions = []string{} // Force empty slice
 
-	app := &cli.Command{}
-	app.Commands = []*cli.Command{
+	cliApp := &cli.Command{}
+	cliApp.Commands = []*cli.Command{
 		SetupInitCommand(cliCtx),
 	}
 
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err := app.Run(context.Background(), args)
+	err := cliApp.Run(context.Background(), args)
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -380,8 +380,8 @@ func TestInitCommand_FailsOnConfigFileCheckError(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{}
-	app.Commands = []*cli.Command{
+	cliApp := &cli.Command{}
+	cliApp.Commands = []*cli.Command{
 		SetupInitCommand(cliCtx),
 	}
 
@@ -393,7 +393,7 @@ func TestInitCommand_FailsOnConfigFileCheckError(t *testing.T) {
 
 	// Step 2: Run `init`, expecting an error
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err := app.Run(context.Background(), args)
+	err := cliApp.Run(context.Background(), args)
 	if err == nil {
 		t.Fatal("Expected error due to file existence check failure, but got none")
 	}
@@ -413,8 +413,8 @@ func TestInitCommand_FailsOnMissingGoMod(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{}
-	app.Commands = []*cli.Command{
+	cliApp := &cli.Command{}
+	cliApp.Commands = []*cli.Command{
 		SetupInitCommand(cliCtx),
 	}
 
@@ -428,7 +428,7 @@ func TestInitCommand_FailsOnMissingGoMod(t *testing.T) {
 
 	// Run `init`, expecting an error due to missing go.mod
 	args := []string{"tempo", "init", "--base-folder", tempDir}
-	err := app.Run(context.Background(), args)
+	err := cliApp.Run(context.Background(), args)
 
 	if err == nil {
 		t.Fatal("Expected error due to missing go.mod file, but got none")

@@ -8,13 +8,36 @@ import (
 	"github.com/indaco/tempo/internal/utils"
 )
 
+// ActionProcessor defines the interface for processing actions.
+// This allows for dependency injection and easier testing.
+type ActionProcessor interface {
+	ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error
+}
+
+// DefaultActionProcessor is the default implementation of ActionProcessor.
+type DefaultActionProcessor struct{}
+
+// NewActionProcessor creates a new ActionProcessor instance.
+func NewActionProcessor() ActionProcessor {
+	return &DefaultActionProcessor{}
+}
+
+// ProcessActions implements ActionProcessor.ProcessActions.
+func (p *DefaultActionProcessor) ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+	return ProcessActions(logger, actions, data)
+}
+
+// Ensure DefaultActionProcessor implements ActionProcessor
+var _ ActionProcessor = (*DefaultActionProcessor)(nil)
+
 // Map of action types to their respective handlers.
 var actionHandlers = map[string]ActionHandler{
 	CopyActionId:   &CopyAction{},
 	RenderActionId: &RenderAction{},
 }
 
-// Default function implementation
+// Default function implementation (kept for backward compatibility)
+// Deprecated: Use ActionProcessor interface instead for new code.
 var ProcessActionsFunc = ProcessActions
 
 // ProcessActions processes a list of actions using the appropriate handlers.

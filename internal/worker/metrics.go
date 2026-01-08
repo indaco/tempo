@@ -133,11 +133,12 @@ func (m *Metrics) PrintSummary(errors []ProcessingError, skippedFiles []Processi
 }
 
 // ToJSONFile writes the summary to a JSON file.
-func (m *Metrics) ToJSONFile(errors []ProcessingError, skippedFiles []ProcessingError, outputPath string) error {
+// Returns any write or close errors that occur.
+func (m *Metrics) ToJSONFile(errors []ProcessingError, skippedFiles []ProcessingError, outputPath string) (err error) {
 	// Use SummaryAsString to get JSON output
-	jsonData, err := m.summaryAsJSON(errors, skippedFiles)
-	if err != nil {
-		return err
+	jsonData, jsonErr := m.summaryAsJSON(errors, skippedFiles)
+	if jsonErr != nil {
+		return jsonErr
 	}
 
 	// Write to JSON file
@@ -146,11 +147,10 @@ func (m *Metrics) ToJSONFile(errors []ProcessingError, skippedFiles []Processing
 		return err
 	}
 
+	// Use named return to capture close errors
 	defer func() {
-		if err := file.Close(); err != nil {
-			// Log the close error, but don't override the main return value
-			// since this is a read-only operation and close errors are rare
-			_ = err
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			err = closeErr
 		}
 	}()
 

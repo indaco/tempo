@@ -90,83 +90,73 @@ func TestResolvePath(t *testing.T) {
 }
 
 func TestFileOrDirExists(t *testing.T) {
-	// Temporary paths setup
-	tempFile := "testfile.tmp"
-	tempDir := "testdir"
+	t.Run("PathIsFile", testFileOrDirExists_PathIsFile)
+	t.Run("PathIsDirectory", testFileOrDirExists_PathIsDirectory)
+	t.Run("PathDoesNotExist", testFileOrDirExists_PathDoesNotExist)
+	t.Run("InvalidPath", testFileOrDirExists_InvalidPath)
+}
+
+func testFileOrDirExists_PathIsFile(t *testing.T) {
+	tempDir := t.TempDir()
+	tempFile := filepath.Join(tempDir, "testfile.tmp")
+
+	file, err := os.Create(tempFile)
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatalf("failed to close temp file: %v", err)
+	}
+
+	exists, isDir, err := FileOrDirExists(tempFile)
+	if err != nil {
+		t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", tempFile, err)
+	}
+	if !exists || isDir {
+		t.Errorf("FileOrDirExists(%q) = (%t, %t); want (true, false)", tempFile, exists, isDir)
+	}
+}
+
+func testFileOrDirExists_PathIsDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+	subDir := filepath.Join(tempDir, "testdir")
+
+	if err := os.Mkdir(subDir, 0755); err != nil {
+		t.Fatalf("failed to create temp directory: %v", err)
+	}
+
+	exists, isDir, err := FileOrDirExists(subDir)
+	if err != nil {
+		t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", subDir, err)
+	}
+	if !exists || !isDir {
+		t.Errorf("FileOrDirExists(%q) = (%t, %t); want (true, true)", subDir, exists, isDir)
+	}
+}
+
+func testFileOrDirExists_PathDoesNotExist(t *testing.T) {
+	tempDir := t.TempDir()
+	nonExistentPath := filepath.Join(tempDir, "nonexistent.tmp")
+
+	exists, isDir, err := FileOrDirExists(nonExistentPath)
+	if err != nil {
+		t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", nonExistentPath, err)
+	}
+	if exists || isDir {
+		t.Errorf("FileOrDirExists(%q) = (%t, %t); want (false, false)", nonExistentPath, exists, isDir)
+	}
+}
+
+func testFileOrDirExists_InvalidPath(t *testing.T) {
 	invalidPath := ""
 
-	// Cleanup function to ensure temporary files and directories are removed
-	cleanup := func() {
-		if err := os.Remove(tempFile); err != nil && !os.IsNotExist(err) {
-			t.Logf("Failed to remove temp file %s: %v", tempFile, err)
-		}
-		if err := os.Remove(tempDir); err != nil && !os.IsNotExist(err) {
-			t.Logf("Failed to remove temp directory %s: %v", tempDir, err)
-		}
+	exists, isDir, err := FileOrDirExists(invalidPath)
+	if err == nil {
+		t.Errorf("FileOrDirExists(%q) returned no error; want error", invalidPath)
 	}
-	defer cleanup()
-
-	// Test case: Path is a file
-	t.Run("PathIsFile", func(t *testing.T) {
-		// Create a temporary file
-		file, err := os.Create(tempFile)
-		if err != nil {
-			t.Fatalf("failed to create temp file: %v", err)
-		}
-		if err := file.Close(); err != nil {
-			t.Fatalf("failed to close temp file: %v", err)
-		}
-
-		// Check if the file exists and is not a directory
-		exists, isDir, err := FileOrDirExists(tempFile)
-		if err != nil {
-			t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", tempFile, err)
-		}
-		if !exists || isDir {
-			t.Errorf("FileOrDirExists(%q) = (%t, %t); want (true, false)", tempFile, exists, isDir)
-		}
-	})
-
-	// Test case: Path is a directory
-	t.Run("PathIsDirectory", func(t *testing.T) {
-		// Create a temporary directory
-		err := os.Mkdir(tempDir, 0755)
-		if err != nil {
-			t.Fatalf("failed to create temp directory: %v", err)
-		}
-
-		// Check if the directory exists
-		exists, isDir, err := FileOrDirExists(tempDir)
-		if err != nil {
-			t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", tempDir, err)
-		}
-		if !exists || !isDir {
-			t.Errorf("FileOrDirExists(%q) = (%t, %t); want (true, true)", tempDir, exists, isDir)
-		}
-	})
-
-	// Test case: Nonexistent path
-	t.Run("PathDoesNotExist", func(t *testing.T) {
-		nonExistentPath := "nonexistent.tmp"
-		exists, isDir, err := FileOrDirExists(nonExistentPath)
-		if err != nil {
-			t.Errorf("FileOrDirExists(%q) returned error: %v; want nil", nonExistentPath, err)
-		}
-		if exists || isDir {
-			t.Errorf("FileOrDirExists(%q) = (%t, %t); want (false, false)", nonExistentPath, exists, isDir)
-		}
-	})
-
-	// Test case: Invalid path
-	t.Run("InvalidPath", func(t *testing.T) {
-		exists, isDir, err := FileOrDirExists(invalidPath)
-		if err == nil {
-			t.Errorf("FileOrDirExists(%q) returned no error; want error", invalidPath)
-		}
-		if exists || isDir {
-			t.Errorf("FileOrDirExists(%q) = (%t, %t); want (false, false)", invalidPath, exists, isDir)
-		}
-	})
+	if exists || isDir {
+		t.Errorf("FileOrDirExists(%q) = (%t, %t); want (false, false)", invalidPath, exists, isDir)
+	}
 }
 
 func TestFileExists(t *testing.T) {

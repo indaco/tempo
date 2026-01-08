@@ -7,18 +7,22 @@ on:
     branches: '**'
   workflow_dispatch:
 
+env:
+  GO_VERSION: '1.25'
+
 jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
           check-latest: true
 
       - name: Install Go modules
@@ -27,10 +31,12 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
+          install-mode: binary
+          skip-cache: false
 
   test:
     name: test
@@ -39,12 +45,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
           check-latest: true
 
       - name: Install Go modules

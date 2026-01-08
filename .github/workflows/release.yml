@@ -2,6 +2,10 @@ name: Release
 on:
   release:
     types: [created]
+
+env:
+  GO_VERSION: '1.25'
+
 jobs:
   release-notes:
     name: release-notes
@@ -11,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

@@ -406,19 +406,28 @@ func handleSummary(
 	return nil
 }
 
-// handleError sends errors to the error channel without blocking.
+// handleError sends errors to the error channel.
+// With large buffer sizes (numWorkers * 100), blocking is unlikely.
+// Uses non-blocking send as a safety fallback.
 func handleError(manager *worker.WorkerPoolManager, path string, err error) {
 	select {
 	case manager.ErrorsChan <- worker.FormatError(path, err):
-	default: // Avoid blocking if the channel is closed
+		// Successfully sent
+	default:
+		// Buffer full - extremely unlikely with large buffers
+		// Log would go here in production, but we avoid blocking
 	}
 }
 
 // handleSkip sends skip reasons to the skipped channel.
+// With large buffer sizes (numWorkers * 100), blocking is unlikely.
+// Uses non-blocking send as a safety fallback.
 func handleSkip(ch chan<- worker.ProcessingError, skipped worker.SkippedFile) {
 	select {
 	case ch <- worker.FormatSkipReason(skipped):
-	default: // Prevent blocking
+		// Successfully sent
+	default:
+		// Buffer full - extremely unlikely with large buffers
 	}
 }
 

@@ -1,23 +1,23 @@
 module github.com/indaco/tempo
 
-go 1.24.0
+go 1.25
 
-toolchain go1.24.7
+toolchain go1.25.5
 
 require (
-	github.com/evanw/esbuild v0.27.0
+	github.com/evanw/esbuild v0.27.2
 	github.com/fatih/color v1.18.0
 	github.com/indaco/tempo-api v0.0.0-20250217085709-fd62d35b4d54
 	github.com/urfave/cli/v3 v3.6.1
-	golang.org/x/mod v0.30.0
-	golang.org/x/sync v0.18.0
+	golang.org/x/mod v0.31.0
+	golang.org/x/sync v0.19.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
 )
 
 // replace (

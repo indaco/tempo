@@ -117,10 +117,14 @@ func TestWorkerPool_SkippedAndProcessedFiles(t *testing.T) {
 		t.Fatal("[ERROR] WorkerPool did not complete within timeout")
 	}
 
-	// Step 7: Collect Skipped Files BEFORE Validating
+	// Step 7: Close channels after workers complete
+	close(manager.ErrorsChan)
+	close(manager.SkippedChan)
+
+	// Step 8: Collect Skipped Files BEFORE Validating
 	collectedSkipped := CollectErrors(manager.SkippedChan)
 
-	// Step 8: Validate skipped files
+	// Step 9: Validate skipped files
 	validateSkippedFiles(t, outputDir, collectedSkipped, manager.Metrics)
 }
 

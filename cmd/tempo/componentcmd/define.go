@@ -78,7 +78,7 @@ func runComponentDefineSubCommand(cmdCtx *app.AppContext) func(ctx context.Conte
 		if err != nil {
 			return err
 		} else if exists {
-			utils.CheckEntityForDefine("component", outputPath, data.Force, cmdCtx.Logger)
+			helpers.CheckEntityForDefine("component", outputPath, data.Force, cmdCtx.Logger)
 
 			if !data.Force {
 				return nil

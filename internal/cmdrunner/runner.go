@@ -6,10 +6,18 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/indaco/tempo/internal/validation"
 )
 
 // RunCommandWithTimeout executes a command with a specified timeout.
+// It validates the directory to prevent command execution in unsafe locations.
 func RunCommandWithTimeout(dir string, timeout time.Duration, command string, args ...string) error {
+	// Validate directory to prevent command injection
+	if err := validation.ValidateDirectory(dir); err != nil {
+		return fmt.Errorf("invalid directory: %w", err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -34,8 +42,14 @@ func RunCommand(dir string, command string, args ...string) error {
 }
 
 // RunCommandOutput executes a command and returns its output while enforcing a timeout.
+// It validates the directory to prevent command execution in unsafe locations.
 func RunCommandOutput(dir string, command string, args ...string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // Adjust timeout
+	// Validate directory to prevent command injection
+	if err := validation.ValidateDirectory(dir); err != nil {
+		return "", fmt.Errorf("invalid directory: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, command, args...)

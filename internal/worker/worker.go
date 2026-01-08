@@ -98,10 +98,12 @@ func processFile(job Job, m *WorkerPoolManager, trackExecution bool) error {
 
 // recordExecutionTime safely stores job execution time in WorkerPoolManager.
 func recordExecutionTime(m *WorkerPoolManager, filePath string, duration time.Duration) {
+	// Store execution time with mutex protection
 	m.mu.Lock()
 	m.ExecutionTimes = append(m.ExecutionTimes, JobExecutionTime{FilePath: filePath, Duration: duration})
 	m.mu.Unlock()
 
+	// Print outside mutex to avoid holding lock during I/O
 	fmt.Printf("Processed %s (took %v)\n", filePath, duration)
 }
 

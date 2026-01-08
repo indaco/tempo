@@ -88,7 +88,7 @@ func runVariantDefineSubCommand(cmdCtx app.AppContext) func(ctx context.Context,
 		if err != nil {
 			return err
 		} else if exists {
-			utils.CheckEntityForDefine("variant", outputPath, data.Force, cmdCtx.Logger)
+			helpers.CheckEntityForDefine("variant", outputPath, data.Force, cmdCtx.Logger)
 
 			if !data.Force {
 				return nil

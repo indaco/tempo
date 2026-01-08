@@ -42,7 +42,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -50,7 +50,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 
 	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component Setup", func(t *testing.T) {
-		_, err := testutils.SetupComponentDefine(app, t)
+		_, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -69,7 +69,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 				"tempo", "component", "new",
 				"--name", "button",
 			}
-			if err := app.Run(context.Background(), args); err != nil {
+			if err := cliApp.Run(context.Background(), args); err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
 		})
@@ -113,7 +113,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -121,7 +121,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 
 	// Step 1: Run "component define"
 	t.Run("Define Component Setup", func(t *testing.T) {
-		_, err := testutils.SetupComponentDefine(app, t)
+		_, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -138,7 +138,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 				"--name", "custom-component",
 				"--assets", cfg.App.AssetsDir,
 			}
-			if err := app.Run(context.Background(), args); err != nil {
+			if err := cliApp.Run(context.Background(), args); err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
 		})
@@ -261,7 +261,7 @@ func TestComponentCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -273,7 +273,7 @@ func TestComponentCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 	}
 
 	output, err := testhelpers.CaptureStdout(func() {
-		err := app.Run(context.Background(), args)
+		err := cliApp.Run(context.Background(), args)
 		if err != nil {
 			t.Fatalf("Command failed: %v", err)
 		}
@@ -460,7 +460,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -468,7 +468,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 
 	// Step 1: Run "component define" to set up the required folder structure and files
 	t.Run("Define Component", func(t *testing.T) {
-		_, err := testutils.SetupComponentDefine(app, t)
+		_, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -487,7 +487,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 				"tempo", "component", "new",
 				"--name", "button",
 			}
-			if err := app.Run(context.Background(), args); err != nil {
+			if err := cliApp.Run(context.Background(), args); err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
 		})
@@ -515,7 +515,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 				"tempo", "component", "new",
 				"--name", "button",
 			}
-			if err := app.Run(context.Background(), args); err != nil {
+			if err := cliApp.Run(context.Background(), args); err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
 		})
@@ -570,7 +570,7 @@ func TestComponentCommand_NewSubCmd_CorruptedActionsFile(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -580,7 +580,7 @@ func TestComponentCommand_NewSubCmd_CorruptedActionsFile(t *testing.T) {
 		"--name", "corrupted",
 	}
 
-	err := app.Run(context.Background(), args)
+	err := cliApp.Run(context.Background(), args)
 	if err == nil {
 		t.Fatalf("Expected error due to corrupted actions file, but got nil")
 	}
@@ -644,7 +644,7 @@ func TestComponentCommand_NewSubCmd_UnwritableDirectory(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -655,7 +655,7 @@ func TestComponentCommand_NewSubCmd_UnwritableDirectory(t *testing.T) {
 		"--force", // Ensure it tries to write files
 	}
 
-	err := app.Run(context.Background(), args)
+	err := cliApp.Run(context.Background(), args)
 	if err == nil {
 		t.Fatalf("Expected error due to unwritable directory, but got nil")
 	}
