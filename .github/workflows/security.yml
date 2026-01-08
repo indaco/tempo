@@ -1,15 +1,22 @@
-name: Test Coverage
+name: security
 
 on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 6:00 AM UTC
   push:
-    branches: [main]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
   GO_VERSION: '1.25'
 
 jobs:
-  coverage:
+  govulncheck:
+    name: govulncheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,10 +40,9 @@ jobs:
         with:
           tool: just
 
-      - name: Run test
-        run: just test-coverage
+      - name: Install govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run govulncheck
+        run: just security-scan
