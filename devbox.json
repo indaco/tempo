@@ -1,11 +1,11 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.0/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
   "packages": [
     "git@latest",
-    "go@1.24",
+    "go@latest",
     "golangci-lint@latest",
-    "go-task@latest",
-    "gnumake@latest"
+    "just@latest",
+    "prek@latest"
   ],
   "env": {
     "GOPATH": "$HOME/go/",
