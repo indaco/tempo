@@ -10,6 +10,7 @@ import (
 
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
+	"github.com/indaco/tempo/internal/validation"
 )
 
 func TestDefaultCloneOrUpdate(t *testing.T) {
@@ -199,6 +200,127 @@ func TestFailCloneRepo(t *testing.T) {
 
 	if !matched {
 		t.Fatalf("Expected error containing one of %q, got: %q", expectedErrors, err.Error())
+	}
+}
+
+func TestCloneRepoValidation(t *testing.T) {
+	mockLogger := logger.NewDefaultLogger()
+
+	tests := []struct {
+		name    string
+		url     string
+		path    string
+		wantErr error
+	}{
+		{
+			name:    "invalid URL scheme (file)",
+			url:     "file:///etc/passwd",
+			path:    "repo",
+			wantErr: validation.ErrInvalidGitURL,
+		},
+		{
+			name:    "invalid URL scheme (http)",
+			url:     "http://github.com/user/repo.git",
+			path:    "repo",
+			wantErr: validation.ErrInvalidGitURL,
+		},
+		{
+			name:    "flag injection in URL",
+			url:     "-u./payload",
+			path:    "repo",
+			wantErr: validation.ErrInvalidGitURL,
+		},
+		{
+			name:    "path traversal",
+			url:     "https://github.com/user/repo.git",
+			path:    "../../../etc/passwd",
+			wantErr: validation.ErrPathTraversal,
+		},
+		{
+			name:    "flag injection in path",
+			url:     "https://github.com/user/repo.git",
+			path:    "-rf",
+			wantErr: validation.ErrInvalidPath,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CloneRepo(tt.url, tt.path, mockLogger)
+			if err == nil {
+				t.Errorf("CloneRepo(%q, %q) = nil, want error", tt.url, tt.path)
+				return
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("CloneRepo(%q, %q) error = %v, want %v", tt.url, tt.path, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestForceRecloneValidation(t *testing.T) {
+	mockLogger := logger.NewDefaultLogger()
+
+	tests := []struct {
+		name    string
+		url     string
+		path    string
+		wantErr error
+	}{
+		{
+			name:    "invalid URL scheme",
+			url:     "file:///etc/passwd",
+			path:    "repo",
+			wantErr: validation.ErrInvalidGitURL,
+		},
+		{
+			name:    "path traversal",
+			url:     "https://github.com/user/repo.git",
+			path:    "../../../etc",
+			wantErr: validation.ErrPathTraversal,
+		},
+		{
+			name:    "flag injection in path",
+			url:     "https://github.com/user/repo.git",
+			path:    "-rf",
+			wantErr: validation.ErrInvalidPath,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ForceReclone(tt.url, tt.path, mockLogger)
+			if err == nil {
+				t.Errorf("ForceReclone(%q, %q) = nil, want error", tt.url, tt.path)
+				return
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("ForceReclone(%q, %q) error = %v, want %v", tt.url, tt.path, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// TestGitOperationsInterface verifies the GitOperations interface works correctly.
+func TestGitOperationsInterface(t *testing.T) {
+	// Verify NewGitOperations returns a valid implementation
+	ops := NewGitOperations()
+	if ops == nil {
+		t.Fatal("NewGitOperations() returned nil")
+	}
+
+	// Verify it implements the interface (type assertion)
+	_ = GitOperations(ops)
+
+	// Test IsValidRepo with a non-existent path
+	if ops.IsValidRepo("/non/existent/path") {
+		t.Error("IsValidRepo should return false for non-existent path")
+	}
+
+	// Test with a temp directory (not a git repo)
+	tempDir := t.TempDir()
+	if ops.IsValidRepo(tempDir) {
+		t.Error("IsValidRepo should return false for non-git directory")
 	}
 }
 
