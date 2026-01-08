@@ -145,9 +145,15 @@ func DerivedFolderPaths(baseFolder string) (TemplatesDir, ActionsDir string) {
 // This function updates the default configuration with any non-empty values
 // provided in the fileConfig.
 func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
-	/* --------------------------------------------------------------------- */
-	/* ROOT CONFIG                                                           */
-	/* --------------------------------------------------------------------- */
+	mergeRootConfig(defaultConfig, fileConfig)
+	mergeAppConfig(defaultConfig, fileConfig)
+	mergeProcessorConfig(defaultConfig, fileConfig)
+	mergeTemplatesConfig(defaultConfig, fileConfig)
+	return defaultConfig
+}
+
+// mergeRootConfig merges root-level configuration settings.
+func mergeRootConfig(defaultConfig, fileConfig *Config) {
 	if fileConfig.TempoRoot != "" {
 		resolvedRoot, err := utils.ResolvePath(fileConfig.TempoRoot)
 		if err == nil {
@@ -156,17 +162,16 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 			defaultConfig.Paths.ActionsDir = filepath.Join(resolvedRoot, "actions")
 		}
 	}
+}
 
-	/* --------------------------------------------------------------------- */
-	/* APP CONFIG                                                            */
-	/* --------------------------------------------------------------------- */
+// mergeAppConfig merges application-specific configuration settings.
+func mergeAppConfig(defaultConfig, fileConfig *Config) {
 	if fileConfig.App.GoModule != "" {
 		defaultConfig.App.GoModule = fileConfig.App.GoModule
 	}
 	if fileConfig.App.GoPackage != "" {
-		resolvedPackage, err := utils.ResolvePath(fileConfig.App.GoPackage)
-		if err == nil {
-			defaultConfig.App.GoPackage = resolvedPackage
+		if resolved, err := utils.ResolvePath(fileConfig.App.GoPackage); err == nil {
+			defaultConfig.App.GoPackage = resolved
 		}
 	}
 	if fileConfig.App.WithJs {
@@ -176,25 +181,24 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 		defaultConfig.App.CssLayer = fileConfig.App.CssLayer
 	}
 	if fileConfig.App.AssetsDir != "" {
-		resolvedAssetsDir, err := utils.ResolvePath(fileConfig.App.AssetsDir)
-		if err == nil {
-			defaultConfig.App.AssetsDir = resolvedAssetsDir
+		if resolved, err := utils.ResolvePath(fileConfig.App.AssetsDir); err == nil {
+			defaultConfig.App.AssetsDir = resolved
 		}
 	}
+}
 
-	/* --------------------------------------------------------------------- */
-	/* PROCESSOR CONFIG                                                      */
-	/* --------------------------------------------------------------------- */
+// mergeProcessorConfig merges processor configuration settings.
+func mergeProcessorConfig(defaultConfig, fileConfig *Config) {
 	if fileConfig.Processor.Workers != 0 {
 		defaultConfig.Processor.Workers = fileConfig.Processor.Workers
 	}
 	if fileConfig.Processor.SummaryFormat != "" {
 		defaultConfig.Processor.SummaryFormat = fileConfig.Processor.SummaryFormat
 	}
+}
 
-	/* --------------------------------------------------------------------- */
-	/* TEMPLATES CONFIG                                                      */
-	/* --------------------------------------------------------------------- */
+// mergeTemplatesConfig merges template configuration settings.
+func mergeTemplatesConfig(defaultConfig, fileConfig *Config) {
 	if len(fileConfig.Templates.Extensions) > 0 {
 		defaultConfig.Templates.Extensions = fileConfig.Templates.Extensions
 	}
@@ -207,8 +211,6 @@ func ensureDefaults(defaultConfig, fileConfig *Config) *Config {
 	if fileConfig.Templates.FunctionProviders != nil {
 		defaultConfig.Templates.FunctionProviders = fileConfig.Templates.FunctionProviders
 	} else {
-		defaultConfig.Templates.FunctionProviders = []TemplateFuncProvider{} // Ensure it's an empty slice, not nil
+		defaultConfig.Templates.FunctionProviders = []TemplateFuncProvider{}
 	}
-
-	return defaultConfig
 }
