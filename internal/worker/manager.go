@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -48,15 +49,23 @@ type WorkerPoolManager struct {
 }
 
 // NewWorkerPoolManager initializes a worker pool manager.
+// Paths are pre-cleaned to avoid repeated cleaning in hot loops.
 func NewWorkerPoolManager(opts WorkerPoolOptions) *WorkerPoolManager {
+	// Use larger buffer sizes to prevent data drops during high-throughput processing
+	bufferSize := max(opts.NumWorkers*100, 100)
+
+	// Pre-clean paths once to avoid repeated allocations in hot paths
+	inputDir := filepath.Clean(opts.InputDir)
+	outputDir := filepath.Clean(opts.OutputDir)
+
 	return &WorkerPoolManager{
-		JobChan:        make(chan Job, opts.NumWorkers*50),
-		ErrorsChan:     make(chan ProcessingError, opts.NumWorkers),
-		SkippedChan:    make(chan ProcessingError, opts.NumWorkers),
+		JobChan:        make(chan Job, bufferSize),
+		ErrorsChan:     make(chan ProcessingError, bufferSize),
+		SkippedChan:    make(chan ProcessingError, bufferSize),
 		Metrics:        NewMetrics(),
 		Factory:        &processor.ProcessorFactory{Production: opts.IsProduction},
-		InputDir:       opts.InputDir,
-		OutputDir:      opts.OutputDir,
+		InputDir:       inputDir,
+		OutputDir:      outputDir,
 		MarkerName:     opts.MarkerName,
 		ExecutionTimes: make([]JobExecutionTime, 0, opts.NumWorkers*10),
 	}
