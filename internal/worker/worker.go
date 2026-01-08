@@ -24,7 +24,9 @@ func WorkerPool(ctx context.Context, m *WorkerPoolManager, trackExecution bool) 
 			}
 
 			if skipReason, skipType := shouldSkipFile(job, m.InputDir, m.OutputDir); skipReason != "" {
-				m.Metrics.IncrementSkippedFile()
+				// Note: Do not increment skipped count here - the collector goroutine
+				// in sync.go handles counting all skipped files (both from workers
+				// and from queueing) to avoid double-counting.
 				select {
 				case m.SkippedChan <- FormatSkipReason(SkippedFile{
 					Source:    job.InputPath,
