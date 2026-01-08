@@ -1,4 +1,4 @@
-package utils
+package helpers
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
 )
 
-// CheckEntityForNew ensures that an entity does not already exist before creating a new one.
+// CheckEntityForNew logs a warning or info message when creating a new entity that already exists.
+// It handles both component and variant entity types with appropriate path formatting.
 func CheckEntityForNew(entityType, entityName, outputPath string, force bool, logr logger.LoggerInterface) {
 	// Select logging function and action message based on `force` flag
 	logFunc, action := logr.Warning, "Use '--force' to overwrite it. Any changes will be lost."
@@ -30,7 +31,7 @@ func CheckEntityForNew(entityType, entityName, outputPath string, force bool, lo
 	logFunc(msg).WithAttrs("path", path)
 }
 
-// CheckEntityForDefine ensures that an entity exists before defining it.
+// CheckEntityForDefine logs a warning or info message when defining templates that already exist.
 func CheckEntityForDefine(entityType, outputPath string, force bool, logr logger.LoggerInterface) {
 	// Select logging function and action message based on `force` flag
 	logFunc, action := logr.Warning, "Use '--force' to overwrite them. Any changes will be lost."

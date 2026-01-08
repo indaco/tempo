@@ -119,7 +119,7 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 		if exists, err := utils.FileExistsFunc(outputPath); err != nil {
 			return err
 		} else if exists {
-			utils.CheckEntityForNew("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
+			helpers.CheckEntityForNew("variant", data.VariantName, outputPath, data.Force, cmdCtx.Logger)
 
 			if !data.Force {
 				return nil

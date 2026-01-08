@@ -42,17 +42,17 @@ func TestComponentCommand_DefineSubComd(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
 	}
 	// Redirect CLI output to buffer
 	var buf bytes.Buffer
-	app.Writer = &buf
+	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		output, err := testutils.SetupComponentDefine(app, t)
+		output, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -99,18 +99,18 @@ func TestComponentCommand_DefineSubComd_WithDryRun(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
 	}
 	// Redirect CLI output to buffer
 	var buf bytes.Buffer
-	app.Writer = &buf
+	cliApp.Writer = &buf
 
 	t.Run("Component dry-run", func(t *testing.T) {
 		args := []string{"tempo", "component", "define", "--dry-run"}
-		err := app.Run(context.Background(), args)
+		err := cliApp.Run(context.Background(), args)
 		// Validate error expectation
 		if err != nil {
 			t.Fatalf("Unexpected error state: %v", err)
@@ -160,17 +160,17 @@ func TestComponentCommand_DefineSubComd_AlreadyExists(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
 	}
 	// Redirect CLI output to buffer
 	var buf bytes.Buffer
-	app.Writer = &buf
+	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		output, err := testutils.SetupComponentDefine(app, t)
+		output, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -190,7 +190,7 @@ func TestComponentCommand_DefineSubComd_AlreadyExists(t *testing.T) {
 	})
 
 	t.Run("Component already exists", func(t *testing.T) {
-		output, err := testutils.SetupComponentDefine(app, t)
+		output, err := testutils.SetupComponentDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
@@ -227,7 +227,7 @@ func TestComponentCommand_DefineSubComd_NoConfigFile(t *testing.T) {
 		CWD:    tempDir,
 	}
 
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -235,7 +235,7 @@ func TestComponentCommand_DefineSubComd_NoConfigFile(t *testing.T) {
 
 	t.Run("No Config File", func(t *testing.T) {
 		args := []string{"tempo", "component", "define"}
-		err := app.Run(context.Background(), args)
+		err := cliApp.Run(context.Background(), args)
 		if err == nil {
 			t.Fatal("Expected error due to missing config file, but got nil")
 		}
@@ -270,7 +270,7 @@ func TestComponentCommand_DefineSubCmd_PermissionError(t *testing.T) {
 		t.Fatalf("Failed to create mock config file: %v", err)
 	}
 
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			SetupComponentCommand(cliCtx),
 		},
@@ -293,7 +293,7 @@ func TestComponentCommand_DefineSubCmd_PermissionError(t *testing.T) {
 
 	t.Run("Permission Error", func(t *testing.T) {
 		args := []string{"tempo", "component", "define"}
-		err := app.Run(context.Background(), args)
+		err := cliApp.Run(context.Background(), args)
 
 		if err == nil {
 			t.Fatal("Expected permission error, but got nil")

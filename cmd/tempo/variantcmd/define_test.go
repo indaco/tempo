@@ -40,7 +40,7 @@ func TestVariantCommand_Define(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			componentcmd.SetupComponentCommand(cliCtx),
 			SetupVariantCommand(cliCtx),
@@ -48,12 +48,12 @@ func TestVariantCommand_Define(t *testing.T) {
 	}
 	// Redirect CLI output to buffer
 	var buf bytes.Buffer
-	app.Writer = &buf
+	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
 		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "component", "define"}
-			err := app.Run(context.Background(), args)
+			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
 			if err != nil {
 				t.Fatalf("Unexpected error state: %v", err)
@@ -76,7 +76,7 @@ func TestVariantCommand_Define(t *testing.T) {
 	t.Run("Variant normal run", func(t *testing.T) {
 		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "variant", "define"}
-			err := app.Run(context.Background(), args)
+			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
 			if err != nil {
 				t.Fatalf("Unexpected error state: %v", err)
@@ -125,7 +125,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	}
 
 	// Prepare CLI app
-	app := &cli.Command{
+	cliApp := &cli.Command{
 		Commands: []*cli.Command{
 			componentcmd.SetupComponentCommand(cliCtx),
 			SetupVariantCommand(cliCtx),
@@ -133,12 +133,12 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	}
 	// Redirect CLI output to buffer
 	var buf bytes.Buffer
-	app.Writer = &buf
+	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
 		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "component", "define"}
-			err := app.Run(context.Background(), args)
+			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
 			if err != nil {
 				t.Fatalf("Unexpected error state: %v", err)
@@ -161,7 +161,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	t.Run("Variant normal run", func(t *testing.T) {
 		_, err := testhelpers.CaptureStdout(func() {
 			args := []string{"tempo", "variant", "define"}
-			err := app.Run(context.Background(), args)
+			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
 			if err != nil {
 				t.Fatalf("Unexpected error state: %v", err)
@@ -181,7 +181,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	})
 
 	t.Run("Variant already exists", func(t *testing.T) {
-		output, err := testutils.SetupVariantDefine(app, t)
+		output, err := testutils.SetupVariantDefine(cliApp, t)
 		if err != nil {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}

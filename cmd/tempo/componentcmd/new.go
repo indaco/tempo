@@ -106,7 +106,7 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 		if exists, err = utils.DirExists(outputPath); err != nil {
 			return err
 		} else if exists {
-			utils.CheckEntityForNew("component", data.ComponentName, data.GoPackage, data.Force, cmdCtx.Logger)
+			helpers.CheckEntityForNew("component", data.ComponentName, data.GoPackage, data.Force, cmdCtx.Logger)
 
 			if !data.Force {
 				return nil
