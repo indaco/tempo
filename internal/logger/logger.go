@@ -261,7 +261,7 @@ func (e *LogEntry) WithAttrs(attrs ...any) *LogEntry {
 	}
 
 	newAttrs := make([]KeyValue, 0, len(attrs)/2)
-	for i := 0; i < len(attrs); i += 2 {
+	for i := 0; i+1 < len(attrs); i += 2 {
 		key, ok := attrs[i].(string)
 		if !ok {
 			fmt.Println("Invalid attribute key: must be a string")

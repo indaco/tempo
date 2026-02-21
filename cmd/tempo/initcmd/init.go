@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
@@ -75,10 +75,10 @@ func runInitCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.C
 		cmdCtx.Logger.Info("Generating", tempoConfigPath)
 		cfg, err := prepareConfig(cmdCtx.CWD, tempoRoot, templatesDir, actionsDir)
 		if err != nil {
-			return errors.Wrap("Failed to prepare the configuration file", err)
+			return apperrors.Wrap("Failed to prepare the configuration file", err)
 		}
 		if err := writeConfigFile(tempoConfigPath, cfg); err != nil {
-			return errors.Wrap("Failed to write the configuration file", err, tempoConfigPath)
+			return apperrors.Wrap("Failed to write the configuration file", err, tempoConfigPath)
 		}
 
 		// Step 5: Log the successful initialization
@@ -100,25 +100,25 @@ func runInitCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.C
 func validateInitPrerequisites(workingDir, configFilePath string) error {
 	goModPath := filepath.Join(workingDir, "go.mod")
 	if _, err := os.Stat(goModPath); os.IsNotExist(err) {
-		return errors.Wrap("missing go.mod file. Run 'go mod init' to create one")
+		return apperrors.Wrap("missing go.mod file. Run 'go mod init' to create one")
 	} else if err != nil {
-		return errors.Wrap("error checking go.mod file", err)
+		return apperrors.Wrap("error checking go.mod file", err)
 	}
 
 	exists, err := utils.FileExistsFunc(configFilePath)
 	if err != nil {
-		return errors.Wrap("Error checking configuration file", err)
+		return apperrors.Wrap("Error checking configuration file", err)
 	}
 	if exists {
 		// Check if the file is writable
 		file, err := os.OpenFile(configFilePath, os.O_WRONLY, 0644)
 		if err != nil {
-			return errors.Wrap("Failed to write the configuration file", err)
+			return apperrors.Wrap("Failed to write the configuration file", err)
 		}
 		if err := file.Close(); err != nil {
-			return errors.Wrap("Failed to close the configuration file", err)
+			return apperrors.Wrap("Failed to close the configuration file", err)
 		}
-		return errors.Wrap("Configuration file already exists", configFilePath)
+		return apperrors.Wrap("Configuration file already exists", configFilePath)
 	}
 	return nil
 }
@@ -163,32 +163,32 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	sb.WriteString("# Tempo CLI configuration file\n")
 	sb.WriteString("# Documentation & source code: https://github.com/indaco/tempo\n\n")
 	sb.WriteString("# The root folder for tempo files\n")
-	sb.WriteString(fmt.Sprintf("tempo_root: %s\n\n", cfg.TempoRoot))
+	fmt.Fprintf(&sb, "tempo_root: %s\n\n", cfg.TempoRoot)
 
 	// Write app-specific configuration
 	sb.WriteString("app:\n")
 	sb.WriteString("  # The name of the Go module being worked on.\n")
-	sb.WriteString(fmt.Sprintf("  go_module: %s\n\n", cfg.App.GoModule))
+	fmt.Fprintf(&sb, "  go_module: %s\n\n", cfg.App.GoModule)
 	sb.WriteString("  # The Go package name where components will be organized and generated.\n")
-	sb.WriteString(fmt.Sprintf("  go_package: %s\n\n", cfg.App.GoPackage))
+	fmt.Fprintf(&sb, "  go_package: %s\n\n", cfg.App.GoPackage)
 	sb.WriteString("  # The directory where asset files (CSS, JS) will be generated.\n")
-	sb.WriteString(fmt.Sprintf("  assets_dir: %s\n\n", cfg.App.AssetsDir))
+	fmt.Fprintf(&sb, "  assets_dir: %s\n\n", cfg.App.AssetsDir)
 	sb.WriteString("  # Indicates whether JavaScript is required for the component.\n")
-	sb.WriteString(fmt.Sprintf("  # with_js: %s\n\n", strconv.FormatBool(cfg.App.WithJs)))
+	fmt.Fprintf(&sb, "  # with_js: %s\n\n", strconv.FormatBool(cfg.App.WithJs))
 	sb.WriteString("  # The name of the CSS layer to associate with component styles.\n")
-	sb.WriteString(fmt.Sprintf("  # css_layer: %s\n\n", cfg.App.CssLayer))
+	fmt.Fprintf(&sb, "  # css_layer: %s\n\n", cfg.App.CssLayer)
 
 	// Write processor configuration
 	sb.WriteString("# processor:\n")
 	sb.WriteString("  # Number of concurrent workers (numCPUs * 2).\n")
-	sb.WriteString(fmt.Sprintf("  # workers: %d\n\n", cfg.Processor.Workers))
+	fmt.Fprintf(&sb, "  # workers: %d\n\n", cfg.Processor.Workers)
 	sb.WriteString("  # Summary format: compact, long, json, none.\n")
-	sb.WriteString(fmt.Sprintf("  # summary_format: %s\n\n", cfg.Processor.SummaryFormat))
+	fmt.Fprintf(&sb, "  # summary_format: %s\n\n", cfg.Processor.SummaryFormat)
 
 	// Write templates configuration
 	sb.WriteString("# templates:\n")
 	sb.WriteString("  # A placeholder in template files indicating auto-generated sections.\n")
-	sb.WriteString(fmt.Sprintf("  # guard_marker: %s\n\n", cfg.Templates.GuardMarker))
+	fmt.Fprintf(&sb, "  # guard_marker: %s\n\n", cfg.Templates.GuardMarker)
 	sb.WriteString("  # File extensions used for template files.\n")
 	sb.WriteString("  # extensions:\n")
 
@@ -198,7 +198,7 @@ func writeConfigFile(filePath string, cfg *config.Config) error {
 	}
 
 	for _, ext := range extensions {
-		sb.WriteString(fmt.Sprintf("    # - %s\n", ext))
+		fmt.Fprintf(&sb, "    # - %s\n", ext)
 	}
 
 	// Add user data section

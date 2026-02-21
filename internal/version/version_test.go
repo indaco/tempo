@@ -1,4 +1,4 @@
-package version
+package version //nolint:revive // package name matches the package under test
 
 import (
 	"testing"

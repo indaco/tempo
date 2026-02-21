@@ -64,19 +64,20 @@ func TestMetrics_ExportToJSON(t *testing.T) {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 
+	tempFileName := tempFile.Name()
 	defer func() {
-		if err := os.Remove(tempFile.Name()); err != nil {
-			log.Printf("Failed to remove test directory %s: %v", tempFile.Name(), err)
+		if err := os.Remove(tempFileName); err != nil { //nolint:gosec // test-only temp file removal
+			log.Printf("Failed to remove test directory %s: %v", tempFileName, err) //nolint:gosec // test-only log with temp file name
 		}
 	}()
 
 	// Export metrics to JSON
-	if err := m.ToJSONFile(errors, skippedFiles, tempFile.Name()); err != nil {
+	if err := m.ToJSONFile(errors, skippedFiles, tempFileName); err != nil {
 		t.Fatalf("Failed to export metrics to JSON: %v", err)
 	}
 
 	// Read and validate JSON file
-	data, err := os.ReadFile(tempFile.Name())
+	data, err := os.ReadFile(tempFileName) //nolint:gosec // test-only read of temp file
 	if err != nil {
 		t.Fatalf("Failed to read temp JSON file: %v", err)
 	}
