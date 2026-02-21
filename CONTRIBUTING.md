@@ -74,6 +74,8 @@ just help
 | `just test`       | Run all tests and generate coverage report |
 | `just test-force` | Clean go tests cache and run all tests     |
 | `just modernize`  | Run go-modernize with auto-fix             |
+| `reportcard`      | Run goreportcard-cli                       |
+| `security-scan`   | Run govulncheck                            |
 | `just check`      | Run modernize, lint, and test              |
 | `just lint`       | Run golangci-lint                          |
 | `just build`      | Build the binary to build/tempo            |
