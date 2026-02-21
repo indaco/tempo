@@ -8,7 +8,7 @@ import (
 	"github.com/indaco/tempo/internal/logger"
 )
 
-// MockLogger is a mock implementation of the LoggerInterface for testing purposes.
+// MockLogger is a mock implementation of the Logger interface for testing purposes.
 type MockLogger struct {
 	Logs             []string
 	indentEnabled    bool

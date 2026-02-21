@@ -15,8 +15,8 @@ import (
 /* INTERFACES                                                                */
 /* ------------------------------------------------------------------------- */
 
-// LoggerInterface defines the interface for structured logging.
-type LoggerInterface interface {
+// Logger defines the interface for structured logging.
+type Logger interface {
 	Default(message string, args ...any) *LogEntry
 	Info(message string, args ...any) *LogEntry
 	Success(message string, args ...any) *LogEntry
@@ -50,7 +50,7 @@ type KeyValue struct {
 	Value any
 }
 
-// DefaultLogger is the default implementation of the LoggerInterface.
+// DefaultLogger is the default implementation of the Logger interface.
 type DefaultLogger struct {
 	indentEnabled    bool
 	timestampEnabled bool

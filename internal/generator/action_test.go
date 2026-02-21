@@ -871,7 +871,7 @@ func TestProcessEntityActions(t *testing.T) {
 
 	// Override ProcessActionsFunc temporarily
 	originalProcessActions := ProcessActionsFunc
-	ProcessActionsFunc = func(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+	ProcessActionsFunc = func(ctx context.Context, logger logger.Logger, actions []Action, data *TemplateData) error {
 		// Debugging output
 		for i, action := range actions {
 			t.Logf("DEBUG: Action[%d]: %+v", i, action)

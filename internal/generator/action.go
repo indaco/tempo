@@ -246,7 +246,7 @@ func GenerateActionJSONFile(filePath string, actions ActionList) error {
 /* ------------------------------------------------------------------------- */
 
 // GenerateActionFile generates an action file for the given entity type.
-func GenerateActionFile(entityType string, data *TemplateData, actions []Action, logger logger.LoggerInterface) error {
+func GenerateActionFile(entityType string, data *TemplateData, actions []Action, logger logger.Logger) error {
 	actionFileName := fmt.Sprintf("%s.json", entityType)
 	actionsPath := filepath.Join(data.ActionsDir, actionFileName)
 
@@ -260,7 +260,7 @@ func GenerateActionFile(entityType string, data *TemplateData, actions []Action,
 }
 
 // RetrieveActionsFile retrieves actions from a JSON file.
-func RetrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, cfg *config.Config) (JSONActionList, error) {
+func RetrieveActionsFile(logger logger.Logger, actionFilePath string, cfg *config.Config) (JSONActionList, error) {
 	// Step 1: Resolve action file path
 	resolvedPath, err := resolveActionFilePath(cfg.Paths.ActionsDir, actionFilePath)
 	if err != nil {
@@ -283,7 +283,7 @@ func RetrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, c
 }
 
 // ProcessEntityActions retrieves and processes actions from a JSON file.
-func ProcessEntityActions(ctx context.Context, logger logger.LoggerInterface, pathToActionsFile string, data *TemplateData, cfg *config.Config) error {
+func ProcessEntityActions(ctx context.Context, logger logger.Logger, pathToActionsFile string, data *TemplateData, cfg *config.Config) error {
 	// Validate context - use Background as fallback for non-critical operations
 	if ctx == nil {
 		ctx = context.Background()

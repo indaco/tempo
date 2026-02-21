@@ -1,4 +1,4 @@
-package utils //nolint:revive // package name matches the package under test
+package utils
 
 import (
 	"testing"

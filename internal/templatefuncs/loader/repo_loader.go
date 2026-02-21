@@ -13,7 +13,7 @@ import (
 func InstallFunctionPackageFromRepo(
 	dataDir, repoURL string,
 	forceClone bool,
-	logger logger.LoggerInterface,
+	logger logger.Logger,
 ) error {
 	logger.Info("Checking repository state").WithAttrs("repo_url", repoURL)
 

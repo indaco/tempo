@@ -6,7 +6,7 @@ import (
 )
 
 type AppContext struct {
-	Logger logger.LoggerInterface
+	Logger logger.Logger
 	Config *config.Config
 	CWD    string
 }

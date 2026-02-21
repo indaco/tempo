@@ -183,7 +183,7 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 	})
 }
 
-func runInvalidProviderTest(t *testing.T, logger logger.LoggerInterface, providerCode, expectedError string) {
+func runInvalidProviderTest(t *testing.T, logger logger.Logger, providerCode, expectedError string) {
 	tempDir, err := os.MkdirTemp("", "invalid_provider_*")
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)

@@ -338,16 +338,16 @@ func resolveSyncFlags(
 	}
 
 	// Worker pool options
-	opts := worker.WorkerPoolOptions{
-		Context:              ctx,
-		InputDir:             inputDir,
-		OutputDir:            outputDir,
-		ExcludeDir:           excludeDir,
-		MarkerName:           cmdCtx.Config.Templates.GuardMarker,
-		NumWorkers:           numWorkers,
-		IsProduction:         isProd,
-		IsForce:              isForce,
-		IsTrackExecutionTime: isTrackExecutionTime,
+	opts, err := worker.NewWorkerPoolOptions(ctx, inputDir, outputDir,
+		worker.WithExcludeDir(excludeDir),
+		worker.WithMarkerName(cmdCtx.Config.Templates.GuardMarker),
+		worker.WithNumWorkers(numWorkers),
+		worker.WithProduction(isProd),
+		worker.WithForce(isForce),
+		worker.WithTrackExecutionTime(isTrackExecutionTime),
+	)
+	if err != nil {
+		return worker.WorkerPoolOptions{}, nil, apperrors.Wrap("invalid worker pool options", err)
 	}
 
 	// Summary options
@@ -375,7 +375,7 @@ func resolveSyncFlags(
 }
 
 func handleSummary(
-	logger logger.LoggerInterface,
+	logger logger.Logger,
 	manager *worker.WorkerPoolManager,
 	processingErrors []worker.ProcessingError,
 	skippedFiles []worker.ProcessingError,

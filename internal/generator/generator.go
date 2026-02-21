@@ -13,7 +13,7 @@ import (
 // ActionProcessor defines the interface for processing actions.
 // This allows for dependency injection and easier testing.
 type ActionProcessor interface {
-	ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error
+	ProcessActions(ctx context.Context, logger logger.Logger, actions []Action, data *TemplateData) error
 }
 
 // DefaultActionProcessor is the default implementation of ActionProcessor.
@@ -25,7 +25,7 @@ func NewActionProcessor() ActionProcessor {
 }
 
 // ProcessActions implements ActionProcessor.ProcessActions.
-func (p *DefaultActionProcessor) ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+func (p *DefaultActionProcessor) ProcessActions(ctx context.Context, logger logger.Logger, actions []Action, data *TemplateData) error {
 	return ProcessActions(ctx, logger, actions, data)
 }
 
@@ -44,7 +44,7 @@ var actionHandlers = map[string]ActionHandler{
 var ProcessActionsFunc = ProcessActions
 
 // ProcessActions processes a list of actions using the appropriate handlers.
-func ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+func ProcessActions(ctx context.Context, logger logger.Logger, actions []Action, data *TemplateData) error {
 	// Validate context - use Background as fallback for non-critical operations
 	if ctx == nil {
 		ctx = context.Background()
@@ -74,7 +74,7 @@ func ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions 
 }
 
 // handleDryRun handles the dry-run mode by resolving templates and logging the actions.
-func handleDryRun(logger logger.LoggerInterface, action Action, data *TemplateData) {
+func handleDryRun(logger logger.Logger, action Action, data *TemplateData) {
 	switch action.Item {
 	case "file":
 		// Handle single file addition

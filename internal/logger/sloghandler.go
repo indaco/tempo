@@ -8,12 +8,12 @@ import (
 
 // LogHandler adapts the core logger to the slog.Handler interface.
 type LogHandler struct {
-	logger LoggerInterface
+	logger Logger
 	attrs  []slog.Attr
 }
 
 // NewLogHandler creates a new LogHandler instance.
-func NewLogHandler(logger LoggerInterface) *LogHandler {
+func NewLogHandler(logger Logger) *LogHandler {
 	return &LogHandler{logger: logger}
 }
 

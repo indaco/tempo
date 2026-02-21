@@ -32,7 +32,7 @@ func (p *DynamicTemplateFuncProvider) GetFunctions() template.FuncMap {
 }
 
 // loadDynamicProvider dynamically loads a Go package, extracts the provider, and registers functions.
-func loadDynamicProvider(meta ProviderMetadata, logger logger.LoggerInterface) (tempo_api.TemplateFuncProvider, error) {
+func loadDynamicProvider(meta ProviderMetadata, logger logger.Logger) (tempo_api.TemplateFuncProvider, error) {
 	logger.Info("Importing Go package").WithAttrs("package_path", meta.ModuleDir)
 
 	// Step 1: Ensure `provider.go` exists (we still need this for AST parsing)

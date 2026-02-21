@@ -4,7 +4,7 @@ import "strings"
 
 type LogWriter struct {
 	Level  string
-	Logger LoggerInterface
+	Logger Logger
 }
 
 func (lw *LogWriter) Write(p []byte) (n int, err error) {

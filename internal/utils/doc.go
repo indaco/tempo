@@ -41,4 +41,4 @@
 //
 // Functions for type conversion:
 //   - Int64ToInt - Safe int64 to int conversion
-package utils //nolint:revive // package provides utility functions
+package utils
