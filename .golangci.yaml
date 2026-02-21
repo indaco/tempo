@@ -73,6 +73,11 @@ linters:
         linters:
           - gocritic
         text: "stringXbytes"
+      # Internal packages: allow var-naming for packages matching their directory
+      - path: internal/
+        linters:
+          - revive
+        text: "var-naming: avoid"
       # Prealloc is often too noisy for small slices
       - path: \.go$
         linters:
