@@ -14,7 +14,6 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/indaco/tempo/internal/worker"
@@ -114,7 +113,7 @@ func TestSyncCommand(t *testing.T) {
 				SetupSyncCommand(cliCtx),
 			}
 
-			output, err := testhelpers.CaptureStdout(func() {
+			output, err := testutils.CaptureStdout(func() {
 				err := cliApp.Run(context.Background(), tt.args)
 				if err != nil {
 					t.Fatalf("Unexpected error: %v", err)
@@ -125,7 +124,7 @@ func TestSyncCommand(t *testing.T) {
 			}
 
 			// Validate CLI output
-			testhelpers.ValidateCLIOutput(t, output, tt.expectedOutput)
+			testutils.ValidateCLIOutput(t, output, tt.expectedOutput)
 
 			// Validate expected output files
 			expectedOutputFiles := []string{}
@@ -226,7 +225,7 @@ func TestSyncWorkerPool_SummaryAsJSON(t *testing.T) {
 	}
 
 	// Capture JSON output
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		_ = runWorkerPool(cmdCtx, opts, &worker.SummaryOptions{Format: "json"})
 	})
 	if err != nil {
@@ -324,7 +323,7 @@ func TestWorkerErrorHandling(t *testing.T) {
 	close(errorsChan)
 
 	// Capture output using testutils
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		collectedErrors := worker.CollectErrors(errorsChan)
 		worker.PrintErrors(collectedErrors)
 	})
@@ -341,7 +340,7 @@ func TestWorkerErrorHandling(t *testing.T) {
 	}
 
 	// Validate output
-	testhelpers.ValidateCLIOutput(t, output, expectedMessages)
+	testutils.ValidateCLIOutput(t, output, expectedMessages)
 }
 
 func TestQueueFilesForProcessing(t *testing.T) {
@@ -571,7 +570,8 @@ func TestQueueFilesForProcessing_NonDirectory(t *testing.T) {
 		IsProduction: false,
 	}
 	manager := worker.NewWorkerPoolManager(opts)
-	err := queueFilesForProcessing(opts, manager, 0)
+	mockLog := &testutils.MockLogger{}
+	err := queueFilesForProcessing(mockLog, opts, manager, 0)
 	// Expect no error.
 	if err != nil {
 		t.Errorf("expected nil error when inputDir is not a directory, got: %v", err)
@@ -616,7 +616,8 @@ func TestQueueFilesForProcessing_ExcludedFiles(t *testing.T) {
 		t.Fatal("SkippedChan is nil, check worker initialization")
 	}
 
-	err := queueFilesForProcessing(opts, manager, 0)
+	mockLog := &testutils.MockLogger{}
+	err := queueFilesForProcessing(mockLog, opts, manager, 0)
 	if err != nil {
 		t.Errorf("expected nil error when processing inputDir, got: %v", err)
 	}
@@ -729,9 +730,10 @@ func TestShouldProcessFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			manager := worker.NewWorkerPoolManager(tt.opts)
+			mockLog := &testutils.MockLogger{}
 
 			// Run the function
-			result := shouldProcessFile(tt.source, tt.dest, tt.opts, tt.lastRun, manager)
+			result := shouldProcessFile(mockLog, tt.source, tt.dest, tt.opts, tt.lastRun, manager)
 
 			// Validate the result
 			if result != tt.expectedResult {
@@ -814,11 +816,13 @@ func TestHandleError(t *testing.T) {
 	manager := worker.NewWorkerPoolManager(worker.WorkerPoolOptions{
 		InputDir:     "dummy",
 		OutputDir:    "dummy",
+		NumWorkers:   1,
 		IsProduction: false,
 	})
 	manager.ErrorsChan = make(chan worker.ProcessingError, 1)
 	fakeErr := errors.New("test error")
-	handleError(manager, "some/path", fakeErr)
+	mockLog := &testutils.MockLogger{}
+	handleError(mockLog, manager, "some/path", fakeErr)
 	close(manager.ErrorsChan)
 
 	count := 0
@@ -887,8 +891,10 @@ func verifyFileProcessing(
 		SkippedChan: skippedChan,
 	}
 
+	mockLog := &testutils.MockLogger{}
+
 	// Run function under test
-	err := queueFilesForProcessing(wpOpts, manager, lastRunTimestamp)
+	err := queueFilesForProcessing(mockLog, wpOpts, manager, lastRunTimestamp)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
