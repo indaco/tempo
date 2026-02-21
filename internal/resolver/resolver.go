@@ -6,7 +6,7 @@ package resolver
 import (
 	"strconv"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
 )
 
@@ -33,7 +33,7 @@ func ResolveString(cliValue, configValue, fieldName, defaultValue string, allowe
 	if textprovider.IsEmptyString(cliValue) && textprovider.IsEmptyString(configValue) {
 		if textprovider.IsEmptyString(defaultValue) {
 			// If no default value exists, return an error
-			return "", errors.Wrap("%s is required. Ensure to pass it as a flag or set its value in .tempo.yaml file", fieldName)
+			return "", apperrors.Wrap("%s is required. Ensure to pass it as a flag or set its value in .tempo.yaml file", fieldName)
 		}
 	}
 
@@ -77,14 +77,14 @@ func ResolveInt(cliValue string, configValue int, fieldName string) (int, error)
 	if cliValue != "" {
 		num, err := strconv.Atoi(cliValue)
 		if err != nil {
-			return 0, errors.Wrap("invalid value for %s: expected an integer but got '%s'", fieldName, cliValue)
+			return 0, apperrors.Wrap("invalid value for %s: expected an integer but got '%s'", fieldName, cliValue)
 		}
 		return num, nil
 	}
 
 	// If CLI value is empty, fallback to config
 	if configValue == 0 {
-		return 0, errors.Wrap("%s is required. Ensure to pass it as a flag or set its value in .tempo.yaml file", fieldName)
+		return 0, apperrors.Wrap("%s is required. Ensure to pass it as a flag or set its value in .tempo.yaml file", fieldName)
 	}
 
 	return configValue, nil

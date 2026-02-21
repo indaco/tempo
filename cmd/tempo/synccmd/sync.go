@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/resolver"
@@ -118,10 +118,9 @@ func runSyncCommand(cmdCtx *app.AppContext) func(ctx context.Context, cmd *cli.C
 		// Step 3: Run file processing
 		cmdCtx.Logger.Info("Processing files...")
 		if err := runWorkerPool(cmdCtx, opts, summaryOpts); err != nil {
-			return errors.Wrap("failed processing files", err)
-		} else {
-			cmdCtx.Logger.Success("Processing completed successfully without errors.")
+			return apperrors.Wrap("failed processing files", err)
 		}
+		cmdCtx.Logger.Success("Processing completed successfully without errors.")
 		helpers.ResetLogger(cmdCtx.Logger)
 
 		return nil
@@ -175,7 +174,7 @@ func runWorkerPool(
 
 	// Ensure all required fields are properly initialized
 	if manager.JobChan == nil || manager.ErrorsChan == nil || manager.SkippedChan == nil || manager.Metrics == nil {
-		return errors.Wrap("WorkerPoolManager initialization failed: missing required fields")
+		return apperrors.Wrap("WorkerPoolManager initialization failed: missing required fields")
 	}
 
 	var (
@@ -210,7 +209,7 @@ func runWorkerPool(
 
 	// Queue files for processing before closing job channel & starting workers
 	if err := queueFilesForProcessing(opts, manager, lastRunTimestamp); err != nil {
-		return errors.Wrap("Failed to queue files", err)
+		return apperrors.Wrap("Failed to queue files", err)
 	}
 
 	// Close job channel before starting workers
@@ -219,7 +218,7 @@ func runWorkerPool(
 	// Start workers
 	err := manager.StartWorkers(opts.Context, opts.NumWorkers, opts.IsTrackExecutionTime)
 	if err != nil {
-		return errors.Wrap("error starting the WorkerPoolManager", err)
+		return apperrors.Wrap("error starting the WorkerPoolManager", err)
 	}
 
 	// Close channels after all workers finish
@@ -228,14 +227,14 @@ func runWorkerPool(
 
 	// Wait for error and skipped file processing to complete
 	if err := g.Wait(); err != nil {
-		return errors.Wrap("Failed while collecting skipped/errors", err)
+		return apperrors.Wrap("Failed while collecting skipped/errors", err)
 	}
 
 	// Use the stored skipped files
 	manager.Metrics.SkippedFiles = len(skippedFiles)
 
 	if err := saveLastRunTimestamp(cacheFile); err != nil {
-		return errors.Wrap("Failed to update last run timestamp", err)
+		return apperrors.Wrap("Failed to update last run timestamp", err)
 	}
 
 	// Handle Summary
@@ -390,7 +389,7 @@ func handleSummary(
 	// Generate summary
 	summary, err := manager.Metrics.SummaryAsString(processingErrors, skippedFiles, summaryOpts)
 	if err != nil {
-		return errors.Wrap("Failed to generate summary", err)
+		return apperrors.Wrap("Failed to generate summary", err)
 	}
 
 	// Print summary
@@ -399,7 +398,7 @@ func handleSummary(
 	// Handle Summary Export to JSON File
 	if summaryOpts.ReportFile != "" {
 		if err := manager.Metrics.ToJSONFile(processingErrors, skippedFiles, summaryOpts.ReportFile); err != nil {
-			return errors.Wrap("Failed to export summary to JSON file", err)
+			return apperrors.Wrap("Failed to export summary to JSON file", err)
 		}
 	}
 

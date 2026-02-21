@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 )
 
 // ErrInvalidGitURL indicates an invalid or unsafe Git URL.
@@ -28,12 +30,12 @@ var allowedGitSchemes = map[string]bool{
 // Local filesystem paths are also allowed for cloning local repositories.
 func ValidateGitURL(rawURL string) error {
 	if rawURL == "" {
-		return fmt.Errorf("%w: empty URL", ErrInvalidGitURL)
+		return apperrors.Wrap("empty URL", ErrInvalidGitURL)
 	}
 
 	// Check for flag injection (URLs starting with -)
 	if strings.HasPrefix(rawURL, "-") {
-		return fmt.Errorf("%w: URL cannot start with dash", ErrInvalidGitURL)
+		return apperrors.Wrap("URL cannot start with dash", ErrInvalidGitURL)
 	}
 
 	// Allow local filesystem paths (absolute or relative without scheme)
@@ -41,7 +43,7 @@ func ValidateGitURL(rawURL string) error {
 	if filepath.IsAbs(rawURL) || !strings.Contains(rawURL, "://") {
 		// Local path - check for traversal
 		if strings.Contains(filepath.Clean(rawURL), "..") {
-			return fmt.Errorf("%w: path traversal not allowed in local path", ErrInvalidGitURL)
+			return apperrors.Wrap("path traversal not allowed in local path", ErrInvalidGitURL)
 		}
 		return nil
 	}
@@ -49,17 +51,17 @@ func ValidateGitURL(rawURL string) error {
 	// Parse URL
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidGitURL, err)
+		return apperrors.Wrap("failed to parse URL", ErrInvalidGitURL, err.Error())
 	}
 
 	// Check scheme
 	if !allowedGitSchemes[u.Scheme] {
-		return fmt.Errorf("%w: unsupported scheme %q (allowed: https, git, ssh)", ErrInvalidGitURL, u.Scheme)
+		return apperrors.Wrap("unsupported scheme %q (allowed: https, git, ssh)", ErrInvalidGitURL, u.Scheme)
 	}
 
 	// Ensure host is present for remote URLs
 	if u.Host == "" {
-		return fmt.Errorf("%w: URL must have a host", ErrInvalidGitURL)
+		return apperrors.Wrap("URL must have a host", ErrInvalidGitURL)
 	}
 
 	return nil
@@ -69,12 +71,12 @@ func ValidateGitURL(rawURL string) error {
 // It allows both relative and absolute paths but rejects traversal patterns.
 func ValidateLocalPath(path string) error {
 	if path == "" {
-		return fmt.Errorf("%w: empty path", ErrInvalidPath)
+		return apperrors.Wrap("empty path", ErrInvalidPath)
 	}
 
 	// Check for flag injection
 	if strings.HasPrefix(path, "-") {
-		return fmt.Errorf("%w: path cannot start with dash", ErrInvalidPath)
+		return apperrors.Wrap("path cannot start with dash", ErrInvalidPath)
 	}
 
 	// Clean the path to normalize it
@@ -83,12 +85,12 @@ func ValidateLocalPath(path string) error {
 	// Check for parent directory traversal in the cleaned path
 	// This catches both relative traversal (../foo) and attempts to escape
 	if strings.Contains(cleaned, "..") {
-		return fmt.Errorf("%w: %s", ErrPathTraversal, path)
+		return apperrors.Wrap("path traversal detected", ErrPathTraversal, path)
 	}
 
 	// For relative paths, use Go's built-in check
 	if !filepath.IsAbs(path) && !filepath.IsLocal(path) {
-		return fmt.Errorf("%w: %s", ErrPathTraversal, path)
+		return apperrors.Wrap("path traversal detected", ErrPathTraversal, path)
 	}
 
 	return nil
@@ -106,7 +108,7 @@ func ValidateDirectory(dir string) error {
 
 	// Check for flag injection
 	if strings.HasPrefix(cleanDir, "-") {
-		return fmt.Errorf("%w: directory cannot start with dash", ErrInvalidPath)
+		return apperrors.Wrap("directory cannot start with dash", ErrInvalidPath)
 	}
 
 	return nil
@@ -116,14 +118,14 @@ func ValidateDirectory(dir string) error {
 // Returns an error if the path is invalid.
 func SanitizePath(path string) (string, error) {
 	if path == "" {
-		return "", fmt.Errorf("%w: empty path", ErrInvalidPath)
+		return "", apperrors.Wrap("empty path", ErrInvalidPath)
 	}
 
 	cleaned := filepath.Clean(path)
 
 	// Check for flag injection after cleaning
 	if strings.HasPrefix(cleaned, "-") {
-		return "", fmt.Errorf("%w: path cannot start with dash", ErrInvalidPath)
+		return "", apperrors.Wrap("path cannot start with dash", ErrInvalidPath)
 	}
 
 	return cleaned, nil

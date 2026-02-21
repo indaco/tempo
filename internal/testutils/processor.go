@@ -34,7 +34,7 @@ func CreateFile(t *testing.T, path, content string) {
 	if err != nil {
 		t.Fatalf("Failed to create directory: %v", err)
 	}
-	err = os.WriteFile(path, []byte(content), 0644)
+	err = os.WriteFile(path, []byte(content), 0600)
 	if err != nil {
 		t.Fatalf("Failed to write file: %v", err)
 	}

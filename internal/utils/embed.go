@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/templates"
 )
 
@@ -25,7 +25,7 @@ func IsEmbedded(path string) bool {
 func ReadEmbeddedFile(path string) ([]byte, error) {
 	file, err := embeddedFiles.Open(path)
 	if err != nil {
-		return nil, errors.Wrap("failed to open embedded file '%s'", err, path)
+		return nil, apperrors.Wrap("failed to open embedded file '%s'", err, path)
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
@@ -42,7 +42,7 @@ func ReadEmbeddedFile(path string) ([]byte, error) {
 func ReadEmbeddedDir(path string) ([]os.DirEntry, error) {
 	entries, err := fs.ReadDir(embeddedFiles, path)
 	if err != nil {
-		return nil, errors.Wrap("failed to read embedded directory '%s'", err, path)
+		return nil, apperrors.Wrap("failed to read embedded directory '%s'", err, path)
 	}
 	return entries, nil
 }
@@ -50,7 +50,7 @@ func ReadEmbeddedDir(path string) ([]os.DirEntry, error) {
 // ensureDirExists ensures that the specified directory exists, creating it if necessary.
 func ensureDirExists(dir string) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return errors.Wrap("failed to create directory '%s'", err, dir)
+		return apperrors.Wrap("failed to create directory '%s'", err, dir)
 	}
 	return nil
 }
@@ -107,8 +107,8 @@ func CopyFileFromEmbed(source, destination string) error {
 	}
 
 	// Write the content to the destination file
-	if err := os.WriteFile(destination, content, 0644); err != nil {
-		return errors.Wrap("failed to write to file '%s': %w", err, destination)
+	if err := os.WriteFile(destination, content, 0600); err != nil {
+		return apperrors.Wrap("failed to write to file '%s': %w", err, destination)
 	}
 
 	return nil

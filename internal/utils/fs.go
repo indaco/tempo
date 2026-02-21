@@ -11,7 +11,7 @@ import (
 
 	"slices"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"golang.org/x/mod/modfile"
 )
 
@@ -99,7 +99,7 @@ var FileOrDirExistsFunc = FileOrDirExists
 // FileOrDirExists checks whether a file or directory exists at the specified path.
 func FileOrDirExists(path string) (exists bool, isDir bool, err error) {
 	if path == "" {
-		return false, false, errors.Wrap("path is empty")
+		return false, false, apperrors.Wrap("path is empty")
 	}
 
 	info, err := os.Stat(path)
@@ -107,7 +107,7 @@ func FileOrDirExists(path string) (exists bool, isDir bool, err error) {
 		return false, false, nil
 	}
 	if err != nil {
-		return false, false, errors.Wrap("error checking path", err)
+		return false, false, apperrors.Wrap("error checking path", err)
 	}
 	return true, info.IsDir(), nil
 }
@@ -123,7 +123,7 @@ func FileExists(path string) (bool, error) {
 		return false, err
 	}
 	if isDir {
-		return false, errors.Wrap("path exists but is a directory: '%s'", nil, path)
+		return false, apperrors.Wrap("path exists but is a directory: '%s'", nil, path)
 	}
 	return exists, nil
 }
@@ -139,7 +139,7 @@ func DirExists(path string) (bool, error) {
 		return false, nil
 	}
 	if !isDir {
-		return false, errors.Wrap("path exists but is not a directory", path)
+		return false, apperrors.Wrap("path exists but is not a directory", path)
 	}
 	return true, nil
 }
@@ -149,17 +149,17 @@ func EnsureDirExists(dir string) error {
 	stat, err := os.Stat(dir)
 	if err == nil {
 		if !stat.IsDir() {
-			return errors.Wrap("path '%s' exists but is not a directory", dir)
+			return apperrors.Wrap("path '%s' exists but is not a directory", dir)
 		}
 		return nil // Directory already exists
 	}
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return errors.Wrap("failed to create directory '%s'", err, dir)
+			return apperrors.Wrap("failed to create directory '%s'", err, dir)
 		}
 		return nil
 	}
-	return errors.Wrap("error checking directory '%s'", err, dir)
+	return apperrors.Wrap("error checking directory '%s'", err, dir)
 }
 
 // ValidateFoldersExistence checks if the specified folders exist and returns an error if any of them are missing.
@@ -167,10 +167,10 @@ func ValidateFoldersExistence(folders []string, errorMessage string) error {
 	for _, folder := range folders {
 		exists, err := DirExists(folder)
 		if err != nil {
-			return errors.Wrap("Failed to check folder existence", err)
+			return apperrors.Wrap("Failed to check folder existence", err)
 		}
 		if !exists {
-			return errors.Wrap(errorMessage)
+			return apperrors.Wrap(errorMessage)
 		}
 	}
 	return nil
@@ -181,13 +181,13 @@ func RemoveIfExists(path string) error {
 	// Check if the file or directory exists
 	exists, _, err := FileOrDirExists(path)
 	if err != nil {
-		return errors.Wrap("failed to check if path '%s' exists", err, path)
+		return apperrors.Wrap("failed to check if path '%s' exists", err, path)
 	}
 
 	// If it exists, remove it
 	if exists {
 		if err := os.RemoveAll(path); err != nil {
-			return errors.Wrap("failed to remove path '%s'", err, path)
+			return apperrors.Wrap("failed to remove path '%s'", err, path)
 		}
 	}
 	return nil
@@ -235,7 +235,7 @@ func CheckMissingFolders(folders map[string]string) (map[string]string, error) {
 func ReadFileAsString(filePath string) (string, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", errors.Wrap("failed to read file '%s'", err, filePath)
+		return "", apperrors.Wrap("failed to read file '%s'", err, filePath)
 	}
 	return string(content), nil
 }
@@ -246,7 +246,7 @@ func WriteToFile(path string, content []byte) error {
 		return err
 	}
 
-	return os.WriteFile(path, content, 0644)
+	return os.WriteFile(path, content, 0600)
 }
 
 // WriteStringToFile writes string content to the specified file.
@@ -259,7 +259,7 @@ func WriteJSONToFile(filePath string, data any) error {
 	// Marshal data into JSON with proper indentation
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return errors.Wrap("failed to marshal data to JSON", err)
+		return apperrors.Wrap("failed to marshal data to JSON", err)
 	}
 
 	// Write JSON to file
@@ -333,16 +333,16 @@ func GetModuleName(goModPath string) (string, error) {
 	goModFile := filepath.Join(goModPath, "go.mod")
 	content, err := os.ReadFile(goModFile)
 	if err != nil {
-		return "", errors.Wrap("error reading go.mod file", err)
+		return "", apperrors.Wrap("error reading go.mod file", err)
 	}
 
 	parsedModFile, err := modfile.Parse(goModFile, content, nil)
 	if err != nil {
-		return "", errors.Wrap("error parsing go.mod file", err)
+		return "", apperrors.Wrap("error parsing go.mod file", err)
 	}
 
 	if parsedModFile.Module == nil || parsedModFile.Module.Mod.Path == "" {
-		return "", errors.Wrap("module path not found in go.mod file")
+		return "", apperrors.Wrap("module path not found in go.mod file")
 	}
 
 	return parsedModFile.Module.Mod.Path, nil

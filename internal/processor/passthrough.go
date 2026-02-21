@@ -1,9 +1,9 @@
 package processor
 
 import (
-	"fmt"
 	"os"
 
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/processor/transformers"
 )
 
@@ -15,7 +15,7 @@ func (p *PassthroughProcessor) Process(inputFilePath, outputFilePath, markerName
 	// Read input file content
 	inputContent, err := os.ReadFile(inputFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read input file: %w", err)
+		return apperrors.Wrap("failed to read input file", err)
 	}
 
 	transformerConfig := transformers.TransformationConfig{

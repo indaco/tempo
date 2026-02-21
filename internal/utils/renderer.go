@@ -8,7 +8,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/lookupprovider"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/textprovider"
@@ -37,7 +37,7 @@ func RenderTemplate(templateContent string, data any) (string, error) {
 		Option("missingkey=error").
 		Parse(templateContent)
 	if err != nil {
-		return "", errors.Wrap("failed to run RenderTemplate", err)
+		return "", apperrors.Wrap("failed to run RenderTemplate", err)
 	}
 
 	var buf bytes.Buffer

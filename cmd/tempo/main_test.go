@@ -212,7 +212,7 @@ func TestRunCLI_LoadConfigError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error from LoadConfig, got nil")
 	}
-	if !utils.ContainsSubstring(err.Error(), "failed to read config file:") {
+	if !utils.ErrorContains(err, "failed to read config file:") {
 		t.Errorf("unexpected error: %v", err)
 	}
 }

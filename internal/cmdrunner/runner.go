@@ -2,11 +2,11 @@ package cmdrunner
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"time"
 
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/validation"
 )
 
@@ -15,7 +15,7 @@ import (
 func RunCommandWithTimeout(dir string, timeout time.Duration, command string, args ...string) error {
 	// Validate directory to prevent command injection
 	if err := validation.ValidateDirectory(dir); err != nil {
-		return fmt.Errorf("invalid directory: %w", err)
+		return apperrors.Wrap("invalid directory", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -28,9 +28,9 @@ func RunCommandWithTimeout(dir string, timeout time.Duration, command string, ar
 
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("command timed out after %v: %w", timeout, err)
+			return apperrors.Wrap("command timed out after %v", err, timeout)
 		}
-		return fmt.Errorf("command failed: %w", err)
+		return apperrors.Wrap("command failed", err)
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func RunCommand(dir string, command string, args ...string) error {
 func RunCommandOutput(dir string, command string, args ...string) (string, error) {
 	// Validate directory to prevent command injection
 	if err := validation.ValidateDirectory(dir); err != nil {
-		return "", fmt.Errorf("invalid directory: %w", err)
+		return "", apperrors.Wrap("invalid directory", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -57,11 +57,11 @@ func RunCommandOutput(dir string, command string, args ...string) (string, error
 	output, err := cmd.CombinedOutput()
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return "", fmt.Errorf("command timed out: %w", err)
+		return "", apperrors.Wrap("command timed out", err)
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("command failed: %w", err)
+		return "", apperrors.Wrap("command failed", err)
 	}
 
 	return string(output), nil

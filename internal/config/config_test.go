@@ -80,7 +80,7 @@ func TestLoadConfig_ReadError(t *testing.T) {
 	}()
 
 	_, err := LoadConfig()
-	if err == nil || !utils.ContainsSubstring(err.Error(), "failed to read config file:") {
+	if err == nil || !utils.ErrorContains(err, "failed to read config file:") {
 		t.Errorf("Expected read error, got: %v", err)
 	}
 }

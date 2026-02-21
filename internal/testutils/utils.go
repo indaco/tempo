@@ -15,7 +15,7 @@ func WriteConfigToFile(filePath string, cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filePath, data, 0644)
+	return os.WriteFile(filePath, data, 0600)
 }
 
 // ValidateGeneratedFiles ensures the specified files exist.
@@ -30,7 +30,7 @@ func ValidateGeneratedFiles(t *testing.T, paths []string) {
 func CreateModFile(tempDir string) error {
 	// Create go.mod inside tempDir (the correct working directory)
 	goModPath := filepath.Join(tempDir, "go.mod")
-	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0644)
+	err := os.WriteFile(goModPath, []byte("module example.com/myproject\n\ngo 1.23\n"), 0600)
 	if err != nil {
 		return err
 	}

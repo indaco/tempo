@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/resolver"
 	"github.com/indaco/tempo/internal/templatefuncs/loader"
@@ -136,17 +136,18 @@ func resolveFlagsToTemplateFuncProvider(cmd *cli.Command) ([]config.TemplateFunc
 
 	// If both URL and Path are provided, ensure unique names
 	if url != "" && path != "" {
-		providers = append(providers, config.TemplateFuncProvider{
-			Name:  name + "-repo", // Differentiate the repo version
-			Type:  "url",
-			Value: url,
-		})
-
-		providers = append(providers, config.TemplateFuncProvider{
-			Name:  name + "-local", // Differentiate the local version
-			Type:  "path",
-			Value: path,
-		})
+		providers = append(providers,
+			config.TemplateFuncProvider{
+				Name:  name + "-repo", // Differentiate the repo version
+				Type:  "url",
+				Value: url,
+			},
+			config.TemplateFuncProvider{
+				Name:  name + "-local", // Differentiate the local version
+				Type:  "path",
+				Value: path,
+			},
+		)
 
 		return providers, nil
 	}
@@ -179,7 +180,7 @@ func registerFunctionsFromRepo(cmdCtx *app.AppContext, forceClone bool, provider
 		forceClone,
 		cmdCtx.Logger,
 	); err != nil {
-		return errors.Wrap("Failed to install function package from repository", err)
+		return apperrors.Wrap("Failed to install function package from repository", err)
 	}
 
 	return nil
@@ -189,7 +190,7 @@ func registerFunctionsFromLocal(cmdCtx *app.AppContext, provider config.Template
 	cmdCtx.Logger.Info("Registering functions from local package...").WithAttrs("path", provider.Value)
 
 	if err := loader.RegisterFunctionsFromPath(provider.Value, cmdCtx.Logger); err != nil {
-		return errors.Wrap("Failed to register function package from local path", err)
+		return apperrors.Wrap("Failed to register function package from local path", err)
 	}
 
 	return nil

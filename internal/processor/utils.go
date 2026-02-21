@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/processor/transformers"
 	"github.com/indaco/tempo/internal/utils"
 )
@@ -17,7 +18,7 @@ func processWithTransformation(cfg transformers.TransformationConfig, outputFile
 	// Step 1: Read the output file content
 	outputContent, err := os.ReadFile(outputFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read output file: %w", err)
+		return apperrors.Wrap("failed to read output file", err)
 	}
 
 	// Step 2: Validate Guard Markers
@@ -37,7 +38,7 @@ func processWithTransformation(cfg transformers.TransformationConfig, outputFile
 	// Step 3: Apply transformation
 	transformedContent, err := cfg.Transform(cfg.RawData)
 	if err != nil {
-		return fmt.Errorf("failed to transform content: %w", err)
+		return apperrors.Wrap("failed to transform content", err)
 	}
 
 	// Step 4: Construct new content (removing any old content between markers)
@@ -51,7 +52,7 @@ func processWithTransformation(cfg transformers.TransformationConfig, outputFile
 
 	// Step 5: Write the updated content back to the output file
 	if err := utils.WriteStringToFile(outputFilePath, updatedContent.String()); err != nil {
-		return fmt.Errorf("failed to write updated content to output file: %w", err)
+		return apperrors.Wrap("failed to write updated content to output file", err)
 	}
 
 	return nil

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -19,7 +19,7 @@ type App struct {
 	GoModule  string `yaml:"go_module,omitempty"`
 	GoPackage string `yaml:"go_package,omitempty"`
 	WithJs    bool   `yaml:"with_js,omitempty"`
-	CssLayer  string `yaml:"css_layer,omitempty"`
+	CssLayer  string `yaml:"css_layer,omitempty"` //nolint:revive // matches YAML field name
 	AssetsDir string `yaml:"assets_dir,omitempty"`
 }
 
@@ -114,12 +114,12 @@ func LoadConfig() (*Config, error) {
 		if _, err := os.Stat(file); err == nil {
 			data, err := os.ReadFile(file)
 			if err != nil {
-				return nil, errors.Wrap("failed to read config file:", err, file)
+				return nil, apperrors.Wrap("failed to read config file:", err, file)
 			}
 
 			var fileConfig Config
 			if err := yaml.Unmarshal(data, &fileConfig); err != nil {
-				return nil, errors.Wrap("failed to parse config file:", err, file)
+				return nil, apperrors.Wrap("failed to parse config file:", err, file)
 			}
 
 			return ensureDefaults(defaultConfig, &fileConfig), nil
@@ -130,9 +130,9 @@ func LoadConfig() (*Config, error) {
 }
 
 // DerivedFolderPaths returns the derived folder paths based on the base folder.
-func DerivedFolderPaths(baseFolder string) (TemplatesDir, ActionsDir string) {
-	TemplatesDir = filepath.Join(baseFolder, "templates")
-	ActionsDir = filepath.Join(baseFolder, "actions")
+func DerivedFolderPaths(baseFolder string) (templatesDir, actionsDir string) {
+	templatesDir = filepath.Join(baseFolder, "templates")
+	actionsDir = filepath.Join(baseFolder, "actions")
 	return
 }
 

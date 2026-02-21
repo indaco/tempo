@@ -3,6 +3,7 @@ package loader
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -71,7 +72,7 @@ func validateProviderPresence(providerPath string) error {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, providerPath, src, parser.AllErrors)
 	if err != nil {
-		return fmt.Errorf("failed to parse provider.go: %s", err)
+		return fmt.Errorf("failed to parse provider.go: %w", err)
 	}
 
 	// Inspect AST to find `Provider`
@@ -103,7 +104,7 @@ func buildProviderExecutable(packagePath, providerPackage string) (string, error
 	// Extract the module name from go.mod
 	moduleName, err := extractModuleName(packagePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to determine module name: %s", err)
+		return "", fmt.Errorf("failed to determine module name: %w", err)
 	}
 
 	// Construct the correct import path
@@ -160,8 +161,8 @@ func main() {
 	fmt.Println(string(data))
 }`, importPath, providerRef)
 
-	if err := os.WriteFile(mainFile, []byte(mainContent), 0644); err != nil {
-		return "", fmt.Errorf("failed to create main.go: %s", err)
+	if err := os.WriteFile(mainFile, []byte(mainContent), 0600); err != nil {
+		return "", fmt.Errorf("failed to create main.go: %w", err)
 	}
 
 	// Ensure go.mod exists
@@ -171,15 +172,15 @@ func main() {
 	}
 
 	// Run `go mod tidy`
-	tidyCmd := exec.Command("go", "mod", "tidy")
+	tidyCmd := exec.CommandContext(context.Background(), "go", "mod", "tidy")
 	tidyCmd.Dir = packagePath
 	if err := tidyCmd.Run(); err != nil {
-		return "", fmt.Errorf("failed to run go mod tidy in %s: %s", packagePath, err)
+		return "", fmt.Errorf("failed to run go mod tidy in %s: %w", packagePath, err)
 	}
 
 	// Build provider binary
 	binPath := filepath.Join(packagePath, "provider_bin")
-	buildCmd := exec.Command("go", "build", "-o", binPath, "./cmd")
+	buildCmd := exec.CommandContext(context.Background(), "go", "build", "-o", binPath, "./cmd")
 	buildCmd.Dir = packagePath
 	var buildErr bytes.Buffer
 	buildCmd.Stderr = &buildErr
@@ -188,7 +189,7 @@ func main() {
 		if bytes.Contains(buildErr.Bytes(), []byte("missing method GetFunctions")) {
 			return "", fmt.Errorf("invalid function provider: Provider does not implement TemplateFuncProvider (missing method GetFunctions)")
 		}
-		return "", fmt.Errorf("failed to compile provider package: %s", err)
+		return "", fmt.Errorf("failed to compile provider package: %w", err)
 	}
 
 	return binPath, nil
@@ -199,7 +200,7 @@ func extractModuleName(modulePath string) (string, error) {
 	goModPath := filepath.Join(modulePath, "go.mod")
 	file, err := os.Open(goModPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open go.mod: %s", err)
+		return "", fmt.Errorf("failed to open go.mod: %w", err)
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
@@ -222,7 +223,7 @@ func extractModuleName(modulePath string) (string, error) {
 
 // runProviderExecutable executes the built provider binary and extracts registered functions.
 func runProviderExecutable(binPath, packagePath string) (template.FuncMap, error) {
-	cmd := exec.Command(binPath)
+	cmd := exec.CommandContext(context.Background(), binPath)
 	cmd.Dir = packagePath
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -238,7 +239,7 @@ func runProviderExecutable(binPath, packagePath string) (template.FuncMap, error
 		case bytes.Contains([]byte(output), []byte(`{"error": "Provider does not implement TemplateFuncProvider"}`)):
 			return nil, fmt.Errorf("invalid function provider: Provider does not implement TemplateFuncProvider")
 		default:
-			return nil, fmt.Errorf("failed to execute provider binary: %s", err)
+			return nil, fmt.Errorf("failed to execute provider binary: %w", err)
 		}
 	}
 
@@ -247,7 +248,7 @@ func runProviderExecutable(binPath, packagePath string) (template.FuncMap, error
 	}
 
 	if err := json.Unmarshal(out.Bytes(), &metadata); err != nil {
-		return nil, fmt.Errorf("failed to parse function list from provider: %s", err)
+		return nil, fmt.Errorf("failed to parse function list from provider: %w", err)
 	}
 
 	if len(metadata.Functions) == 0 {
