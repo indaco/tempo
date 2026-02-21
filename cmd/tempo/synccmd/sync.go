@@ -375,7 +375,7 @@ func resolveSyncFlags(
 }
 
 func handleSummary(
-	logger logger.LoggerInterface,
+	logger logger.Logger,
 	manager *worker.WorkerPoolManager,
 	processingErrors []worker.ProcessingError,
 	skippedFiles []worker.ProcessingError,

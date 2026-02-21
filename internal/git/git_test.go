@@ -23,7 +23,7 @@ func TestDefaultCloneOrUpdate(t *testing.T) {
 		originalUpdateRepo := UpdateRepo
 		defer func() { UpdateRepo = originalUpdateRepo }()
 
-		UpdateRepo = func(repoPath string, logger logger.LoggerInterface) error {
+		UpdateRepo = func(repoPath string, logger logger.Logger) error {
 			if repoPath != tempDir {
 				t.Errorf("UpdateRepo called with wrong path: got %s, want %s", repoPath, tempDir)
 			}
@@ -46,7 +46,7 @@ func TestDefaultCloneOrUpdate(t *testing.T) {
 		originalCloneRepo := CloneRepoFunc
 		defer func() { CloneRepoFunc = originalCloneRepo }()
 
-		CloneRepoFunc = func(repoURL, repoPath string, logger logger.LoggerInterface) error {
+		CloneRepoFunc = func(repoURL, repoPath string, logger logger.Logger) error {
 			if repoPath != destRepo {
 				t.Errorf("CloneRepoFunc called with wrong path: got %s, want %s", repoPath, destRepo)
 			}

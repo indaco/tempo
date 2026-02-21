@@ -8,16 +8,16 @@ import (
 )
 
 // EnableLoggerIndentation ensures consistent indentation.
-func EnableLoggerIndentation(log logger.LoggerInterface) {
+func EnableLoggerIndentation(log logger.Logger) {
 	log.WithIndent(true)
 }
 
-func ResetLogger(log logger.LoggerInterface) {
+func ResetLogger(log logger.Logger) {
 	log.Reset()
 }
 
 // LogSuccessMessages logs the success messages for generated template files and assets.
-func LogSuccessMessages(entityType string, cfg *config.Config, logger logger.LoggerInterface) {
+func LogSuccessMessages(entityType string, cfg *config.Config, logger logger.Logger) {
 	var message string
 
 	basePath := filepath.Join(cfg.Paths.TemplatesDir, entityType, "templ")

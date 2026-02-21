@@ -13,10 +13,10 @@ import (
 // GitOperations defines the interface for git operations.
 // This allows for dependency injection and easier testing.
 type GitOperations interface {
-	CloneOrUpdate(repoURL, repoPath string, logger logger.LoggerInterface) error
-	Update(repoPath string, logger logger.LoggerInterface) error
-	Clone(repoURL, repoPath string, logger logger.LoggerInterface) error
-	ForceReclone(repoURL, repoPath string, logger logger.LoggerInterface) error
+	CloneOrUpdate(repoURL, repoPath string, logger logger.Logger) error
+	Update(repoPath string, logger logger.Logger) error
+	Clone(repoURL, repoPath string, logger logger.Logger) error
+	ForceReclone(repoURL, repoPath string, logger logger.Logger) error
 	IsValidRepo(repoPath string) bool
 }
 
@@ -38,7 +38,7 @@ var (
 )
 
 // Default implementation of CloneOrUpdate
-func DefaultCloneOrUpdate(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func DefaultCloneOrUpdate(repoURL, repoPath string, logger logger.Logger) error {
 	if IsValidGitRepo(repoPath) {
 		logger.Info("Updating existing plugin repository").WithAttrs("repo_path", repoPath)
 		return UpdateRepo(repoPath, logger)
@@ -48,14 +48,14 @@ func DefaultCloneOrUpdate(repoURL, repoPath string, logger logger.LoggerInterfac
 }
 
 // Default implementation of UpdateRepo
-func DefaultUpdateRepo(repoPath string, logger logger.LoggerInterface) error {
+func DefaultUpdateRepo(repoPath string, logger logger.Logger) error {
 	logger.Info("Updating existing repository").WithAttrs("repo_path", repoPath)
 	return cmdrunner.RunCommand(repoPath, "git", "pull")
 }
 
 // CloneRepo clones a Git repository into the specified path.
 // It validates the URL and path to prevent command injection attacks.
-func CloneRepo(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func CloneRepo(repoURL, repoPath string, logger logger.Logger) error {
 	// Validate URL to prevent command injection
 	if err := validation.ValidateGitURL(repoURL); err != nil {
 		return apperrors.Wrap("invalid repository URL", err)
@@ -73,7 +73,7 @@ func CloneRepo(repoURL, repoPath string, logger logger.LoggerInterface) error {
 
 // ForceReclone removes an existing repository and re-clones it.
 // It validates the URL and path before performing any operations.
-func ForceReclone(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func ForceReclone(repoURL, repoPath string, logger logger.Logger) error {
 	// Validate URL first (CloneRepo will also validate, but fail fast)
 	if err := validation.ValidateGitURL(repoURL); err != nil {
 		return apperrors.Wrap("invalid repository URL", err)
@@ -103,22 +103,22 @@ func IsValidGitRepo(repoPath string) bool {
 // Interface implementations for DefaultGitOps
 
 // CloneOrUpdate implements GitOperations.CloneOrUpdate.
-func (g *DefaultGitOps) CloneOrUpdate(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func (g *DefaultGitOps) CloneOrUpdate(repoURL, repoPath string, logger logger.Logger) error {
 	return DefaultCloneOrUpdate(repoURL, repoPath, logger)
 }
 
 // Update implements GitOperations.Update.
-func (g *DefaultGitOps) Update(repoPath string, logger logger.LoggerInterface) error {
+func (g *DefaultGitOps) Update(repoPath string, logger logger.Logger) error {
 	return DefaultUpdateRepo(repoPath, logger)
 }
 
 // Clone implements GitOperations.Clone.
-func (g *DefaultGitOps) Clone(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func (g *DefaultGitOps) Clone(repoURL, repoPath string, logger logger.Logger) error {
 	return CloneRepo(repoURL, repoPath, logger)
 }
 
 // ForceReclone implements GitOperations.ForceReclone.
-func (g *DefaultGitOps) ForceReclone(repoURL, repoPath string, logger logger.LoggerInterface) error {
+func (g *DefaultGitOps) ForceReclone(repoURL, repoPath string, logger logger.Logger) error {
 	return ForceReclone(repoURL, repoPath, logger)
 }
 

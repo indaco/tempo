@@ -24,9 +24,9 @@ func clearRegistry() {
 // The test then only verifies that functions are registered.
 func TestInstallFunctionPackageFromRepo_NewRepo(t *testing.T) {
 	// Override git.CloneRepoFunc to simulate cloning.
-	origCloneRepoFunc := git.CloneRepoFunc                                               //nolint:staticcheck // uses deprecated var for test mock injection
-	defer func() { git.CloneRepoFunc = origCloneRepoFunc }()                             //nolint:staticcheck // restores deprecated var after test
-	git.CloneRepoFunc = func(repoURL, repoPath string, l logger.LoggerInterface) error { //nolint:staticcheck // sets deprecated var for mock
+	origCloneRepoFunc := git.CloneRepoFunc                                      //nolint:staticcheck // uses deprecated var for test mock injection
+	defer func() { git.CloneRepoFunc = origCloneRepoFunc }()                    //nolint:staticcheck // restores deprecated var after test
+	git.CloneRepoFunc = func(repoURL, repoPath string, l logger.Logger) error { //nolint:staticcheck // sets deprecated var for mock
 		// Simulate clone: create the clone directory.
 		if err := os.MkdirAll(repoPath, 0755); err != nil {
 			return err

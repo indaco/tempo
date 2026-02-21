@@ -10,7 +10,7 @@ import (
 
 // CheckEntityForNew logs a warning or info message when creating a new entity that already exists.
 // It handles both component and variant entity types with appropriate path formatting.
-func CheckEntityForNew(entityType, entityName, outputPath string, force bool, logr logger.LoggerInterface) {
+func CheckEntityForNew(entityType, entityName, outputPath string, force bool, logr logger.Logger) {
 	// Select logging function and action message based on `force` flag
 	logFunc, action := logr.Warning, "Use '--force' to overwrite it. Any changes will be lost."
 	if force {
@@ -32,7 +32,7 @@ func CheckEntityForNew(entityType, entityName, outputPath string, force bool, lo
 }
 
 // CheckEntityForDefine logs a warning or info message when defining templates that already exist.
-func CheckEntityForDefine(entityType, outputPath string, force bool, logr logger.LoggerInterface) {
+func CheckEntityForDefine(entityType, outputPath string, force bool, logr logger.Logger) {
 	// Select logging function and action message based on `force` flag
 	logFunc, action := logr.Warning, "Use '--force' to overwrite them. Any changes will be lost."
 	if force {

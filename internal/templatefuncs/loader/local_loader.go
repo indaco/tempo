@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterFunctionsFromPath registers functions from a local Go package.
-func RegisterFunctionsFromPath(packagePath string, logger logger.LoggerInterface) error {
+func RegisterFunctionsFromPath(packagePath string, logger logger.Logger) error {
 	logger.Info("Loading functions from").WithAttrs("package", packagePath)
 
 	// Step 1: Locate the provider.go file dynamically
