@@ -176,3 +176,76 @@ func TestWorkerPoolManager_InitializationErrors(t *testing.T) {
 
 	t.Log("[DEBUG] WorkerPoolManager initialization failed as expected")
 }
+
+/* ------------------------------------------------------------------------- */
+/* Test NewWorkerPoolOptions                                                 */
+/* ------------------------------------------------------------------------- */
+
+func TestNewWorkerPoolOptions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("defaults applied when no options given", func(t *testing.T) {
+		opts, err := NewWorkerPoolOptions(ctx, "/input", "/output")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if opts.Context != ctx {
+			t.Errorf("expected context to be set")
+		}
+		if opts.InputDir != "/input" {
+			t.Errorf("expected InputDir=/input, got %s", opts.InputDir)
+		}
+		if opts.OutputDir != "/output" {
+			t.Errorf("expected OutputDir=/output, got %s", opts.OutputDir)
+		}
+		if opts.NumWorkers <= 0 {
+			t.Errorf("expected positive default NumWorkers, got %d", opts.NumWorkers)
+		}
+	})
+
+	t.Run("functional options override defaults", func(t *testing.T) {
+		opts, err := NewWorkerPoolOptions(ctx, "/input", "/output",
+			WithExcludeDir("/input/exclude"),
+			WithMarkerName("custom-marker"),
+			WithNumWorkers(4),
+			WithProduction(true),
+			WithForce(true),
+			WithTrackExecutionTime(true),
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if opts.ExcludeDir != "/input/exclude" {
+			t.Errorf("expected ExcludeDir=/input/exclude, got %s", opts.ExcludeDir)
+		}
+		if opts.MarkerName != "custom-marker" {
+			t.Errorf("expected MarkerName=custom-marker, got %s", opts.MarkerName)
+		}
+		if opts.NumWorkers != 4 {
+			t.Errorf("expected NumWorkers=4, got %d", opts.NumWorkers)
+		}
+		if !opts.IsProduction {
+			t.Errorf("expected IsProduction=true")
+		}
+		if !opts.IsForce {
+			t.Errorf("expected IsForce=true")
+		}
+		if !opts.IsTrackExecutionTime {
+			t.Errorf("expected IsTrackExecutionTime=true")
+		}
+	})
+
+	t.Run("validation rejects zero workers", func(t *testing.T) {
+		_, err := NewWorkerPoolOptions(ctx, "/input", "/output", WithNumWorkers(0))
+		if err == nil {
+			t.Fatal("expected error for NumWorkers=0, got nil")
+		}
+	})
+
+	t.Run("validation rejects negative workers", func(t *testing.T) {
+		_, err := NewWorkerPoolOptions(ctx, "/input", "/output", WithNumWorkers(-1))
+		if err == nil {
+			t.Fatal("expected error for NumWorkers=-1, got nil")
+		}
+	})
+}
