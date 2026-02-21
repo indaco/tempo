@@ -11,7 +11,7 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/indaco/tempo/internal/version"
 )
@@ -138,7 +138,7 @@ func TestRunApp_Help(t *testing.T) {
 	}
 	os.Stdout = w
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		if err := runCLI(args); err != nil {
 			t.Fatalf("runApp returned error: %v", err)
 		}
@@ -146,7 +146,7 @@ func TestRunApp_Help(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to capture output: %v", err)
 	}
-	testhelpers.ValidateCLIOutput(t, output, []string{"USAGE:", "COMMANDS:"})
+	testutils.ValidateCLIOutput(t, output, []string{"USAGE:", "COMMANDS:"})
 }
 
 // TestRunApp_InitAutoGen verifies that when no config file exists, the "init" command auto-generates one.
@@ -161,7 +161,7 @@ func TestRunApp_InitAutoGen(t *testing.T) {
 	}
 
 	// Run the command and capture output
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		_ = runCLI([]string{"tempo", "init", "--base-folder", tempDir})
 	})
 
@@ -175,7 +175,7 @@ func TestRunApp_InitAutoGen(t *testing.T) {
 	}
 
 	// Validate output messages
-	testhelpers.ValidateCLIOutput(t, output, []string{"Generating", "Done!"})
+	testutils.ValidateCLIOutput(t, output, []string{"Generating", "Done!"})
 }
 
 /* ------------------------------------------------------------------------- */

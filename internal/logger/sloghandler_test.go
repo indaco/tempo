@@ -1,16 +1,17 @@
-package logger
+package logger_test
 
 import (
 	"log/slog"
 	"strings"
 	"testing"
 
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestLogHandler(t *testing.T) {
-	loggerInstance := NewDefaultLogger()
-	handler := NewLogHandler(loggerInstance)
+	loggerInstance := logger.NewDefaultLogger()
+	handler := logger.NewLogHandler(loggerInstance)
 	slogLogger := slog.New(handler)
 
 	tests := []struct {
@@ -65,7 +66,7 @@ func TestLogHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := testhelpers.CaptureStdout(tt.logFunc)
+			output, err := testutils.CaptureStdout(tt.logFunc)
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)
 			}
@@ -82,8 +83,8 @@ func TestLogHandler(t *testing.T) {
 }
 
 func TestLogHandlerWithAttrs(t *testing.T) {
-	loggerInstance := NewDefaultLogger()
-	handler := NewLogHandler(loggerInstance)
+	loggerInstance := logger.NewDefaultLogger()
+	handler := logger.NewLogHandler(loggerInstance)
 	slogLogger := slog.New(handler)
 
 	tests := []struct {
@@ -109,7 +110,7 @@ func TestLogHandlerWithAttrs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := testhelpers.CaptureStdout(tt.logFunc)
+			output, err := testutils.CaptureStdout(tt.logFunc)
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)
 			}
@@ -125,14 +126,14 @@ func TestLogHandlerWithAttrs(t *testing.T) {
 }
 
 func TestLogHandlerWithGroup(t *testing.T) {
-	loggerInstance := NewDefaultLogger()
-	handler := NewLogHandler(loggerInstance)
+	loggerInstance := logger.NewDefaultLogger()
+	handler := logger.NewLogHandler(loggerInstance)
 
 	// Create a grouped handler.
 	groupedHandler := handler.WithGroup("database")
 	slogLogger := slog.New(groupedHandler)
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		slogLogger.Warn("Connection slow",
 			slog.String("latency", "500ms"),
 		)
@@ -153,8 +154,8 @@ func TestLogHandlerWithGroup(t *testing.T) {
 }
 
 func TestGroupedLogHandlerWithAttrs(t *testing.T) {
-	loggerInstance := NewDefaultLogger()
-	handler := NewLogHandler(loggerInstance)
+	loggerInstance := logger.NewDefaultLogger()
+	handler := logger.NewLogHandler(loggerInstance)
 
 	// Create a grouped handler and add additional attributes.
 	groupedHandler := handler.WithGroup("database")
@@ -164,7 +165,7 @@ func TestGroupedLogHandlerWithAttrs(t *testing.T) {
 	})
 	slogLogger := slog.New(newHandler)
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		slogLogger.Info("Query executed")
 	})
 	if err != nil {
@@ -184,14 +185,14 @@ func TestGroupedLogHandlerWithAttrs(t *testing.T) {
 }
 
 func TestGroupedLogHandlerWithNestedGroups(t *testing.T) {
-	loggerInstance := NewDefaultLogger()
-	handler := NewLogHandler(loggerInstance)
+	loggerInstance := logger.NewDefaultLogger()
+	handler := logger.NewLogHandler(loggerInstance)
 
 	// Create a nested grouped handler.
 	groupedHandler := handler.WithGroup("database").WithGroup("connection")
 	slogLogger := slog.New(groupedHandler)
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		slogLogger.Warn("Slow response",
 			slog.String("latency", "500ms"),
 		)

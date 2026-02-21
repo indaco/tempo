@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestCheckEntityForNew(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCheckEntityForNew(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			output, err := testhelpers.CaptureStdout(func() {
+			output, err := testutils.CaptureStdout(func() {
 				logr := logger.NewDefaultLogger()
 				CheckEntityForNew("component", tc.entityName, tc.outputPath, tc.force, logr)
 			})
@@ -86,7 +86,7 @@ func TestCheckEntityForDefine_Component(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := testhelpers.CaptureStdout(func() {
+			output, err := testutils.CaptureStdout(func() {
 				logr := logger.NewDefaultLogger()
 				CheckEntityForDefine("component", tt.outputPath, tt.force, logr)
 			})
@@ -96,7 +96,7 @@ func TestCheckEntityForDefine_Component(t *testing.T) {
 			}
 
 			// Validate output
-			testhelpers.ValidateCLIOutput(t, output, tt.expectedMsg)
+			testutils.ValidateCLIOutput(t, output, tt.expectedMsg)
 		})
 	}
 }
@@ -132,7 +132,7 @@ func TestCheckEntityForDefine_Variant(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := testhelpers.CaptureStdout(func() {
+			output, err := testutils.CaptureStdout(func() {
 				logr := logger.NewDefaultLogger()
 				CheckEntityForDefine("variant", tt.outputPath, tt.force, logr)
 			})
@@ -142,7 +142,7 @@ func TestCheckEntityForDefine_Variant(t *testing.T) {
 			}
 
 			// Validate output
-			testhelpers.ValidateCLIOutput(t, output, tt.expectedMsg)
+			testutils.ValidateCLIOutput(t, output, tt.expectedMsg)
 		})
 	}
 }

@@ -119,7 +119,12 @@ type WorkerPoolManager struct {
 
 // NewWorkerPoolManager initializes a worker pool manager.
 // Paths are pre-cleaned to avoid repeated cleaning in hot loops.
+// Panics if opts.NumWorkers is not positive, as this is a programming error.
 func NewWorkerPoolManager(opts WorkerPoolOptions) *WorkerPoolManager {
+	if opts.NumWorkers <= 0 {
+		panic(fmt.Sprintf("worker: NewWorkerPoolManager called with NumWorkers=%d; must be > 0", opts.NumWorkers))
+	}
+
 	// Use larger buffer sizes to prevent data drops during high-throughput processing
 	bufferSize := max(opts.NumWorkers*100, 100)
 

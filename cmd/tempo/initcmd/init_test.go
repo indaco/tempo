@@ -11,7 +11,6 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
@@ -59,7 +58,7 @@ func TestInitCommand(t *testing.T) {
 				SetupInitCommand(cliCtx),
 			}
 
-			output, err := testhelpers.CaptureStdout(func() {
+			output, err := testutils.CaptureStdout(func() {
 				args := []string{"tempo", "init", "--base-folder", baseFolder}
 				err := cliApp.Run(context.Background(), args)
 				if err != nil {
@@ -70,7 +69,7 @@ func TestInitCommand(t *testing.T) {
 				t.Fatalf("Failed to capture stdout: %v", err)
 			}
 
-			testhelpers.ValidateCLIOutput(t, output, []string{
+			testutils.ValidateCLIOutput(t, output, []string{
 				"ℹ Generating",
 				"✔ Done! Customize it to match your project needs.",
 			})

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 )
 
@@ -147,7 +147,7 @@ func TestPrintErrors(t *testing.T) {
 		}
 
 		// Capture output when there are errors
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			PrintErrors(errors)
 		})
 		if err != nil {
@@ -161,13 +161,13 @@ func TestPrintErrors(t *testing.T) {
 			"- Skipped File: ignored.txt\n  Reason: Unsupported file type (Type: unsupported_file)",
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, expectedMessages)
+		testutils.ValidateCLIOutput(t, output, expectedMessages)
 	})
 
 	// Test case 2:  errors slice is empty
 	t.Run("No errors", func(t *testing.T) {
 		// Capture output when there are no errors
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			PrintErrors([]ProcessingError{}) // Empty slice
 		})
 		if err != nil {

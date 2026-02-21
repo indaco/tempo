@@ -10,7 +10,6 @@ import (
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/templatefuncs/registry"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 )
@@ -72,7 +71,7 @@ func TestRegisterCommand_Functions_Repo(t *testing.T) {
 		"--url", "https://github.com/indaco/tempo-provider-sprig.git",
 	}
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		if err := cmd.Run(context.Background(), args); err != nil {
 			t.Fatalf("Command failed: %v", err)
 		}
@@ -157,7 +156,7 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 		"--path", providerDir,
 	}
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		if err := cmd.Run(context.Background(), args); err != nil {
 			t.Fatalf("Command failed: %v", err)
 		}
@@ -238,7 +237,7 @@ var Provider templatefuncs.TemplateFuncProvider = &MockProvider{}
 		"--path", providerDir,
 	}
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		if err := cmd.Run(context.Background(), args); err != nil {
 			t.Fatalf("Command failed: %v", err)
 		}

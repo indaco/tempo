@@ -10,7 +10,6 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
@@ -57,7 +56,7 @@ func TestComponentCommand_DefineSubComd(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"✔ Templates for the component and assets (CSS and JS) have been created",
 			"✔ Tempo action file for 'component' has been created",
 		})
@@ -175,7 +174,7 @@ func TestComponentCommand_DefineSubComd_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"✔ Templates for the component and assets (CSS and JS) have been created",
 			"✔ Tempo action file for 'component' has been created",
 		})
@@ -195,7 +194,7 @@ func TestComponentCommand_DefineSubComd_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"⚠ Templates for 'component' already exist.",
 			"  Use '--force' to overwrite them. Any changes will be lost.",
 			"  - path: " + cfg.Paths.TemplatesDir + "/component",

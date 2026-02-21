@@ -1,33 +1,34 @@
-package logger
+package logger_test
 
 import (
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestLogger(t *testing.T) {
 	tests := []struct {
 		name     string
-		logFunc  func(logger *DefaultLogger, message string, args ...any) *LogEntry
+		logFunc  func(l *logger.DefaultLogger, message string, args ...any) *logger.LogEntry
 		message  string
 		args     []any
 		expected string
 	}{
 		{
 			name: "Default message",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Default(msg, args...)
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Default(msg, args...)
 			},
 			message:  "Operation completed successfully",
 			expected: "Operation completed successfully\n",
 		},
 		{
 			name: "Info message with args",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Info(msg, args...)
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Info(msg, args...)
 			},
 			message:  "Application started",
 			args:     []any{"port:", 8080, "version:", "1.0.0"},
@@ -35,34 +36,34 @@ func TestLogger(t *testing.T) {
 		},
 		{
 			name: "Success message",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Success(msg, args...)
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Success(msg, args...)
 			},
 			message:  "Operation completed",
 			expected: "✔ Operation completed\n",
 		},
 		{
 			name: "Warning message",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Warning(msg, args...)
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Warning(msg, args...)
 			},
 			message:  "Low disk space",
 			expected: "⚠ Low disk space\n",
 		},
 		{
 			name: "Error message",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Error(msg, args...)
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Error(msg, args...)
 			},
 			message:  "Failed to connect to database",
 			expected: "✘ Failed to connect to database\n",
 		},
 		{
 			name: "Indented Success message",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				logger.WithIndent(true)
-				entry := logger.Success(msg, args...)
-				logger.WithIndent(false) // Reset after the test.
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				l.WithIndent(true)
+				entry := l.Success(msg, args...)
+				l.WithIndent(false) // Reset after the test.
 				return entry
 			},
 			message:  "Indented operation completed",
@@ -70,8 +71,8 @@ func TestLogger(t *testing.T) {
 		},
 		{
 			name: "Message with attributes",
-			logFunc: func(logger *DefaultLogger, msg string, args ...any) *LogEntry {
-				return logger.Success(msg).WithAttrs("items", 42, "duration", "1s")
+			logFunc: func(l *logger.DefaultLogger, msg string, args ...any) *logger.LogEntry {
+				return l.Success(msg).WithAttrs("items", 42, "duration", "1s")
 			},
 			message:  "Operation completed",
 			expected: "✔ Operation completed\n  - items: 42\n  - duration: 1s\n",
@@ -80,10 +81,10 @@ func TestLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := NewDefaultLogger() // Create a new logger instance per test.
+			l := logger.NewDefaultLogger() // Create a new logger instance per test.
 
-			output, err := testhelpers.CaptureStdout(func() {
-				tt.logFunc(logger, tt.message, tt.args...)
+			output, err := testutils.CaptureStdout(func() {
+				tt.logFunc(l, tt.message, tt.args...)
 			})
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)
@@ -97,12 +98,12 @@ func TestLogger(t *testing.T) {
 }
 
 func TestLoggerToJSON(t *testing.T) {
-	logger := NewDefaultLogger()
-	logger.WithTimestamp(true)
+	l := logger.NewDefaultLogger()
+	l.WithTimestamp(true)
 
 	tests := []struct {
 		name        string
-		logFunc     func(*DefaultLogger, string, ...any) *LogEntry
+		logFunc     func(*logger.DefaultLogger, string, ...any) *logger.LogEntry
 		message     string
 		args        []any
 		attributes  []any
@@ -110,7 +111,7 @@ func TestLoggerToJSON(t *testing.T) {
 	}{
 		{
 			name:        "Success with attributes",
-			logFunc:     (*DefaultLogger).Success,
+			logFunc:     (*logger.DefaultLogger).Success,
 			message:     "Operation succeeded",
 			args:        nil,
 			attributes:  []any{"user", "JohnDoe", "action", "login"},
@@ -118,7 +119,7 @@ func TestLoggerToJSON(t *testing.T) {
 		},
 		{
 			name:        "Error with attributes",
-			logFunc:     (*DefaultLogger).Error,
+			logFunc:     (*logger.DefaultLogger).Error,
 			message:     "Database error",
 			args:        nil,
 			attributes:  []any{"code", 500, "reason", "timeout"},
@@ -128,7 +129,7 @@ func TestLoggerToJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			entry := tt.logFunc(logger, tt.message, tt.args...)
+			entry := tt.logFunc(l, tt.message, tt.args...)
 			entry.WithAttrs(tt.attributes...)
 
 			jsonData, err := entry.ToJSON()
@@ -144,11 +145,11 @@ func TestLoggerToJSON(t *testing.T) {
 }
 
 func TestLoggerWithTimestamp(t *testing.T) {
-	logger := NewDefaultLogger()
-	logger.WithTimestamp(true)
+	l := logger.NewDefaultLogger()
+	l.WithTimestamp(true)
 
-	output, err := testhelpers.CaptureStdout(func() {
-		logger.Info("Timestamped log")
+	output, err := testutils.CaptureStdout(func() {
+		l.Info("Timestamped log")
 	})
 	if err != nil {
 		t.Fatalf("Failed to capture stdout: %v", err)
@@ -193,12 +194,12 @@ func TestLogAttrsWithIndent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := NewDefaultLogger()
-			logger.WithTimestamp(false)
-			logger.WithIndent(tt.indentEnabled)
+			l := logger.NewDefaultLogger()
+			l.WithTimestamp(false)
+			l.WithIndent(tt.indentEnabled)
 
-			output, err := testhelpers.CaptureStdout(func() {
-				logger.Success("Testing attributes").WithAttrs(tt.attrs...)
+			output, err := testutils.CaptureStdout(func() {
+				l.Success("Testing attributes").WithAttrs(tt.attrs...)
 			})
 			if err != nil {
 				t.Fatalf("Failed to capture stdout: %v", err)

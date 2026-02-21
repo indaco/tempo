@@ -208,7 +208,7 @@ func runWorkerPool(
 	})
 
 	// Queue files for processing before closing job channel & starting workers
-	if err := queueFilesForProcessing(opts, manager, lastRunTimestamp); err != nil {
+	if err := queueFilesForProcessing(cmdCtx.Logger, opts, manager, lastRunTimestamp); err != nil {
 		return apperrors.Wrap("Failed to queue files", err)
 	}
 
@@ -251,24 +251,25 @@ func runWorkerPool(
 
 // queueFilesForProcessing walks through the input directory and enqueues jobs.
 func queueFilesForProcessing(
+	log logger.Logger,
 	opts worker.WorkerPoolOptions,
 	manager *worker.WorkerPoolManager,
 	lastRunTimestamp int64,
 ) error {
 	return filepath.WalkDir(opts.InputDir, func(source string, d os.DirEntry, err error) error {
 		if err != nil {
-			handleError(manager, source, err)
+			handleError(log, manager, source, err)
 			return nil
 		}
 
 		absPath, err := filepath.Abs(source)
 		if err != nil {
-			handleError(manager, source, err)
+			handleError(log, manager, source, err)
 			return nil
 		}
 
 		if shouldExcludeDir(opts.ExcludeDir, absPath) || isExcludedFile(absPath) {
-			handleSkip(manager.SkippedChan, worker.SkippedFile{
+			handleSkip(log, manager.SkippedChan, worker.SkippedFile{
 				Source:    source,
 				Dest:      "", // No expected output file
 				InputDir:  opts.InputDir,
@@ -280,9 +281,9 @@ func queueFilesForProcessing(
 		}
 
 		outputFilePath := utils.RebasePathToOutput(source, opts.InputDir, opts.OutputDir)
-		if !d.IsDir() && shouldProcessFile(source, outputFilePath, opts, lastRunTimestamp, manager) {
+		if !d.IsDir() && shouldProcessFile(log, source, outputFilePath, opts, lastRunTimestamp, manager) {
 			if !enqueueJob(manager, source, outputFilePath) {
-				handleSkip(manager.SkippedChan, worker.SkippedFile{
+				handleSkip(log, manager.SkippedChan, worker.SkippedFile{
 					Source:    source,
 					Dest:      outputFilePath,
 					InputDir:  opts.InputDir,
@@ -407,26 +408,27 @@ func handleSummary(
 
 // handleError sends errors to the error channel.
 // With large buffer sizes (numWorkers * 100), blocking is unlikely.
-// Uses non-blocking send as a safety fallback.
-func handleError(manager *worker.WorkerPoolManager, path string, err error) {
+// Uses non-blocking send as a safety fallback; logs a warning if the buffer is full.
+func handleError(log logger.Logger, manager *worker.WorkerPoolManager, path string, err error) {
 	select {
 	case manager.ErrorsChan <- worker.FormatError(path, err):
 		// Successfully sent
 	default:
-		// Buffer full - extremely unlikely with large buffers
-		// Log would go here in production, but we avoid blocking
+		// Buffer full - log so the error is not silently lost
+		log.Warning("error channel buffer full, dropping error for path: %s (%v)", path, err)
 	}
 }
 
 // handleSkip sends skip reasons to the skipped channel.
 // With large buffer sizes (numWorkers * 100), blocking is unlikely.
-// Uses non-blocking send as a safety fallback.
-func handleSkip(ch chan<- worker.ProcessingError, skipped worker.SkippedFile) {
+// Uses non-blocking send as a safety fallback; logs a warning if the buffer is full.
+func handleSkip(log logger.Logger, ch chan<- worker.ProcessingError, skipped worker.SkippedFile) {
 	select {
 	case ch <- worker.FormatSkipReason(skipped):
 		// Successfully sent
 	default:
-		// Buffer full - extremely unlikely with large buffers
+		// Buffer full - log so the skip is not silently lost
+		log.Warning("skipped channel buffer full, dropping skip for path: %s", skipped.Source)
 	}
 }
 
@@ -436,9 +438,9 @@ func shouldExcludeDir(excludeDir, absPath string) bool {
 }
 
 // shouldProcessFile decides whether the file should be processed or skipped.
-func shouldProcessFile(source, dest string, opts worker.WorkerPoolOptions, lastRunTimestamp int64, manager *worker.WorkerPoolManager) bool {
+func shouldProcessFile(log logger.Logger, source, dest string, opts worker.WorkerPoolOptions, lastRunTimestamp int64, manager *worker.WorkerPoolManager) bool {
 	if isExcludedFile(source) {
-		handleSkip(manager.SkippedChan, worker.SkippedFile{
+		handleSkip(log, manager.SkippedChan, worker.SkippedFile{
 			Source:    source,
 			Dest:      dest,
 			InputDir:  opts.InputDir,
@@ -451,12 +453,12 @@ func shouldProcessFile(source, dest string, opts worker.WorkerPoolOptions, lastR
 
 	lastModified, err := getFileLastModifiedTime(source)
 	if err != nil {
-		handleError(manager, source, err)
+		handleError(log, manager, source, err)
 		return false
 	}
 
 	if !opts.IsProduction && !opts.IsForce && lastModified < lastRunTimestamp {
-		handleSkip(manager.SkippedChan, worker.SkippedFile{
+		handleSkip(log, manager.SkippedChan, worker.SkippedFile{
 			Source:    source,
 			Dest:      dest,
 			InputDir:  opts.InputDir,

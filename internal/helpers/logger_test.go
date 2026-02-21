@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 )
 
@@ -17,7 +16,7 @@ func TestEnableLoggerIndentation(t *testing.T) {
 	EnableLoggerIndentation(log)
 
 	// Capture the output of a log message.
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		log.Success("Test message")
 	})
 	if err != nil {
@@ -37,7 +36,7 @@ func TestResetLogger(t *testing.T) {
 
 	// Enable indentation.
 	EnableLoggerIndentation(log)
-	outputIndented, err := testhelpers.CaptureStdout(func() {
+	outputIndented, err := testutils.CaptureStdout(func() {
 		log.Success("Indented message")
 	})
 	if err != nil {
@@ -49,7 +48,7 @@ func TestResetLogger(t *testing.T) {
 
 	// Now reset the logger.
 	ResetLogger(log)
-	outputReset, err := testhelpers.CaptureStdout(func() {
+	outputReset, err := testutils.CaptureStdout(func() {
 		log.Success("Non indented message")
 	})
 	if err != nil {
