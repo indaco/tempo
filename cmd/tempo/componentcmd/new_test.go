@@ -12,7 +12,6 @@ import (
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/templatefuncs/providers/gonameprovider"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/urfave/cli/v3"
@@ -64,7 +63,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 
 	// Step 2: Run "component new" to test the command
 	t.Run("Component with default config", func(t *testing.T) {
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			args := []string{
 				"tempo", "component", "new",
 				"--name", "button",
@@ -78,7 +77,7 @@ func TestComponentCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"✔ Templ component files have been created",
 		})
 
@@ -129,7 +128,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 
 	// Step 2: Run "component new" to test the command
 	t.Run("Component with configs by flags", func(t *testing.T) {
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			args := []string{
 				"tempo",
 				"component",
@@ -147,7 +146,7 @@ func TestComponentCommand_NewSubCmd_WithFlags(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"✔ Templ component files have been created",
 		})
 
@@ -202,7 +201,7 @@ func TestComponentCommand_NewSubComd_DryRun(t *testing.T) {
 
 	// Run the "component new" command with --dry-run flag.
 	t.Run("Component Dry Run", func(t *testing.T) {
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			args := []string{
 				"tempo", "component", "new",
 				"--name", "dryrun",
@@ -272,7 +271,7 @@ func TestComponentCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 		"--dry-run",
 	}
 
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		err := cliApp.Run(context.Background(), args)
 		if err != nil {
 			t.Fatalf("Command failed: %v", err)
@@ -482,7 +481,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 
 	// Step 2: Run "component new" to test the command
 	t.Run("Component with default config", func(t *testing.T) {
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			args := []string{
 				"tempo", "component", "new",
 				"--name", "button",
@@ -496,7 +495,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"✔ Templ component files have been created",
 		})
 
@@ -510,7 +509,7 @@ func TestComponentCommand_NewSubCmd_CheckComponentExists(t *testing.T) {
 
 	// Step 3: Run "component new" again
 	t.Run("Fail Component Creation When The Same already exists", func(t *testing.T) {
-		output, err := testhelpers.CaptureStdout(func() {
+		output, err := testutils.CaptureStdout(func() {
 			args := []string{
 				"tempo", "component", "new",
 				"--name", "button",

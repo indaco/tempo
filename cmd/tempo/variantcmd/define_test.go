@@ -10,7 +10,6 @@ import (
 	"github.com/indaco/tempo/internal/app"
 	"github.com/indaco/tempo/internal/config"
 	"github.com/indaco/tempo/internal/logger"
-	"github.com/indaco/tempo/internal/testhelpers"
 	"github.com/indaco/tempo/internal/testutils"
 	"github.com/urfave/cli/v3"
 )
@@ -51,7 +50,7 @@ func TestVariantCommand_Define(t *testing.T) {
 	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		_, err := testhelpers.CaptureStdout(func() {
+		_, err := testutils.CaptureStdout(func() {
 			args := []string{"tempo", "component", "define"}
 			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
@@ -74,7 +73,7 @@ func TestVariantCommand_Define(t *testing.T) {
 	})
 
 	t.Run("Variant normal run", func(t *testing.T) {
-		_, err := testhelpers.CaptureStdout(func() {
+		_, err := testutils.CaptureStdout(func() {
 			args := []string{"tempo", "variant", "define"}
 			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
@@ -136,7 +135,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	cliApp.Writer = &buf
 
 	t.Run("Component normal run", func(t *testing.T) {
-		_, err := testhelpers.CaptureStdout(func() {
+		_, err := testutils.CaptureStdout(func() {
 			args := []string{"tempo", "component", "define"}
 			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
@@ -159,7 +158,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 	})
 
 	t.Run("Variant normal run", func(t *testing.T) {
-		_, err := testhelpers.CaptureStdout(func() {
+		_, err := testutils.CaptureStdout(func() {
 			args := []string{"tempo", "variant", "define"}
 			err := cliApp.Run(context.Background(), args)
 			// Validate error expectation
@@ -186,7 +185,7 @@ func TestVariantCommand_Define_AlreadyExists(t *testing.T) {
 			t.Fatalf("Failed to capture stdout: %v", err)
 		}
 
-		testhelpers.ValidateCLIOutput(t, output, []string{
+		testutils.ValidateCLIOutput(t, output, []string{
 			"⚠ Templates for 'variant' already exist.",
 			"  Use '--force' to overwrite them. Any changes will be lost.",
 			"  - path: " + cfg.Paths.TemplatesDir + "/component-variant",

@@ -1,9 +1,10 @@
-package logger
+package logger_test
 
 import (
 	"testing"
 
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/logger"
+	"github.com/indaco/tempo/internal/testutils"
 )
 
 func TestLogWriter(t *testing.T) {
@@ -47,8 +48,8 @@ func TestLogWriter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			writer := &LogWriter{Level: tt.level, Logger: NewDefaultLogger()}
-			output, err := testhelpers.CaptureStdout(func() {
+			writer := &logger.LogWriter{Level: tt.level, Logger: logger.NewDefaultLogger()}
+			output, err := testutils.CaptureStdout(func() {
 				_, err := writer.Write([]byte(tt.input))
 				if err != nil {
 					t.Fatalf("Failed to write on LogWriter: %v", err)

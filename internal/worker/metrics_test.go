@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/indaco/tempo/internal/testhelpers"
+	"github.com/indaco/tempo/internal/testutils"
 	"github.com/indaco/tempo/internal/utils"
 )
 
@@ -138,7 +138,7 @@ func TestMetrics_PrintSummary(t *testing.T) {
 	}
 
 	// Capture the output
-	output, err := testhelpers.CaptureStdout(func() {
+	output, err := testutils.CaptureStdout(func() {
 		m.PrintSummary(errors, skippedFiles, true)
 	})
 	if err != nil {
@@ -162,7 +162,7 @@ func TestMetrics_PrintSummary(t *testing.T) {
 	}
 
 	// Validate output
-	testhelpers.ValidateCLIOutput(t, output, expectedMessages)
+	testutils.ValidateCLIOutput(t, output, expectedMessages)
 }
 
 // TestMetrics_Reset ensures all metrics are correctly reset.
