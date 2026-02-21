@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -248,4 +249,22 @@ func TestNewWorkerPoolOptions(t *testing.T) {
 			t.Fatal("expected error for NumWorkers=-1, got nil")
 		}
 	})
+}
+
+func TestNewWorkerPoolManager_PanicsOnInvalidNumWorkers(t *testing.T) {
+	for _, numWorkers := range []int{0, -1} {
+		t.Run(fmt.Sprintf("NumWorkers=%d", numWorkers), func(t *testing.T) {
+			opts := WorkerPoolOptions{
+				InputDir:   "/input",
+				OutputDir:  "/output",
+				NumWorkers: numWorkers,
+			}
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("expected panic for NumWorkers=%d, got none", numWorkers)
+				}
+			}()
+			NewWorkerPoolManager(opts)
+		})
+	}
 }
