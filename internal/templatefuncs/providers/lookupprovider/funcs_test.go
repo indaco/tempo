@@ -81,7 +81,7 @@ func TestLookup_EdgeCases(t *testing.T) {
 		{"Leading Dot", map[string]any{"config": "value"}, ".config", nil},
 		{"Trailing Dot", map[string]any{"config": "value"}, "config.", nil},
 		{"Key with Only Dots", map[string]any{"config": "value"}, "...", nil},
-		//{"Non-String Key", map[string]any{123: "numberKey"}, "123", nil}, // Ensure it doesn't panic
+		// {"Non-String Key", map[string]any{123: "numberKey"}, "123", nil}, // Ensure it doesn't panic
 	}
 
 	for _, tt := range tests {

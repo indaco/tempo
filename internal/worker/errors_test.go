@@ -60,7 +60,7 @@ func TestFormatError(t *testing.T) {
 }
 
 func TestFormatSkipReason(t *testing.T) {
-	//cwd := utils.GetCWD()
+	// cwd := utils.GetCWD()
 
 	tests := []struct {
 		name        string

@@ -24,7 +24,7 @@ type TemplateData struct {
 	VariantName   string
 	AssetsDir     string
 	WithJs        bool
-	CssLayer      string
+	CssLayer      string //nolint:revive // matches config field name
 	GuardMarker   string
 	Force         bool
 	DryRun        bool

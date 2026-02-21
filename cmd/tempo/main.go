@@ -12,8 +12,8 @@ import (
 	"github.com/indaco/tempo/cmd/tempo/synccmd"
 	"github.com/indaco/tempo/cmd/tempo/variantcmd"
 	"github.com/indaco/tempo/internal/app"
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
 	"github.com/indaco/tempo/internal/version"
@@ -31,7 +31,7 @@ const (
 // main is the CLI application's entry point.
 func main() {
 	if err := runCLI(os.Args); err != nil {
-		errors.LogErrorChain(err)
+		apperrors.LogErrorChain(err)
 		log.Fatal(err)
 	}
 }
@@ -44,7 +44,7 @@ func runCLI(args []string) error {
 	// Load configuration.
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		return fmt.Errorf("error loading config: %w", err)
+		return apperrors.Wrap("error loading config", err)
 	}
 
 	// Initialize CLI context.

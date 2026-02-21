@@ -1,4 +1,49 @@
-package errors
+// Package apperrors provides custom error handling for the Tempo CLI.
+//
+// Error Handling Strategy:
+//
+// This package standardizes error handling throughout the Tempo codebase with
+// the following guidelines:
+//
+//  1. Creating New Errors:
+//     Use apperrors.Wrap() to create new errors with context, optionally wrapping
+//     an underlying cause:
+//
+//     return apperrors.Wrap("failed to read config file", err, filename)
+//
+//     The first argument after the error is treated as the cause. Additional
+//     arguments are formatted into the message.
+//
+//  2. Error Wrapping:
+//     Always use apperrors.Wrap() instead of fmt.Errorf() for error wrapping.
+//     This ensures consistent error formatting and proper error chain support:
+//
+//     // Good
+//     return apperrors.Wrap("failed to process file", err)
+//
+//     // Avoid
+//     return fmt.Errorf("failed to process file: %w", err)
+//
+//  3. Sentinel Errors:
+//     Define package-level sentinel errors using fmt.Errorf() for comparison
+//     with errors.Is():
+//
+//     var ErrNotFound = fmt.Errorf("resource not found")
+//
+//  4. Error Attributes:
+//     Use WithAttr() to add structured metadata to errors for debugging:
+//
+//     err := apperrors.Wrap("validation failed", nil)
+//     err.(*TempoError).WithAttr("field", "email").WithAttr("value", userInput)
+//
+//  5. Error Chains:
+//     The package properly implements Unwrap() to support Go's error chain
+//     traversal with errors.Is() and errors.As().
+//
+//  6. Logging:
+//     Use LogErrorChain() for simple error logging or LogErrorChainWithAttrs()
+//     for detailed error information including attributes.
+package apperrors
 
 import (
 	"encoding/json"
@@ -18,7 +63,6 @@ import (
 // TempoErrorInterface defines the interface for TempoError with extended capabilities.
 type TempoErrorInterface interface {
 	error
-	Code() int
 	Attrs() map[string]any
 }
 
@@ -28,7 +72,6 @@ type TempoErrorInterface interface {
 
 // TempoError represents an error with an additional context message, cause, and attributes.
 type TempoError struct {
-	Code    int            // Error code
 	Message string         // Context message for the error
 	Cause   error          // Underlying cause of the error, if any
 	Attrs   map[string]any // Additional attributes for the error
@@ -58,12 +101,10 @@ func (e *TempoError) ToJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(struct {
-		Code    int            `json:"code"`
 		Message string         `json:"message"`
 		Cause   string         `json:"cause,omitempty"`
 		Attrs   map[string]any `json:"attrs,omitempty"`
 	}{
-		Code:    e.Code,
 		Message: e.Message,
 		Cause:   causeMessage,
 		Attrs:   e.Attrs,
@@ -73,12 +114,6 @@ func (e *TempoError) ToJSON() ([]byte, error) {
 /* ------------------------------------------------------------------------- */
 /* UTILITY METHODS                                                           */
 /* ------------------------------------------------------------------------- */
-
-// WithCode adds an error code to the TempoError and returns the updated error.
-func (e *TempoError) WithCode(code int) *TempoError {
-	e.Code = code
-	return e
-}
 
 // WithAttr adds a key-value pair to the attributes and returns the updated error.
 func (e *TempoError) WithAttr(key string, value any) *TempoError {
@@ -129,7 +164,7 @@ func Wrap(msg string, args ...any) error {
 		coloredArgs[i] = argColor(fmt.Sprint(arg)) // Ensure everything is a string
 	}
 
-	// Convert []string → []any for fmt.Sprintf compatibility
+	// Convert []string -> []any for fmt.Sprintf compatibility
 	coloredMsg := formatMessage(msg, stringToAnySlice(coloredArgs)...)
 
 	return NewTempoError(coloredMsg, cause)
@@ -152,9 +187,9 @@ func LogErrorChain(err error) {
 	output := color.Output
 	errorColor := color.New(color.FgRed, color.Bold).SprintFunc()
 
-	mustWrite(output, "%s\n", errorColor("✘ Something went wrong:"))
+	mustWrite(output, "%s\n", errorColor("X Something went wrong:"))
 	for err != nil {
-		mustWrite(output, "  %s %v\n", errorColor("→"), err)
+		mustWrite(output, "  %s %v\n", errorColor("->"), err)
 		err = errors.Unwrap(err)
 	}
 }
@@ -165,10 +200,11 @@ func LogErrorChainWithAttrs(err error) {
 	errorColor := color.New(color.FgRed, color.Bold).SprintFunc()
 	argColor := color.New(color.Faint).SprintFunc()
 
-	mustWrite(output, "%s\n", errorColor("✘ Something went wrong:"))
+	mustWrite(output, "%s\n", errorColor("X Something went wrong:"))
 	for err != nil {
-		if tempoErr, ok := err.(*TempoError); ok {
-			mustWrite(output, "  - Code: %d, Message: %s\n", tempoErr.Code, tempoErr.Message)
+		var tempoErr *TempoError
+		if errors.As(err, &tempoErr) {
+			mustWrite(output, "  - Message: %s\n", tempoErr.Message)
 			if len(tempoErr.Attrs) > 0 {
 				mustWrite(output, "    Attrs:\n")
 

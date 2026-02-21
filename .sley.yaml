@@ -17,15 +17,8 @@ plugins:
   # Generates changelogs from git commits
   changelog-generator:
     enabled: true
-      mode: "versioned"
-    changes-dir: ".changes"
-    use-default-icons: true
     repository:
       auto-detect: true
-    exclude-patterns:
-      - "^Merge"
-      - "^WIP"
-      - "^release"
+    use-default-icons: true
     contributors:
       enabled: true
-

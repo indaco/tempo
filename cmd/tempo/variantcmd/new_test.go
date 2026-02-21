@@ -105,7 +105,7 @@ func TestVariantCommand_NewSubCmd_DefaultConfig(t *testing.T) {
 		testutils.ValidateGeneratedFiles(t, expectedFiles)
 	})
 
-	//Step 4: Run "variant new" to test the command
+	// Step 4: Run "variant new" to test the command
 	t.Run("Variant with default config", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -203,7 +203,7 @@ func TestVariantCommand_NewSubCmd_WithFlags(t *testing.T) {
 			"✔ Templ component files have been created",
 		})
 
-		//Transform name using the same logic as in the implementation
+		// Transform name using the same logic as in the implementation
 		transformedName := gonameprovider.ToGoPackageName("custom-component")
 		expectedFiles := []string{
 			filepath.Join(cfg.App.GoPackage, transformedName, fmt.Sprintf("%s.templ", transformedName)),
@@ -447,7 +447,7 @@ func TestVariantCommand_NewSubCmd_DryRun_NoChanges(t *testing.T) {
 		testutils.ValidateGeneratedFiles(t, expectedFiles)
 	})
 
-	//Step 4: Run "variant new" to test the command
+	// Step 4: Run "variant new" to test the command
 	t.Run("Variant with default config", func(t *testing.T) {
 		output, err := testhelpers.CaptureStdout(func() {
 			args := []string{
@@ -638,7 +638,7 @@ func TestVariantCommand_NewSubCmd_MissingNameFlag(t *testing.T) {
 			"✔ Templ component files have been created",
 		})
 
-		//Transform name using the same logic as in the implementation
+		// Transform name using the same logic as in the implementation
 		transformedName := gonameprovider.ToGoPackageName("custom-component")
 		expectedFiles := []string{
 			filepath.Join(cfg.App.GoPackage, transformedName, fmt.Sprintf("%s.templ", transformedName)),

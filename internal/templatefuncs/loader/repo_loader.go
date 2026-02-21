@@ -3,7 +3,7 @@ package loader
 import (
 	"path/filepath"
 
-	"github.com/indaco/tempo/internal/errors"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/git"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
@@ -32,11 +32,11 @@ func InstallFunctionPackageFromRepo(
 			if forceClone {
 				return git.ForceReclone(repoURL, clonePath, logger)
 			}
-			return git.UpdateRepo(clonePath, logger)
+			return git.DefaultUpdateRepo(clonePath, logger)
 		}
 
 		// If it's not a valid Git repo
-		return errors.Wrap("Function provider folder already exists but is not a valid repository. Use --force to re-clone or manually remove the folder.")
+		return apperrors.Wrap("Function provider folder already exists but is not a valid repository. Use --force to re-clone or manually remove the folder.")
 	}
 
 	// Step 1: Clone the repo

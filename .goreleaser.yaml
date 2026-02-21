@@ -10,6 +10,10 @@ builds:
     binary: tempo
     env:
       - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
     goos:
       - linux
       - windows
@@ -39,6 +43,19 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+brews:
+  - repository:
+      owner: indaco
+      name: homebrew-tap
+    directory: Formula
+    homepage: https://github.com/indaco/tempo
+    description: A CLI tool for managing assets and scaffolding components in [templ](https://templ.guide)-based projects
+    license: MIT
+    install: |
+      bin.install "tempo"
+    test: |
+      system "#{bin}/tempo", "--version"
 
 release:
   footer: >-

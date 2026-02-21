@@ -1,6 +1,7 @@
-package utils
+package utils //nolint:revive // package provides utility functions
 
 import (
+	"errors"
 	"log"
 	"os"
 	"os/exec"
@@ -32,13 +33,14 @@ func TestGetCWD_ExitOnError(t *testing.T) {
 	}
 
 	// Run the test in a subprocess
-	cmd := exec.Command(os.Args[0], "-test.run=TestGetCWD_ExitOnError")
+	cmd := exec.Command(os.Args[0], "-test.run=TestGetCWD_ExitOnError") //nolint:gosec // test-only subprocess execution using fixed args
 	cmd.Env = append(os.Environ(), "MOCK_GETWD_ERROR=1")
 
 	err := cmd.Run()
 
 	// Ensure the process exited with status 1
-	if exitError, ok := err.(*exec.ExitError); ok {
+	var exitError *exec.ExitError
+	if errors.As(err, &exitError) {
 		if exitError.ExitCode() != 1 {
 			t.Errorf("Expected exit code 1, got %d", exitError.ExitCode())
 		}
@@ -90,13 +92,13 @@ func TestResolvePath(t *testing.T) {
 }
 
 func TestFileOrDirExists(t *testing.T) {
-	t.Run("PathIsFile", testFileOrDirExists_PathIsFile)
-	t.Run("PathIsDirectory", testFileOrDirExists_PathIsDirectory)
-	t.Run("PathDoesNotExist", testFileOrDirExists_PathDoesNotExist)
-	t.Run("InvalidPath", testFileOrDirExists_InvalidPath)
+	t.Run("PathIsFile", testFileOrDirExistsPathIsFile)
+	t.Run("PathIsDirectory", testFileOrDirExistsPathIsDirectory)
+	t.Run("PathDoesNotExist", testFileOrDirExistsPathDoesNotExist)
+	t.Run("InvalidPath", testFileOrDirExistsInvalidPath)
 }
 
-func testFileOrDirExists_PathIsFile(t *testing.T) {
+func testFileOrDirExistsPathIsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	tempFile := filepath.Join(tempDir, "testfile.tmp")
 
@@ -117,7 +119,7 @@ func testFileOrDirExists_PathIsFile(t *testing.T) {
 	}
 }
 
-func testFileOrDirExists_PathIsDirectory(t *testing.T) {
+func testFileOrDirExistsPathIsDirectory(t *testing.T) {
 	tempDir := t.TempDir()
 	subDir := filepath.Join(tempDir, "testdir")
 
@@ -134,7 +136,7 @@ func testFileOrDirExists_PathIsDirectory(t *testing.T) {
 	}
 }
 
-func testFileOrDirExists_PathDoesNotExist(t *testing.T) {
+func testFileOrDirExistsPathDoesNotExist(t *testing.T) {
 	tempDir := t.TempDir()
 	nonExistentPath := filepath.Join(tempDir, "nonexistent.tmp")
 
@@ -147,7 +149,7 @@ func testFileOrDirExists_PathDoesNotExist(t *testing.T) {
 	}
 }
 
-func testFileOrDirExists_InvalidPath(t *testing.T) {
+func testFileOrDirExistsInvalidPath(t *testing.T) {
 	invalidPath := ""
 
 	exists, isDir, err := FileOrDirExists(invalidPath)

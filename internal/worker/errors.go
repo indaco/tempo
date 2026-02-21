@@ -109,9 +109,9 @@ func PrintErrors(errors []ProcessingError) {
 
 	for _, err := range errors {
 		if err.Reason != "" {
-			sb.WriteString(fmt.Sprintf("- Skipped File: %s\n  Reason: %s (Type: %s)\n", err.Source, err.Reason, err.SkipType))
+			fmt.Fprintf(&sb, "- Skipped File: %s\n  Reason: %s (Type: %s)\n", err.Source, err.Reason, err.SkipType)
 		} else {
-			sb.WriteString(fmt.Sprintf("- File: %s\n  Error: %s\n", err.Source, err.Message))
+			fmt.Fprintf(&sb, "- File: %s\n  Error: %s\n", err.Source, err.Message)
 		}
 	}
 

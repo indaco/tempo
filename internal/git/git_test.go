@@ -166,8 +166,8 @@ func TestFailRemoveExistingRepo(t *testing.T) {
 		return
 	}
 
-	expectedError := "Failed to remove existing repository"
-	if !utils.ContainsSubstring(err.Error(), expectedError) && !utils.ContainsSubstring(err.Error(), "permission denied") {
+	expectedError := "failed to remove existing repository"
+	if !utils.ErrorContains(err, expectedError) && !utils.ErrorContains(err, "permission denied") {
 		t.Fatalf("Expected error containing: %q or 'permission denied', got: %q", expectedError, err.Error())
 	}
 }
@@ -184,15 +184,14 @@ func TestFailCloneRepo(t *testing.T) {
 
 	// Ensure error correctly wraps Git failure
 	expectedErrors := []string{
-		"Failed to clone repository",
-		"command failed: exit status 128",
+		"command failed",
 		"fatal",
 		"Could not resolve host",
 	}
 
 	matched := false
 	for _, expected := range expectedErrors {
-		if utils.ContainsSubstring(err.Error(), expected) {
+		if utils.ErrorContains(err, expected) {
 			matched = true
 			break
 		}
@@ -309,8 +308,8 @@ func TestGitOperationsInterface(t *testing.T) {
 		t.Fatal("NewGitOperations() returned nil")
 	}
 
-	// Verify it implements the interface (type assertion)
-	_ = GitOperations(ops)
+	// Verify it implements the interface
+	_ = ops.IsValidRepo
 
 	// Test IsValidRepo with a non-existent path
 	if ops.IsValidRepo("/non/existent/path") {

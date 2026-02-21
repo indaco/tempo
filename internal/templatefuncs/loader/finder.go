@@ -23,7 +23,7 @@ func findProviderFile(modulePath string) (ProviderMetadata, error) {
 			// Extract the package name from the provider file
 			packageName, err := extractPackageName(path)
 			if err != nil {
-				return fmt.Errorf("failed to determine package name: %s", err)
+				return fmt.Errorf("failed to determine package name: %w", err)
 			}
 			metadata.Package = packageName
 

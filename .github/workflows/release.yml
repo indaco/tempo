@@ -54,4 +54,4 @@ jobs:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.TEMPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
