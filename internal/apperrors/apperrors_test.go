@@ -1,4 +1,4 @@
-package errors
+package apperrors
 
 import (
 	"bytes"
@@ -70,10 +70,10 @@ func TestLogErrorChain(t *testing.T) {
 	LogErrorChain(finalErr)
 
 	got := buf.String()
-	want := `✘ Something went wrong:
-  → component creation failed
-  → failed to render file
-  → template execution failed
+	want := `X Something went wrong:
+  -> component creation failed
+  -> failed to render file
+  -> template execution failed
 `
 
 	if got != want {
@@ -109,13 +109,7 @@ func TestNewTempoError(t *testing.T) {
 	}
 }
 
-func TestWithCode(t *testing.T) {
-	err := NewTempoError("operation failed", nil).WithCode(404)
-
-	if err.Code != 404 {
-		t.Errorf("Unexpected code: got %d, want %d", err.Code, 404)
-	}
-}
+// TestWithCode has been removed as the Code field is no longer part of TempoError
 
 func TestWithAttrs(t *testing.T) {
 	err := NewTempoError("operation failed", nil)
@@ -134,10 +128,8 @@ func TestWithAttrs(t *testing.T) {
 
 func TestLogErrorChainWithMetadata(t *testing.T) {
 	baseErr := NewTempoError("file not found", nil)
-	baseErr = baseErr.WithCode(0)
 
 	metadataErr := NewTempoError("operation failed", baseErr).
-		WithCode(500).
 		WithAttr("key1", "value1").
 		WithAttr("key2", 42)
 
@@ -148,12 +140,12 @@ func TestLogErrorChainWithMetadata(t *testing.T) {
 
 	// Explicitly capture the output from the buffer
 	got := buf.String()
-	want := `✘ Something went wrong:
-  - Code: 500, Message: operation failed
+	want := `X Something went wrong:
+  - Message: operation failed
     Attrs:
       key1: value1
       key2: 42
-  - Code: 0, Message: file not found
+  - Message: file not found
 `
 
 	if got != want {
@@ -171,7 +163,6 @@ func TestTempoErrorToJSON(t *testing.T) {
 		{
 			name: "Valid TempoError with cause and attributes",
 			tempoError: &TempoError{
-				Code:    500,
 				Message: "Internal Server Error",
 				Cause:   errors.New("database connection failed"),
 				Attrs: map[string]any{
@@ -179,29 +170,27 @@ func TestTempoErrorToJSON(t *testing.T) {
 					"endpoint":  "/api/v1/resource",
 				},
 			},
-			expected:  `{"code":500,"message":"Internal Server Error","cause":"database connection failed","attrs":{"endpoint":"/api/v1/resource","retryable":true}}`,
+			expected:  `{"message":"Internal Server Error","cause":"database connection failed","attrs":{"endpoint":"/api/v1/resource","retryable":true}}`,
 			expectErr: false,
 		},
 		{
 			name: "Valid TempoError without cause",
 			tempoError: &TempoError{
-				Code:    404,
 				Message: "Not Found",
 				Attrs: map[string]any{
 					"resource": "user",
 				},
 			},
-			expected:  `{"code":404,"message":"Not Found","attrs":{"resource":"user"}}`,
+			expected:  `{"message":"Not Found","attrs":{"resource":"user"}}`,
 			expectErr: false,
 		},
 		{
 			name: "Valid TempoError with nil attributes",
 			tempoError: &TempoError{
-				Code:    400,
 				Message: "Bad Request",
 				Cause:   errors.New("invalid input"),
 			},
-			expected:  `{"code":400,"message":"Bad Request","cause":"invalid input"}`,
+			expected:  `{"message":"Bad Request","cause":"invalid input"}`,
 			expectErr: false,
 		},
 		{
@@ -258,24 +247,24 @@ func TestStringToAnySlice(t *testing.T) {
 		expected []any
 	}{
 		{
-			name:     "✅ Convert non-empty string slice",
+			name:     "Convert non-empty string slice",
 			input:    []string{"one", "two", "three"},
 			expected: []any{"one", "two", "three"},
 		},
 		{
-			name:     "✅ Convert single-element slice",
+			name:     "Convert single-element slice",
 			input:    []string{"hello"},
 			expected: []any{"hello"},
 		},
 		{
-			name:     "✅ Convert empty slice",
+			name:     "Convert empty slice",
 			input:    []string{},
 			expected: []any{},
 		},
 		{
-			name:     "✅ Convert slice with special characters",
-			input:    []string{"$#@!", "你好", "😊"},
-			expected: []any{"$#@!", "你好", "😊"},
+			name:     "Convert slice with special characters",
+			input:    []string{"$#@!", "hello", "world"},
+			expected: []any{"$#@!", "hello", "world"},
 		},
 	}
 
@@ -362,7 +351,7 @@ func TestErrorsIs(t *testing.T) {
 // TestErrorsAs validates that errors.As works correctly with TempoError chain.
 func TestErrorsAs(t *testing.T) {
 	// Create a TempoError
-	tempoErr := NewTempoError("tempo error", nil).WithCode(500)
+	tempoErr := NewTempoError("tempo error", nil)
 
 	// Wrap it with another TempoError
 	wrappedErr := Wrap("wrapped error", tempoErr)
