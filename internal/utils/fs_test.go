@@ -1,4 +1,4 @@
-package utils //nolint:revive // package provides utility functions
+package utils
 
 import (
 	"errors"

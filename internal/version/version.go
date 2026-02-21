@@ -1,4 +1,4 @@
-package version //nolint:revive // package name matches the domain concept, not stdlib
+package version
 
 import (
 	_ "embed"
