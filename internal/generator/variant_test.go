@@ -81,7 +81,7 @@ func TestBuildVariantActions(t *testing.T) {
 	})
 
 	t.Run("ActionTypeValidation", func(t *testing.T) {
-		actions, err := BuildVariantActions(CopyActionId, false)
+		actions, err := BuildVariantActions(CopyActionID, false)
 		if err != nil {
 			t.Fatalf("BuildVariantActions() returned an error: %v", err)
 		}

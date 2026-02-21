@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/generator"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/resolver"
@@ -81,7 +81,7 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 		// Step 1: Create variant data
 		data, err := createVariantData(cmd, cmdCtx.Config)
 		if err != nil {
-			return errors.Wrap("failed to create variant data", err)
+			return apperrors.Wrap("failed to create variant data", err)
 		}
 
 		if data.DryRun {
@@ -97,20 +97,20 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 			return err
 		}
 		if !exists {
-			return errors.Wrap("Cannot find actions folder. Did you run 'tempo variant define' before?")
+			return apperrors.Wrap("Cannot find actions folder. Did you run 'tempo variant define' before?")
 		}
 
 		// Step 3: Ensure the component folder exists before adding a variant
 		componentFolderPath := filepath.Join(data.GoPackage, data.ComponentName)
 		if exists, err := utils.DirExists(componentFolderPath); err != nil {
-			return errors.Wrap("Error checking component folder", err, data.ComponentName)
+			return apperrors.Wrap("Error checking component folder", err, data.ComponentName)
 		} else if !exists {
 			cmdCtx.Logger.Error("Cannot create variant: Component does not exist").
 				WithAttrs(
 					"variant", data.VariantName,
 					"component", data.ComponentName,
 				)
-			return errors.Wrap("Cannot create variant: Component does not exist", data.ComponentName)
+			return apperrors.Wrap("Cannot create variant: Component does not exist", data.ComponentName)
 		}
 
 		// Step 4: Check if the component variant already exists with the same name
@@ -127,8 +127,8 @@ func runVariantNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context, c
 		}
 
 		// Step 5: Retrieve and process actions
-		if err := generator.ProcessEntityActions(cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
-			return errors.Wrap("failed to process actions for variant", err, data.ComponentName)
+		if err := generator.ProcessEntityActions(ctx, cmdCtx.Logger, pathToVariantActionsFile, data, cmdCtx.Config); err != nil {
+			return apperrors.Wrap("failed to process actions for variant", err, data.ComponentName)
 		}
 
 		// Step 6: Log success and asset information

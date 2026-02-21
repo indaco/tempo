@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/generator"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/resolver"
@@ -64,7 +64,7 @@ func runComponentDefineSubCommand(cmdCtx *app.AppContext) func(ctx context.Conte
 		// Step 1: Create template data
 		data, err := createTemplateData(cmd, cmdCtx.Config)
 		if err != nil {
-			return errors.Wrap("Failed to create template data for component", err)
+			return apperrors.Wrap("Failed to create template data for component", err)
 		}
 
 		if data.DryRun {
@@ -86,14 +86,14 @@ func runComponentDefineSubCommand(cmdCtx *app.AppContext) func(ctx context.Conte
 		}
 
 		// Step 3: Retrieve component actions
-		builtInActions, err := generator.BuildComponentActions(generator.CopyActionId, data.Force, data.WithJs)
+		builtInActions, err := generator.BuildComponentActions(generator.CopyActionID, data.Force, data.WithJs)
 		if err != nil {
-			return errors.Wrap("Failed to build component actions", err)
+			return apperrors.Wrap("Failed to build component actions", err)
 		}
 
 		// Step 4: Process actions
-		if err := generator.ProcessActions(cmdCtx.Logger, builtInActions, data); err != nil {
-			return errors.Wrap("Failed to process actions for component", err)
+		if err := generator.ProcessActions(ctx, cmdCtx.Logger, builtInActions, data); err != nil {
+			return apperrors.Wrap("Failed to process actions for component", err)
 		}
 
 		if !data.DryRun {

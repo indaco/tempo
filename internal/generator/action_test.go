@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -211,7 +212,7 @@ func TestExecute_CopyAction(t *testing.T) {
 
 	copyAction := CopyAction{}
 
-	err := copyAction.Execute(action, &TemplateData{TemplatesDir: cfg.TempoRoot})
+	err := copyAction.Execute(context.Background(), action, &TemplateData{TemplatesDir: cfg.TempoRoot})
 	if err == nil {
 		t.Errorf("Expected error due to missing template file, but got none")
 	}
@@ -229,7 +230,7 @@ func TestExecute_RenderAction(t *testing.T) {
 
 	renderAction := RenderAction{}
 
-	err := renderAction.Execute(action, &TemplateData{TemplatesDir: cfg.TempoRoot})
+	err := renderAction.Execute(context.Background(), action, &TemplateData{TemplatesDir: cfg.TempoRoot})
 	if err == nil {
 		t.Errorf("Expected error due to missing template file, but got none")
 	}
@@ -486,7 +487,7 @@ func TestCopyAction_Execute_Folder_Success(t *testing.T) {
 	defer func() { utils.CopyDirFromEmbedFunc = origCopyDirFunc }()
 
 	copyAction := &CopyAction{}
-	err := copyAction.Execute(action, data)
+	err := copyAction.Execute(context.Background(), action, data)
 	if err != nil {
 		t.Fatalf("CopyAction.Execute returned error: %v", err)
 	}
@@ -509,7 +510,7 @@ func TestCopyAction_Execute_Default(t *testing.T) {
 		Item: "invalidType",
 	}
 	copyAction := &CopyAction{}
-	err := copyAction.Execute(action, data)
+	err := copyAction.Execute(context.Background(), action, data)
 	if err == nil {
 		t.Fatalf("expected error for unknown item type, got nil")
 	}
@@ -528,7 +529,7 @@ func TestRenderAction_Execute_Default(t *testing.T) {
 		Item: "invalidType",
 	}
 	renderAction := &RenderAction{}
-	err := renderAction.Execute(action, data)
+	err := renderAction.Execute(context.Background(), action, data)
 	if err == nil {
 		t.Fatalf("expected error for unknown item type in RenderAction, got nil")
 	}
@@ -659,7 +660,7 @@ func TestRenderAction_Execute_Folder_Direct(t *testing.T) {
 
 	// Call Execute on RenderAction (which dispatches to renderActionFolder).
 	renderAction := &RenderAction{}
-	err := renderAction.Execute(action, data)
+	err := renderAction.Execute(context.Background(), action, data)
 	if err != nil {
 		t.Fatalf("RenderAction.Execute returned error: %v", err)
 	}
@@ -870,7 +871,7 @@ func TestProcessEntityActions(t *testing.T) {
 
 	// Override ProcessActionsFunc temporarily
 	originalProcessActions := ProcessActionsFunc
-	ProcessActionsFunc = func(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+	ProcessActionsFunc = func(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
 		// Debugging output
 		for i, action := range actions {
 			t.Logf("DEBUG: Action[%d]: %+v", i, action)
@@ -880,13 +881,13 @@ func TestProcessEntityActions(t *testing.T) {
 	defer func() { ProcessActionsFunc = originalProcessActions }() // Restore after test
 
 	// Run processEntityActions
-	err = ProcessEntityActions(mockLogger, actionFilePath, templateData, mockConfig)
+	err = ProcessEntityActions(context.Background(), mockLogger, actionFilePath, templateData, mockConfig)
 	if err != nil {
 		t.Fatalf("processEntityActions failed: %v", err)
 	}
 
 	// Manually create the expected actions list, ensuring Force=true
-	expectedActions := actions.ToActions(RenderActionId)
+	expectedActions := actions.ToActions(RenderActionID)
 	for i := range expectedActions {
 		expectedActions[i].Force = true
 	}

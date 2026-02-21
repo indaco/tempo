@@ -1,14 +1,15 @@
 package generator
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
 )
@@ -19,7 +20,7 @@ import (
 
 // ActionHandler defines the interface for processing actions.
 type ActionHandler interface {
-	Execute(action Action, data *TemplateData) error
+	Execute(ctx context.Context, action Action, data *TemplateData) error
 }
 
 /* ------------------------------------------------------------------------- */
@@ -59,8 +60,8 @@ type JSONAction struct {
 type JSONActionList []JSONAction
 
 const (
-	RenderActionId = "render"
-	CopyActionId   = "copy"
+	RenderActionID = "render"
+	CopyActionID   = "copy"
 )
 
 /* ------------------------------------------------------------------------- */
@@ -117,7 +118,7 @@ func (jsaList JSONActionList) ToActions(actionType string) []Action {
 // CopyAction handles copying files and folders.
 type CopyAction struct{}
 
-func (a *CopyAction) Execute(action Action, data *TemplateData) error {
+func (a *CopyAction) Execute(_ context.Context, action Action, data *TemplateData) error {
 	switch action.Item {
 	case "file":
 		destination := filepath.Join(data.TemplatesDir, action.TemplateFile)
@@ -126,21 +127,21 @@ func (a *CopyAction) Execute(action Action, data *TemplateData) error {
 		destinationPath := filepath.Join(data.TemplatesDir, action.Source)
 		return utils.CopyDirFromEmbedFunc(action.Source, destinationPath)
 	default:
-		return errors.Wrap("unknown item type: %s", action.Item)
+		return apperrors.Wrap("unknown item type: %s", action.Item)
 	}
 }
 
 // RenderAction handles rendering templates into files or folders.
 type RenderAction struct{}
 
-func (a *RenderAction) Execute(action Action, data *TemplateData) error {
+func (a *RenderAction) Execute(_ context.Context, action Action, data *TemplateData) error {
 	switch action.Item {
 	case "file":
 		return renderActionFile(action, data)
 	case "folder":
 		return renderActionFolder(action, data)
 	default:
-		return errors.Wrap("unknown item type: %s", action.Item)
+		return apperrors.Wrap("unknown item type: %s", action.Item)
 	}
 }
 
@@ -157,13 +158,13 @@ func renderActionFile(action Action, data *TemplateData) error {
 	filePath := filepath.Join(data.TemplatesDir, action.TemplateFile)
 	renderedContent, err := readAndRenderTemplate(filePath, data)
 	if err != nil {
-		return errors.Wrap("failed to process template file", err, action.TemplateFile)
+		return apperrors.Wrap("failed to process template file", err, action.TemplateFile)
 	}
 
 	// Step 2: Render the output path
 	outputPath, err := utils.RenderTemplate(action.Path, data)
 	if err != nil {
-		return errors.Wrap("failed to render output path", err, action.Path)
+		return apperrors.Wrap("failed to render output path", err, action.Path)
 	}
 
 	// Step 3: Handle output file existence and writing
@@ -179,20 +180,20 @@ func renderActionFolder(action Action, data *TemplateData) error {
 
 	// Step 2: Ensure the destination directory exists
 	if err := os.MkdirAll(destination, 0755); err != nil {
-		return errors.Wrap("failed to create destination directory", err, destination)
+		return apperrors.Wrap("failed to create destination directory", err, destination)
 	}
 
 	// Step 3: Read files from the base directory
 	files, err := readDir(base)
 	if err != nil {
-		return errors.Wrap("failed to read base directory", err, base)
+		return apperrors.Wrap("failed to read base directory", err, base)
 	}
 
 	// Step 4: Process each file in the base directory
 	for _, entry := range files {
 		fileInfo, err := entry.Info() // Convert to os.FileInfo
 		if err != nil {
-			return errors.Wrap("failed to get file info", err, entry.Name())
+			return apperrors.Wrap("failed to get file info", err, entry.Name())
 		}
 		if err := processFileInActionFolder(fileInfo, base, destination, action, data); err != nil {
 			return err
@@ -214,22 +215,22 @@ func LoadUserActions(filePath string) ([]JSONAction, error) {
 	// Check if the file exists and is not a directory
 	exists, isDir, err := utils.FileOrDirExists(filePath)
 	if err != nil {
-		return nil, errors.Wrap("error checking actions file '%s': %w", err, filePath)
+		return nil, apperrors.Wrap("error checking actions file '%s': %w", err, filePath)
 	}
 	if !exists || isDir {
-		return nil, errors.Wrap("actions file '%s' does not exist or is a directory", filePath)
+		return nil, apperrors.Wrap("actions file '%s' does not exist or is a directory", filePath)
 	}
 
 	// Read the file content
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, errors.Wrap("failed to read actions file '%s': %w", err, filePath)
+		return nil, apperrors.Wrap("failed to read actions file '%s': %w", err, filePath)
 	}
 
 	// Unmarshal the JSON content into a slice of JSONAction
 	var actions []JSONAction
 	if err := json.Unmarshal(data, &actions); err != nil {
-		return nil, errors.Wrap("failed to parse actions file '%s': %w", err, filePath)
+		return nil, apperrors.Wrap("failed to parse actions file '%s': %w", err, filePath)
 	}
 
 	return actions, nil
@@ -250,7 +251,7 @@ func GenerateActionFile(entityType string, data *TemplateData, actions []Action,
 	actionsPath := filepath.Join(data.ActionsDir, actionFileName)
 
 	if err := GenerateActionJSONFile(actionsPath, actions); err != nil {
-		return errors.Wrap("Failed to generate action file for %s", entityType, err)
+		return apperrors.Wrap("Failed to generate action file for %s", entityType, err)
 	}
 
 	logger.Success(fmt.Sprintf("Tempo action file for '%s' has been created", entityType)).
@@ -263,13 +264,13 @@ func RetrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, c
 	// Step 1: Resolve action file path
 	resolvedPath, err := resolveActionFilePath(cfg.Paths.ActionsDir, actionFilePath)
 	if err != nil {
-		return nil, errors.Wrap("failed to resolve action file path", err)
+		return nil, apperrors.Wrap("failed to resolve action file path", err)
 	}
 
 	// Step 2: Load user-defined actions
 	userActions, err := LoadUserActions(resolvedPath)
 	if err != nil {
-		return nil, errors.Wrap("failed to load user-defined actions from:", err, resolvedPath)
+		return nil, apperrors.Wrap("failed to load user-defined actions from:", err, resolvedPath)
 	}
 
 	logger.Info("Actions loaded").
@@ -282,15 +283,20 @@ func RetrieveActionsFile(logger logger.LoggerInterface, actionFilePath string, c
 }
 
 // ProcessEntityActions retrieves and processes actions from a JSON file.
-func ProcessEntityActions(logger logger.LoggerInterface, pathToActionsFile string, data *TemplateData, cfg *config.Config) error {
+func ProcessEntityActions(ctx context.Context, logger logger.LoggerInterface, pathToActionsFile string, data *TemplateData, cfg *config.Config) error {
+	// Validate context - use Background as fallback for non-critical operations
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	// Retrieve user actions
 	userActions, err := RetrieveActionsFile(logger, pathToActionsFile, cfg)
 	if err != nil {
-		return errors.Wrap("failed to get component actions file", err)
+		return apperrors.Wrap("failed to get component actions file", err)
 	}
 
 	// Convert to built-in actions
-	builtInActions := userActions.ToActions(RenderActionId)
+	builtInActions := userActions.ToActions(RenderActionID)
 
 	if data.Force {
 		for i := range builtInActions {
@@ -299,18 +305,18 @@ func ProcessEntityActions(logger logger.LoggerInterface, pathToActionsFile strin
 	}
 
 	// Process actions
-	if err := ProcessActionsFunc(logger, builtInActions, data); err != nil {
-		return errors.Wrap("failed to process actions", err)
+	if err := ProcessActionsFunc(ctx, logger, builtInActions, data); err != nil {
+		return apperrors.Wrap("failed to process actions", err)
 	}
 
 	return nil
 }
 
 // resolveActionFilePath resolves the path to an action file.
-func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
+func resolveActionFilePath(actionsDir, actionFileFlag string) (string, error) {
 	// Step 1: Resolve the action file path relative to the actions folder, if provided
-	if ActionsDir != "" {
-		resolvedPath := filepath.Join(ActionsDir, actionFileFlag)
+	if actionsDir != "" {
+		resolvedPath := filepath.Join(actionsDir, actionFileFlag)
 		exists, err := utils.FileExistsFunc(resolvedPath)
 		if err != nil {
 			return "", err
@@ -323,10 +329,10 @@ func resolveActionFilePath(ActionsDir, actionFileFlag string) (string, error) {
 	// Check the actionFileFlag as an absolute path
 	exists, err := utils.FileExistsFunc(actionFileFlag)
 	if err != nil {
-		return "", errors.Wrap("error checking action file path", err, actionFileFlag)
+		return "", apperrors.Wrap("error checking action file path", err, actionFileFlag)
 	}
 	if !exists {
-		return "", errors.Wrap("action file does not exist", actionFileFlag)
+		return "", apperrors.Wrap("action file does not exist", actionFileFlag)
 	}
 
 	return actionFileFlag, nil
@@ -339,7 +345,7 @@ func readFile(path string) ([]byte, error) {
 		return os.ReadFile(path)
 	}
 
-	return nil, errors.Wrap("file not found in both embedded and disk: %s", path)
+	return nil, apperrors.Wrap("file not found in both embedded and disk: %s", path)
 }
 
 // Helper to read directories from embedded or disk.
@@ -354,12 +360,12 @@ func readDir(path string) ([]os.DirEntry, error) {
 func readAndRenderTemplate(filePath string, data *TemplateData) (string, error) {
 	content, err := readFile(filePath)
 	if err != nil {
-		return "", errors.Wrap("failed to read file", err, filePath)
+		return "", apperrors.Wrap("failed to read file", err, filePath)
 	}
 
 	renderedContent, err := utils.RenderTemplate(string(content), data)
 	if err != nil {
-		return "", errors.Wrap("failed to render template", err, filePath)
+		return "", apperrors.Wrap("failed to render template", err, filePath)
 	}
 
 	return renderedContent, nil
@@ -369,12 +375,12 @@ func readAndRenderTemplate(filePath string, data *TemplateData) (string, error) 
 func renderBaseAndDestination(action Action, data *TemplateData) (string, string, error) {
 	base, err := utils.RenderTemplate(filepath.Join(data.TemplatesDir, action.Source), data)
 	if err != nil {
-		return "", "", errors.Wrap("failed to render base directory", err, action.Source)
+		return "", "", apperrors.Wrap("failed to render base directory", err, action.Source)
 	}
 
 	destination, err := utils.RenderTemplate(action.Destination, data)
 	if err != nil {
-		return "", "", errors.Wrap("failed to render destination directory", err, action.Destination)
+		return "", "", apperrors.Wrap("failed to render destination directory", err, action.Destination)
 	}
 
 	return base, destination, nil
@@ -409,24 +415,24 @@ func handleOutputFile(
 ) error {
 	exists, isDir, err := fileExistsFunc(outputPath)
 	if err != nil {
-		return errors.Wrap("error checking output file", err, outputPath)
+		return apperrors.Wrap("error checking output file", err, outputPath)
 	}
 
 	if exists {
 		if isDir {
-			return errors.Wrap("output path exists but is a directory", outputPath)
+			return apperrors.Wrap("output path exists but is a directory", outputPath)
 		}
 		if action.SkipIfExists {
 			return nil // Skip processing if the file exists and skip is enabled
 		}
 		if !action.Force {
-			return errors.Wrap("file already exists and force is not set", outputPath)
+			return apperrors.Wrap("file already exists and force is not set", outputPath)
 		}
 	}
 
 	// Step 4: Write the rendered content to the output file
 	if err := writeFileFunc(outputPath, renderedContent); err != nil {
-		return errors.Wrap("failed to write rendered content", err, outputPath)
+		return apperrors.Wrap("failed to write rendered content", err, outputPath)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -15,7 +16,7 @@ type MockActionHandler struct {
 	ReturnError     bool
 }
 
-func (m *MockActionHandler) Execute(action Action, data *TemplateData) error {
+func (m *MockActionHandler) Execute(ctx context.Context, action Action, data *TemplateData) error {
 	m.ExecutedActions = append(m.ExecutedActions, action)
 	if m.ReturnError {
 		return errors.New("mock error")
@@ -103,7 +104,7 @@ func TestProcessActions(t *testing.T) {
 			}
 
 			data := &TemplateData{DryRun: test.dryRun}
-			err := ProcessActions(logger, test.actions, data)
+			err := ProcessActions(context.Background(), logger, test.actions, data)
 
 			if test.expectError {
 				if err == nil {
@@ -175,7 +176,7 @@ func TestProcessActions_SkipJsActions(t *testing.T) {
 				WithJs: test.withJs,
 			}
 
-			err := ProcessActions(logger, test.actions, data)
+			err := ProcessActions(context.Background(), logger, test.actions, data)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}

@@ -3,7 +3,9 @@
 package generator
 
 import (
-	"github.com/indaco/tempo/internal/errors"
+	"context"
+
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/utils"
 )
@@ -11,7 +13,7 @@ import (
 // ActionProcessor defines the interface for processing actions.
 // This allows for dependency injection and easier testing.
 type ActionProcessor interface {
-	ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error
+	ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error
 }
 
 // DefaultActionProcessor is the default implementation of ActionProcessor.
@@ -23,8 +25,8 @@ func NewActionProcessor() ActionProcessor {
 }
 
 // ProcessActions implements ActionProcessor.ProcessActions.
-func (p *DefaultActionProcessor) ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
-	return ProcessActions(logger, actions, data)
+func (p *DefaultActionProcessor) ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+	return ProcessActions(ctx, logger, actions, data)
 }
 
 // Ensure DefaultActionProcessor implements ActionProcessor
@@ -32,16 +34,22 @@ var _ ActionProcessor = (*DefaultActionProcessor)(nil)
 
 // Map of action types to their respective handlers.
 var actionHandlers = map[string]ActionHandler{
-	CopyActionId:   &CopyAction{},
-	RenderActionId: &RenderAction{},
+	CopyActionID:   &CopyAction{},
+	RenderActionID: &RenderAction{},
 }
 
 // Default function implementation (kept for backward compatibility)
+//
 // Deprecated: Use ActionProcessor interface instead for new code.
 var ProcessActionsFunc = ProcessActions
 
 // ProcessActions processes a list of actions using the appropriate handlers.
-func ProcessActions(logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+func ProcessActions(ctx context.Context, logger logger.LoggerInterface, actions []Action, data *TemplateData) error {
+	// Validate context - use Background as fallback for non-critical operations
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	for _, action := range actions {
 		if data.DryRun {
 			handleDryRun(logger, action, data)
@@ -55,11 +63,11 @@ func ProcessActions(logger logger.LoggerInterface, actions []Action, data *Templ
 
 		handler, exists := actionHandlers[action.Type]
 		if !exists {
-			return errors.Wrap("unknown action type", action.Type)
+			return apperrors.Wrap("unknown action type", action.Type)
 		}
 
-		if err := handler.Execute(action, data); err != nil {
-			return errors.Wrap("error executing action", err, action.Type)
+		if err := handler.Execute(ctx, action, data); err != nil {
+			return apperrors.Wrap("error executing action", err, action.Type)
 		}
 	}
 	return nil

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/generator"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/resolver"
@@ -81,7 +81,7 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 		// Step 1: Create template data
 		data, err := createComponentData(cmd, cmdCtx.Config)
 		if err != nil {
-			return errors.Wrap("Failed to create template data for component", err)
+			return apperrors.Wrap("Failed to create template data for component", err)
 		}
 
 		if data.DryRun {
@@ -97,7 +97,7 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 			return err
 		}
 		if !exists {
-			return errors.Wrap("Cannot find actions folder. Did you run 'tempo component define' before?")
+			return apperrors.Wrap("Cannot find actions folder. Did you run 'tempo component define' before?")
 		}
 
 		// Step 3: Check if the component already exists
@@ -114,8 +114,8 @@ func runComponentNewSubCommand(cmdCtx *app.AppContext) func(ctx context.Context,
 		}
 
 		// Step 4: Retrieve and process actions
-		if err := generator.ProcessEntityActions(cmdCtx.Logger, pathToComponentActionsFile, data, cmdCtx.Config); err != nil {
-			return errors.Wrap("failed to process actions for component", err, data.ComponentName)
+		if err := generator.ProcessEntityActions(ctx, cmdCtx.Logger, pathToComponentActionsFile, data, cmdCtx.Config); err != nil {
+			return apperrors.Wrap("failed to process actions for component", err, data.ComponentName)
 		}
 
 		// Step 5: Log success and asset information

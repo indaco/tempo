@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/indaco/tempo/internal/app"
+	"github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/config"
-	"github.com/indaco/tempo/internal/errors"
 	"github.com/indaco/tempo/internal/generator"
 	"github.com/indaco/tempo/internal/helpers"
 	"github.com/indaco/tempo/internal/resolver"
@@ -54,10 +54,10 @@ func validateVariantDefinePrerequisites(cfg *config.Config) func(ctx context.Con
 		pathToTemplatesComponent := filepath.Join(cfg.Paths.TemplatesDir, "component")
 		exists, err := utils.DirExists(pathToTemplatesComponent)
 		if err != nil {
-			return nil, errors.Wrap("Failed to check component templates folder", err)
+			return nil, apperrors.Wrap("Failed to check component templates folder", err)
 		}
 		if !exists {
-			return nil, errors.Wrap("Templates for component not found. Run 'tempo component define' first.")
+			return nil, apperrors.Wrap("Templates for component not found. Run 'tempo component define' first.")
 		}
 		return ctx, nil
 	}
@@ -74,7 +74,7 @@ func runVariantDefineSubCommand(cmdCtx app.AppContext) func(ctx context.Context,
 		// Step 1: Create template data
 		data, err := createTemplateData(cmd, cmdCtx.Config)
 		if err != nil {
-			return errors.Wrap("Failed to create template data", err)
+			return apperrors.Wrap("Failed to create template data", err)
 		}
 
 		if data.DryRun {
@@ -96,14 +96,14 @@ func runVariantDefineSubCommand(cmdCtx app.AppContext) func(ctx context.Context,
 		}
 
 		// Step 3: Retrieve component actions
-		builtInActions, err := generator.BuildVariantActions(generator.CopyActionId, false)
+		builtInActions, err := generator.BuildVariantActions(generator.CopyActionID, false)
 		if err != nil {
-			return errors.Wrap("Failed to build variant actions", err)
+			return apperrors.Wrap("Failed to build variant actions", err)
 		}
 
 		// Step 4: Process actions
-		if err := generator.ProcessActions(cmdCtx.Logger, builtInActions, data); err != nil {
-			return errors.Wrap("Failed to process actions for variant", err)
+		if err := generator.ProcessActions(ctx, cmdCtx.Logger, builtInActions, data); err != nil {
+			return apperrors.Wrap("Failed to process actions for variant", err)
 		}
 
 		if !data.DryRun {
