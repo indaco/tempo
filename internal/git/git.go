@@ -1,10 +1,10 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
+	apperrors "github.com/indaco/tempo/internal/apperrors"
 	"github.com/indaco/tempo/internal/cmdrunner"
 	"github.com/indaco/tempo/internal/logger"
 	"github.com/indaco/tempo/internal/validation"
@@ -29,6 +29,7 @@ func NewGitOperations() GitOperations {
 }
 
 // Function variables to allow mocking in tests (kept for backward compatibility)
+//
 // Deprecated: Use GitOperations interface instead for new code.
 var (
 	CloneOrUpdate = DefaultCloneOrUpdate
@@ -57,12 +58,12 @@ func DefaultUpdateRepo(repoPath string, logger logger.LoggerInterface) error {
 func CloneRepo(repoURL, repoPath string, logger logger.LoggerInterface) error {
 	// Validate URL to prevent command injection
 	if err := validation.ValidateGitURL(repoURL); err != nil {
-		return fmt.Errorf("invalid repository URL: %w", err)
+		return apperrors.Wrap("invalid repository URL", err)
 	}
 
 	// Validate path to prevent path traversal
 	if err := validation.ValidateLocalPath(repoPath); err != nil {
-		return fmt.Errorf("invalid repository path: %w", err)
+		return apperrors.Wrap("invalid repository path", err)
 	}
 
 	logger.Info("Cloning repository").WithAttrs("repo_url", repoURL)
@@ -75,18 +76,18 @@ func CloneRepo(repoURL, repoPath string, logger logger.LoggerInterface) error {
 func ForceReclone(repoURL, repoPath string, logger logger.LoggerInterface) error {
 	// Validate URL first (CloneRepo will also validate, but fail fast)
 	if err := validation.ValidateGitURL(repoURL); err != nil {
-		return fmt.Errorf("invalid repository URL: %w", err)
+		return apperrors.Wrap("invalid repository URL", err)
 	}
 
 	// Validate path before removal
 	if err := validation.ValidateLocalPath(repoPath); err != nil {
-		return fmt.Errorf("invalid repository path: %w", err)
+		return apperrors.Wrap("invalid repository path", err)
 	}
 
 	logger.Warning("Force-cloning repository. Removing existing folder").WithAttrs("repo_path", repoPath)
 
 	if err := os.RemoveAll(repoPath); err != nil {
-		return fmt.Errorf("failed to remove existing repository: %w", err)
+		return apperrors.Wrap("failed to remove existing repository", err)
 	}
 
 	return CloneRepo(repoURL, repoPath, logger)
