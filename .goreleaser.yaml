@@ -37,29 +37,22 @@ archives:
       - goos: windows
         formats: ['zip']
 
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
-
-brews:
-  - repository:
+homebrew_casks:
+  - name: tempo
+    repository:
       owner: indaco
       name: homebrew-tap
-    directory: Formula
+    directory: Casks
     homepage: https://github.com/indaco/tempo
-    description: A CLI tool for managing assets and scaffolding components in [templ](https://templ.guide)-based projects
-    license: MIT
-    install: |
-      bin.install "tempo"
-    test: |
-      system "#{bin}/tempo", "--version"
+    description: A CLI tool for managing assets and scaffolding components in templ-based projects.
+    binaries:
+      - tempo
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/tempo"]
+          end
 
-release:
-  footer: >-
-
-    ---
-
-    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+changelog:
+  disable: true

@@ -7,7 +7,7 @@ env:
   GO_VERSION: '1.25'
 
 jobs:
-  release-notes:
+  create-release-notes:
     name: release-notes
     runs-on: ubuntu-latest
     environment:
@@ -24,7 +24,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}
           draft: false
           prerelease: false
-          make_latest: 'true'
+          make_latest: "true"
           token: ${{ secrets.TEMPO_TOKEN }}
           body_path: ${{ github.workspace }}/.changes/${{ github.event.release.tag_name }}.md
           generate_release_notes: false
@@ -32,13 +32,15 @@ jobs:
   goreleaser:
     name: goreleaser
     runs-on: ubuntu-latest
-    needs: release-notes
+    needs: create-release-notes
     environment:
       name: Release
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -51,7 +53,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
+          version: "~> v2"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
