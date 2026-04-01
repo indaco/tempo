@@ -990,23 +990,45 @@ func createTestTemplateData(templatesDir string) *TemplateData {
 }
 
 // copyDir is a simple helper that recursively copies a directory from src to dest.
+// Used only in tests with controlled inputs, so symlink TOCTOU is not a concern.
 func copyDir(src, dest string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+	srcRoot, err := os.OpenRoot(src)
+	if err != nil {
+		return err
+	}
+	defer srcRoot.Close()
+
+	destRoot, err := os.OpenRoot(dest)
+	if err != nil {
+		// dest may not exist yet at the top level; create it and retry.
+		if mkErr := os.MkdirAll(dest, 0o755); mkErr != nil {
+			return mkErr
+		}
+		destRoot, err = os.OpenRoot(dest)
 		if err != nil {
 			return err
 		}
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
+	}
+	defer destRoot.Close()
+
+	return filepath.Walk(src, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
-		destPath := filepath.Join(dest, rel)
+		rel, relErr := filepath.Rel(src, path)
+		if relErr != nil {
+			return relErr
+		}
 		if info.IsDir() {
-			return os.MkdirAll(destPath, info.Mode())
+			if rel == "." {
+				return nil
+			}
+			return destRoot.Mkdir(rel, info.Mode())
 		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
+		data, readErr := srcRoot.ReadFile(rel)
+		if readErr != nil {
+			return readErr
 		}
-		return os.WriteFile(destPath, data, info.Mode())
+		return destRoot.WriteFile(rel, data, info.Mode())
 	})
 }
