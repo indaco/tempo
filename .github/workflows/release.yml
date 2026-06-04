@@ -4,7 +4,7 @@ on:
     types: [created]
 
 env:
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.26'
 
 jobs:
   create-release-notes:
@@ -24,7 +24,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}
           draft: false
           prerelease: false
-          make_latest: "true"
+          make_latest: 'true'
           token: ${{ secrets.TEMPO_TOKEN }}
           body_path: ${{ github.workspace }}/.changes/${{ github.event.release.tag_name }}.md
           generate_release_notes: false
@@ -53,7 +53,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: "~> v2"
+          version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
