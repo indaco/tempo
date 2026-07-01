@@ -202,8 +202,7 @@ func LogErrorChainWithAttrs(err error) {
 
 	mustWrite(output, "%s\n", errorColor("X Something went wrong:"))
 	for err != nil {
-		var tempoErr *TempoError
-		if errors.As(err, &tempoErr) {
+		if tempoErr, ok := errors.AsType[*TempoError](err); ok {
 			mustWrite(output, "  - Message: %s\n", tempoErr.Message)
 			if len(tempoErr.Attrs) > 0 {
 				mustWrite(output, "    Attrs:\n")

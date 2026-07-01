@@ -39,8 +39,7 @@ func TestGetCWD_ExitOnError(t *testing.T) {
 	err := cmd.Run()
 
 	// Ensure the process exited with status 1
-	var exitError *exec.ExitError
-	if errors.As(err, &exitError) {
+	if exitError, ok := errors.AsType[*exec.ExitError](err); ok {
 		if exitError.ExitCode() != 1 {
 			t.Errorf("Expected exit code 1, got %d", exitError.ExitCode())
 		}
