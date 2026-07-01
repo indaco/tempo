@@ -3,12 +3,12 @@ module github.com/indaco/tempo
 go 1.26.0
 
 require (
-	github.com/evanw/esbuild v0.28.0
+	github.com/evanw/esbuild v0.28.1
 	github.com/fatih/color v1.19.0
 	github.com/indaco/tempo-api v0.0.0-20250217085709-fd62d35b4d54
-	github.com/urfave/cli/v3 v3.9.0
-	golang.org/x/mod v0.36.0
-	golang.org/x/sync v0.20.0
+	github.com/urfave/cli/v3 v3.10.1
+	golang.org/x/mod v0.37.0
+	golang.org/x/sync v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
